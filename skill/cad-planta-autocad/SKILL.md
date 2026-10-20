@@ -16,7 +16,7 @@ description: Cria e entrega plantas baixas no AutoCAD de verdade (arquitetura, l
 | Projeto do MCP | `C:\Users\Correta Engenharia\mcp-cad-server` (env `MCP_CAD_SERVER`) |
 | Motor | `src/cad_mcp/com_backend.py` — COM/ActiveX no AutoCAD **aberto** (não rouba foco) |
 | Renderizador | `src/cad_mcp/planta.py` — `desenhar_modelo(backend, modelo)` |
-| MCP no AionUi | `mcp-cad-server` (stdio, 48 tools), id `mcp_01a1472d-f66b-7350-a159-a3d5cdea6ef7` |
+| MCP no AionUi | `mcp-cad-server` (stdio, 118 tools), id `mcp_01a1472d-f66b-7350-a159-a3d5cdea6ef7` |
 | Área de trabalho | `C:\temp\mcp_cad_com` (**sem espaço no caminho** — env `MCP_CAD_TEMP`) |
 | Motores alternativos | `file_ipc` (AutoCAD LT), `ezdxf` (headless, sem AutoCAD) via `MCP_CAD_BACKEND` |
 | Camada oficial | `references/api-oficial-mcp.md` — o que a **Autodesk declara** (ObjectARX/.NET/AutoLISP/COM) e o **MCP oficial** do AutoCAD. Ler quando o pedido for sobre API oficial, suporte, MCP da Autodesk ou o que "não é suportado" |
