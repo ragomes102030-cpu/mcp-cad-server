@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+build/
+
+# Quarentena de antivirus (nao eh projeto)
+_avast_/
+
+# Ambiente local
+.venv/
+venv/
+.idea/
+.vscode/

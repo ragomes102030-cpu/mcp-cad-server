@@ -1,0 +1,12 @@
+C:\Users\Correta Engenharia\mcp-cad-server\plugin\CadMcpBridge\obj\Release\CadMcpBridge.csproj.AssemblyReference.cache
+C:\Users\Correta Engenharia\mcp-cad-server\plugin\CadMcpBridge\obj\Release\CadMcpBridge.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Correta Engenharia\mcp-cad-server\plugin\CadMcpBridge\obj\Release\CadMcpBridge.AssemblyInfoInputs.cache
+C:\Users\Correta Engenharia\mcp-cad-server\plugin\CadMcpBridge\obj\Release\CadMcpBridge.AssemblyInfo.cs
+C:\Users\Correta Engenharia\mcp-cad-server\plugin\CadMcpBridge\obj\Release\CadMcpBridge.csproj.CoreCompileInputs.cache
+C:\Users\Correta Engenharia\mcp-cad-server\plugin\CadMcpBridge\bin\Release\CadMcpBridge.deps.json
+C:\Users\Correta Engenharia\mcp-cad-server\plugin\CadMcpBridge\bin\Release\CadMcpBridge.dll
+C:\Users\Correta Engenharia\mcp-cad-server\plugin\CadMcpBridge\bin\Release\CadMcpBridge.pdb
+C:\Users\Correta Engenharia\mcp-cad-server\plugin\CadMcpBridge\obj\Release\CadMcpBridge.dll
+C:\Users\Correta Engenharia\mcp-cad-server\plugin\CadMcpBridge\obj\Release\refint\CadMcpBridge.dll
+C:\Users\Correta Engenharia\mcp-cad-server\plugin\CadMcpBridge\obj\Release\CadMcpBridge.pdb
+C:\Users\Correta Engenharia\mcp-cad-server\plugin\CadMcpBridge\obj\Release\ref\CadMcpBridge.dll

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-cad-server"
+version = "0.1.0"
+description = "Servidor MCP para AutoCAD: desenha plantas, lê desenhos e calcula quantitativos"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp",
+    "mcp",
+    "ezdxf",
+    "shapely",
+    "matplotlib",
+    "pillow",
+    "structlog",
+    "pywin32; sys_platform == 'win32'",
+]
+
+[project.scripts]
+cad-mcp = "cad_mcp.server:main"
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["cad_mcp*", "autocad_mcp*"]

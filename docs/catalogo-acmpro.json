@@ -1,0 +1,3657 @@
+{
+ "origem": "autocad-mcp-pro 1.6.0 (MIT, U-C4N/Autocad-MCP)",
+ "baixado": "2026-10-16",
+ "ferramentas": [
+  {
+   "nome": "drawing_info",
+   "funcao": "drawing_info",
+   "resumo": "Read the current drawing's name, path, extents and object counts.",
+   "titulo": "Drawing Info",
+   "custo": "read",
+   "linha": 1219,
+   "familia": "consulta",
+   "args": []
+  },
+  {
+   "nome": "drawing_new",
+   "funcao": "drawing_new",
+   "resumo": "Start a drawing: blank with the engineering layers, or from a bundled/own template.",
+   "titulo": "New Drawing",
+   "custo": "mutate",
+   "linha": 1238,
+   "familia": "desenho",
+   "args": [
+    "template",
+    "bootstrap"
+   ]
+  },
+  {
+   "nome": "drawing_open",
+   "funcao": "drawing_open",
+   "resumo": "Load an existing DXF from disk (DWG only on the live AutoCAD backend).",
+   "titulo": "Open Drawing",
+   "custo": "mutate",
+   "linha": 1327,
+   "familia": "plot/arquivo",
+   "args": [
+    "path"
+   ]
+  },
+  {
+   "nome": "drawing_save",
+   "funcao": "drawing_save",
+   "resumo": "Write the drawing back to its file, or to a path you give.",
+   "titulo": "Save Drawing",
+   "custo": "mutate",
+   "linha": 1358,
+   "familia": "plot/arquivo",
+   "args": [
+    "path"
+   ]
+  },
+  {
+   "nome": "drawing_save_as",
+   "funcao": "drawing_save_as",
+   "resumo": "Save a copy under a new name; the extension picks DXF, DWG or DWT.",
+   "titulo": "Save As",
+   "custo": "mutate",
+   "linha": 1378,
+   "familia": "plot/arquivo",
+   "args": [
+    "path",
+    "format"
+   ]
+  },
+  {
+   "nome": "drawing_export_dxf",
+   "funcao": "drawing_export_dxf",
+   "resumo": "Write a DXF interchange copy of the drawing.",
+   "titulo": "Export DXF",
+   "custo": "mutate",
+   "linha": 1407,
+   "familia": "plot/arquivo",
+   "args": [
+    "path"
+   ]
+  },
+  {
+   "nome": "drawing_export_pdf",
+   "funcao": "drawing_export_pdf",
+   "resumo": "Plot the drawing, or one paper-space layout, to PDF.",
+   "titulo": "Export PDF",
+   "custo": "mutate",
+   "linha": 1422,
+   "familia": "plot/arquivo",
+   "args": [
+    "path",
+    "layout"
+   ]
+  },
+  {
+   "nome": "drawing_purge",
+   "funcao": "drawing_purge",
+   "resumo": "Strip unused layers, blocks, linetypes and styles out of the file.",
+   "titulo": "Purge Drawing",
+   "custo": "destructive",
+   "linha": 1448,
+   "familia": "plot/arquivo",
+   "args": []
+  },
+  {
+   "nome": "drawing_audit",
+   "funcao": "drawing_audit",
+   "resumo": "Scan the drawing for structural errors and repair what it finds.",
+   "titulo": "Audit Drawing",
+   "custo": "mutate",
+   "linha": 1459,
+   "familia": "consulta",
+   "args": []
+  },
+  {
+   "nome": "drawing_close",
+   "funcao": "drawing_close",
+   "resumo": "Close the drawing, saving first unless you say otherwise.",
+   "titulo": "Close Drawing",
+   "custo": "destructive",
+   "linha": 1477,
+   "familia": "plot/arquivo",
+   "args": [
+    "save"
+   ]
+  },
+  {
+   "nome": "drawing_undo",
+   "funcao": "drawing_undo",
+   "resumo": "Step back one operation.",
+   "titulo": "Undo",
+   "custo": "safe",
+   "linha": 1496,
+   "familia": "edicao",
+   "args": []
+  },
+  {
+   "nome": "drawing_redo",
+   "funcao": "drawing_redo",
+   "resumo": "Reapply the operation you just undid.",
+   "titulo": "Redo",
+   "custo": "safe",
+   "linha": 1516,
+   "familia": "edicao",
+   "args": []
+  },
+  {
+   "nome": "entity_create_line",
+   "funcao": "entity_create_line",
+   "resumo": "Draw a straight line between two points.",
+   "titulo": "Create Line",
+   "custo": "mutate",
+   "linha": 1537,
+   "familia": "desenho",
+   "args": [
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "z1",
+    "z2",
+    "layer",
+    "color",
+    "linetype"
+   ]
+  },
+  {
+   "nome": "entity_create_circle",
+   "funcao": "entity_create_circle",
+   "resumo": "Draw a circle: a hole, a bore, a pitch circle.",
+   "titulo": "Create Circle",
+   "custo": "mutate",
+   "linha": 1560,
+   "familia": "desenho",
+   "args": [
+    "cx",
+    "cy",
+    "radius",
+    "layer",
+    "color"
+   ]
+  },
+  {
+   "nome": "entity_create_arc",
+   "funcao": "entity_create_arc",
+   "resumo": "Draw a circular arc from a centre, a radius and two angles.",
+   "titulo": "Create Arc",
+   "custo": "mutate",
+   "linha": 1579,
+   "familia": "desenho",
+   "args": [
+    "cx",
+    "cy",
+    "radius",
+    "start_angle",
+    "end_angle",
+    "layer",
+    "color"
+   ]
+  },
+  {
+   "nome": "entity_create_polyline",
+   "funcao": "entity_create_polyline",
+   "resumo": "Draw a connected outline or closed profile through a list of points.",
+   "titulo": "Create Polyline",
+   "custo": "mutate",
+   "linha": 1605,
+   "familia": "desenho",
+   "args": [
+    "points",
+    "closed",
+    "layer",
+    "color"
+   ]
+  },
+  {
+   "nome": "entity_create_rectangle",
+   "funcao": "entity_create_rectangle",
+   "resumo": "Draw a closed rectangle from two opposite corners.",
+   "titulo": "Create Rectangle",
+   "custo": "mutate",
+   "linha": 1626,
+   "familia": "desenho",
+   "args": [
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "layer",
+    "color"
+   ]
+  },
+  {
+   "nome": "entity_create_text",
+   "funcao": "entity_create_text",
+   "resumo": "Place a single-line text label.",
+   "titulo": "Create Text",
+   "custo": "mutate",
+   "linha": 1650,
+   "familia": "outros",
+   "args": [
+    "text",
+    "x",
+    "y",
+    "height",
+    "rotation",
+    "layer",
+    "color"
+   ]
+  },
+  {
+   "nome": "entity_create_mtext",
+   "funcao": "entity_create_mtext",
+   "resumo": "Place a wrapped paragraph note in a text box of a given width.",
+   "titulo": "Create MText",
+   "custo": "mutate",
+   "linha": 1671,
+   "familia": "texto",
+   "args": [
+    "text",
+    "x",
+    "y",
+    "width",
+    "height",
+    "rotation",
+    "layer",
+    "color"
+   ]
+  },
+  {
+   "nome": "entity_create_table",
+   "funcao": "entity_create_table",
+   "resumo": "Place a parts list, BOM or schedule as a table with headers and rows.",
+   "titulo": "Create Table",
+   "custo": "mutate",
+   "linha": 1700,
+   "familia": "desenho",
+   "args": [
+    "x",
+    "y",
+    "rows",
+    "headers",
+    "column_widths",
+    "row_height",
+    "text_height",
+    "title",
+    "layer"
+   ]
+  },
+  {
+   "nome": "leader_create_mleader",
+   "funcao": "leader_create_mleader",
+   "resumo": "Add a callout: an arrow with a note on the end.",
+   "titulo": "Create Multileader",
+   "custo": "mutate",
+   "linha": 1724,
+   "familia": "cota/anotacao",
+   "args": [
+    "points",
+    "text",
+    "text_height",
+    "landing_gap",
+    "arrow_size",
+    "layer"
+   ]
+  },
+  {
+   "nome": "entity_create_hatch",
+   "funcao": "entity_create_hatch",
+   "resumo": "Fill a closed boundary with a section pattern such as ANSI31 or SOLID.",
+   "titulo": "Create Hatch",
+   "custo": "mutate",
+   "linha": 1748,
+   "familia": "desenho",
+   "args": [
+    "pattern",
+    "boundary_points",
+    "scale",
+    "angle",
+    "layer",
+    "color"
+   ]
+  },
+  {
+   "nome": "entity_create_spline",
+   "funcao": "entity_create_spline",
+   "resumo": "Draw a smooth NURBS curve through fit points.",
+   "titulo": "Create Spline",
+   "custo": "mutate",
+   "linha": 1770,
+   "familia": "desenho",
+   "args": [
+    "fit_points",
+    "layer",
+    "color"
+   ]
+  },
+  {
+   "nome": "entity_create_ellipse",
+   "funcao": "entity_create_ellipse",
+   "resumo": "Draw an ellipse from its centre, major axis vector and axis ratio.",
+   "titulo": "Create Ellipse",
+   "custo": "mutate",
+   "linha": 1790,
+   "familia": "desenho",
+   "args": [
+    "cx",
+    "cy",
+    "major_x",
+    "major_y",
+    "ratio",
+    "layer",
+    "color"
+   ]
+  },
+  {
+   "nome": "entity_create_point",
+   "funcao": "entity_create_point",
+   "resumo": "Place a point marker (node) at a coordinate.",
+   "titulo": "Create Point",
+   "custo": "mutate",
+   "linha": 1817,
+   "familia": "desenho",
+   "args": [
+    "x",
+    "y",
+    "layer",
+    "color"
+   ]
+  },
+  {
+   "nome": "entity_create_block_ref",
+   "funcao": "entity_create_block_ref",
+   "resumo": "Drop an instance of an existing block definition into the drawing.",
+   "titulo": "Insert Block Reference",
+   "custo": "mutate",
+   "linha": 1837,
+   "familia": "bloco",
+   "args": [
+    "name",
+    "x",
+    "y",
+    "scale_x",
+    "scale_y",
+    "rotation",
+    "layer"
+   ]
+  },
+  {
+   "nome": "hatch_set_gradient",
+   "funcao": "hatch_set_gradient",
+   "resumo": "Replace a hatch's fill with a two-colour gradient.",
+   "titulo": "Set Hatch Gradient",
+   "custo": "mutate",
+   "linha": 1867,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "color1",
+    "color2",
+    "rotation",
+    "centered",
+    "one_color",
+    "tint",
+    "name"
+   ]
+  },
+  {
+   "nome": "hatch_edit",
+   "funcao": "hatch_edit",
+   "resumo": "Change a hatch's pattern, scale, angle, colour or island style.",
+   "titulo": "Edit Hatch",
+   "custo": "mutate",
+   "linha": 1891,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "pattern",
+    "scale",
+    "angle",
+    "color",
+    "style"
+   ]
+  },
+  {
+   "nome": "hatch_add_boundary",
+   "funcao": "hatch_add_boundary",
+   "resumo": "Add a boundary path to a hatch, arcs and ellipses included.",
+   "titulo": "Add Hatch Boundary",
+   "custo": "mutate",
+   "linha": 1915,
+   "familia": "consulta",
+   "args": [
+    "handle",
+    "edges"
+   ]
+  },
+  {
+   "nome": "entity_create_wipeout",
+   "funcao": "entity_create_wipeout",
+   "resumo": "Mask whatever is behind a closed polygon on the sheet.",
+   "titulo": "Create Wipeout",
+   "custo": "mutate",
+   "linha": 1943,
+   "familia": "cota/anotacao",
+   "args": [
+    "points",
+    "layer"
+   ]
+  },
+  {
+   "nome": "entity_create_revcloud",
+   "funcao": "entity_create_revcloud",
+   "resumo": "Draw a revision cloud around an area.",
+   "titulo": "Create Revision Cloud",
+   "custo": "mutate",
+   "linha": 1961,
+   "familia": "desenho",
+   "args": [
+    "points",
+    "segment_length",
+    "layer",
+    "closed"
+   ]
+  },
+  {
+   "nome": "dimension_linear",
+   "funcao": "dimension_linear",
+   "resumo": "Dimension a horizontal or vertical size, with an ISO 129 tolerance or ISO 286 fit.",
+   "titulo": "Linear Dimension",
+   "custo": "mutate",
+   "linha": 2023,
+   "familia": "cota/anotacao",
+   "args": [
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "dim_x",
+    "dim_y",
+    "rotation",
+    "layer",
+    "tol_upper",
+    "tol_lower",
+    "tol_mode",
+    "text_override",
+    "fit"
+   ]
+  },
+  {
+   "nome": "dimension_aligned",
+   "funcao": "dimension_aligned",
+   "resumo": "Dimension the true distance between two points, along a slope.",
+   "titulo": "Aligned Dimension",
+   "custo": "mutate",
+   "linha": 2080,
+   "familia": "cota/anotacao",
+   "args": [
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "dim_x",
+    "dim_y",
+    "layer"
+   ]
+  },
+  {
+   "nome": "dimension_angular",
+   "funcao": "dimension_angular",
+   "resumo": "Dimension the included angle between two rays from a vertex.",
+   "titulo": "Angular Dimension",
+   "custo": "mutate",
+   "linha": 2100,
+   "familia": "cota/anotacao",
+   "args": [
+    "vertex_x",
+    "vertex_y",
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "text_x",
+    "text_y",
+    "layer"
+   ]
+  },
+  {
+   "nome": "dimension_radius",
+   "funcao": "dimension_radius",
+   "resumo": "Call out the radius of a circle or arc, optionally toleranced.",
+   "titulo": "Radius Dimension",
+   "custo": "mutate",
+   "linha": 2124,
+   "familia": "cota/anotacao",
+   "args": [
+    "center_x",
+    "center_y",
+    "chord_x",
+    "chord_y",
+    "leader_length",
+    "layer",
+    "tol_upper",
+    "tol_lower",
+    "tol_mode",
+    "text_override",
+    "fit"
+   ]
+  },
+  {
+   "nome": "dimension_diameter",
+   "funcao": "dimension_diameter",
+   "resumo": "Call out a hole or shaft diameter, optionally to a fit such as H7.",
+   "titulo": "Diameter Dimension",
+   "custo": "mutate",
+   "linha": 2177,
+   "familia": "cota/anotacao",
+   "args": [
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "leader_length",
+    "layer",
+    "tol_upper",
+    "tol_lower",
+    "tol_mode",
+    "text_override",
+    "fit"
+   ]
+  },
+  {
+   "nome": "entity_move",
+   "funcao": "entity_move",
+   "resumo": "Shift an entity by a displacement vector.",
+   "titulo": "Move Entity",
+   "custo": "mutate",
+   "linha": 2233,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "dx",
+    "dy",
+    "dz"
+   ]
+  },
+  {
+   "nome": "entity_copy",
+   "funcao": "entity_copy",
+   "resumo": "Duplicate an entity and offset the copy.",
+   "titulo": "Copy Entity",
+   "custo": "mutate",
+   "linha": 2250,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "dx",
+    "dy",
+    "dz"
+   ]
+  },
+  {
+   "nome": "entity_rotate",
+   "funcao": "entity_rotate",
+   "resumo": "Turn an entity about a base point by an angle in degrees.",
+   "titulo": "Rotate Entity",
+   "custo": "mutate",
+   "linha": 2268,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "base_x",
+    "base_y",
+    "angle_deg"
+   ]
+  },
+  {
+   "nome": "entity_scale",
+   "funcao": "entity_scale",
+   "resumo": "Resize an entity uniformly about a base point.",
+   "titulo": "Scale Entity",
+   "custo": "mutate",
+   "linha": 2285,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "base_x",
+    "base_y",
+    "factor"
+   ]
+  },
+  {
+   "nome": "entity_mirror",
+   "funcao": "entity_mirror",
+   "resumo": "Reflect an entity across a mirror line, keeping or dropping the original.",
+   "titulo": "Mirror Entity",
+   "custo": "mutate",
+   "linha": 2304,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "delete_original"
+   ]
+  },
+  {
+   "nome": "entity_offset",
+   "funcao": "entity_offset",
+   "resumo": "Make a parallel copy of a line, circle or polyline at a set distance.",
+   "titulo": "Offset Entity",
+   "custo": "mutate",
+   "linha": 2326,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "distance",
+    "side_x",
+    "side_y"
+   ]
+  },
+  {
+   "nome": "entity_trim",
+   "funcao": "entity_trim",
+   "resumo": "Cut a line back to where another crosses it, keeping the side you point at.",
+   "titulo": "Trim Entity",
+   "custo": "mutate",
+   "linha": 2349,
+   "familia": "edicao",
+   "args": [
+    "target_handle",
+    "cutter_handle",
+    "keep_x",
+    "keep_y"
+   ]
+  },
+  {
+   "nome": "entity_extend",
+   "funcao": "entity_extend",
+   "resumo": "Lengthen a line until it meets a boundary line.",
+   "titulo": "Extend Entity",
+   "custo": "mutate",
+   "linha": 2370,
+   "familia": "edicao",
+   "args": [
+    "target_handle",
+    "boundary_handle",
+    "end_x",
+    "end_y"
+   ]
+  },
+  {
+   "nome": "entity_fillet",
+   "funcao": "entity_fillet",
+   "resumo": "Round a corner between two lines with a tangent arc.",
+   "titulo": "Fillet Two Entities",
+   "custo": "mutate",
+   "linha": 2391,
+   "familia": "edicao",
+   "args": [
+    "handle1",
+    "handle2",
+    "radius",
+    "trim"
+   ]
+  },
+  {
+   "nome": "entity_chamfer",
+   "funcao": "entity_chamfer",
+   "resumo": "Bevel a corner between two lines by two setback distances.",
+   "titulo": "Chamfer Two Entities",
+   "custo": "mutate",
+   "linha": 2413,
+   "familia": "edicao",
+   "args": [
+    "handle1",
+    "handle2",
+    "dist1",
+    "dist2",
+    "trim"
+   ]
+  },
+  {
+   "nome": "entity_delete",
+   "funcao": "entity_delete",
+   "resumo": "Erase one entity by handle.",
+   "titulo": "Delete Entity",
+   "custo": "destructive",
+   "linha": 2436,
+   "familia": "edicao",
+   "args": [
+    "handle"
+   ]
+  },
+  {
+   "nome": "entity_array_rectangular",
+   "funcao": "entity_array_rectangular",
+   "resumo": "Repeat an entity in a grid of rows and columns.",
+   "titulo": "Rectangular Array",
+   "custo": "mutate",
+   "linha": 2450,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "rows",
+    "cols",
+    "row_spacing",
+    "col_spacing",
+    "fields",
+    "compact"
+   ]
+  },
+  {
+   "nome": "entity_array_polar",
+   "funcao": "entity_array_polar",
+   "resumo": "Repeat an entity around a centre: a bolt circle or radial pattern.",
+   "titulo": "Polar Array",
+   "custo": "mutate",
+   "linha": 2491,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "count",
+    "fill_angle",
+    "center_x",
+    "center_y",
+    "fields",
+    "compact"
+   ]
+  },
+  {
+   "nome": "entity_set_properties",
+   "funcao": "entity_set_properties",
+   "resumo": "Change an entity's layer, colour, linetype, lineweight or visibility.",
+   "titulo": "Set Entity Properties",
+   "custo": "mutate",
+   "linha": 2526,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "layer",
+    "color",
+    "linetype",
+    "lineweight",
+    "visible"
+   ]
+  },
+  {
+   "nome": "entity_edit_text",
+   "funcao": "entity_edit_text",
+   "resumo": "Reword a label, or change its height or rotation, keeping its handle.",
+   "titulo": "Edit Text",
+   "custo": "mutate",
+   "linha": 2552,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "text",
+    "height",
+    "rotation"
+   ]
+  },
+  {
+   "nome": "text_set_background",
+   "funcao": "text_set_background",
+   "resumo": "Put an opaque background box behind an MTEXT.",
+   "titulo": "Set Text Background",
+   "custo": "mutate",
+   "linha": 2574,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "enabled",
+    "color",
+    "scale"
+   ]
+  },
+  {
+   "nome": "text_find_replace",
+   "funcao": "text_find_replace",
+   "resumo": "Find and replace text across the drawing.",
+   "titulo": "Find and Replace Text",
+   "custo": "mutate",
+   "linha": 2597,
+   "familia": "selecao",
+   "args": [
+    "find",
+    "replace",
+    "layer",
+    "match_case",
+    "dry_run"
+   ]
+  },
+  {
+   "nome": "entity_edit_geometry",
+   "funcao": "entity_edit_geometry",
+   "resumo": "Change a circle's radius, a line's endpoints or an arc's angles in place.",
+   "titulo": "Edit Geometry",
+   "custo": "mutate",
+   "linha": 2627,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "cx",
+    "cy",
+    "radius",
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "start_angle",
+    "end_angle"
+   ]
+  },
+  {
+   "nome": "selection_window",
+   "funcao": "selection_window",
+   "resumo": "Select entities inside or crossing a rectangle.",
+   "titulo": "Select by Window",
+   "custo": "read",
+   "linha": 2671,
+   "familia": "arquitetura",
+   "args": [
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "mode",
+    "entity_type",
+    "layer"
+   ]
+  },
+  {
+   "nome": "selection_polygon",
+   "funcao": "selection_polygon",
+   "resumo": "Select entities inside or crossing an arbitrary polygon.",
+   "titulo": "Select by Polygon",
+   "custo": "read",
+   "linha": 2702,
+   "familia": "selecao",
+   "args": [
+    "points",
+    "mode",
+    "entity_type",
+    "layer"
+   ]
+  },
+  {
+   "nome": "selection_filter",
+   "funcao": "selection_filter",
+   "resumo": "Select entities by layer, type, colour, linetype or minimum area.",
+   "titulo": "Select by Properties",
+   "custo": "read",
+   "linha": 2721,
+   "familia": "selecao",
+   "args": [
+    "entity_type",
+    "layer",
+    "color",
+    "linetype",
+    "min_area"
+   ]
+  },
+  {
+   "nome": "entity_get",
+   "funcao": "entity_get",
+   "resumo": "Inspect one entity by handle: type, layer, colour and geometry.",
+   "titulo": "Get Entity",
+   "custo": "read",
+   "linha": 2744,
+   "familia": "consulta",
+   "args": [
+    "handle"
+   ]
+  },
+  {
+   "nome": "entity_list",
+   "funcao": "entity_list",
+   "resumo": "Browse the drawing's entities and their handles, filtered by type or layer.",
+   "titulo": "List Entities",
+   "custo": "read",
+   "linha": 2761,
+   "familia": "consulta",
+   "args": [
+    "type_filter",
+    "layer_filter",
+    "limit",
+    "offset",
+    "fields",
+    "compact"
+   ]
+  },
+  {
+   "nome": "entity_delete_many",
+   "funcao": "entity_delete_many",
+   "resumo": "Erase a whole list of entities in one call.",
+   "titulo": "Delete Multiple Entities",
+   "custo": "destructive",
+   "linha": 2830,
+   "familia": "edicao",
+   "args": [
+    "handles"
+   ]
+  },
+  {
+   "nome": "selection_get",
+   "funcao": "selection_get",
+   "resumo": "Read what the user already picked in the AutoCAD viewport (COM backend).",
+   "titulo": "Get Viewport Selection",
+   "custo": "read",
+   "linha": 2858,
+   "familia": "consulta",
+   "args": [
+    "fields",
+    "compact"
+   ]
+  },
+  {
+   "nome": "entity_get_xdata",
+   "funcao": "entity_get_xdata",
+   "resumo": "Read an entity's extended data (XDATA) by application name.",
+   "titulo": "Get Entity XDATA",
+   "custo": "read",
+   "linha": 2912,
+   "familia": "consulta",
+   "args": [
+    "handle",
+    "app_name"
+   ]
+  },
+  {
+   "nome": "entity_set_xdata",
+   "funcao": "entity_set_xdata",
+   "resumo": "Attach or replace extended data (XDATA) on an entity.",
+   "titulo": "Set Entity XDATA",
+   "custo": "safe",
+   "linha": 2926,
+   "familia": "edicao",
+   "args": [
+    "handle",
+    "app_name",
+    "values"
+   ]
+  },
+  {
+   "nome": "layer_list",
+   "funcao": "layer_list",
+   "resumo": "List every layer with its colour, linetype and visibility state.",
+   "titulo": "List Layers",
+   "custo": "read",
+   "linha": 2953,
+   "familia": "camada/estilo",
+   "args": [
+    "fields",
+    "compact"
+   ]
+  },
+  {
+   "nome": "layer_create",
+   "funcao": "layer_create",
+   "resumo": "Add a layer with a colour, linetype and lineweight.",
+   "titulo": "Create Layer",
+   "custo": "mutate",
+   "linha": 2979,
+   "familia": "camada/estilo",
+   "args": [
+    "name",
+    "color",
+    "linetype",
+    "lineweight"
+   ]
+  },
+  {
+   "nome": "layer_delete",
+   "funcao": "layer_delete",
+   "resumo": "Remove an empty layer from the drawing.",
+   "titulo": "Delete Layer",
+   "custo": "destructive",
+   "linha": 2999,
+   "familia": "camada/estilo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "layer_set_current",
+   "funcao": "layer_set_current",
+   "resumo": "Choose the layer that new geometry lands on.",
+   "titulo": "Set Current Layer",
+   "custo": "safe",
+   "linha": 3013,
+   "familia": "camada/estilo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "layer_modify",
+   "funcao": "layer_modify",
+   "resumo": "Change an existing layer's colour, linetype or lineweight.",
+   "titulo": "Modify Layer",
+   "custo": "mutate",
+   "linha": 3027,
+   "familia": "camada/estilo",
+   "args": [
+    "name",
+    "color",
+    "linetype",
+    "lineweight"
+   ]
+  },
+  {
+   "nome": "layer_freeze",
+   "funcao": "layer_freeze",
+   "resumo": "Freeze a layer so it stops drawing and regenerating.",
+   "titulo": "Freeze Layer",
+   "custo": "safe",
+   "linha": 3041,
+   "familia": "camada/estilo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "layer_thaw",
+   "funcao": "layer_thaw",
+   "resumo": "Bring a frozen layer back into view.",
+   "titulo": "Thaw Layer",
+   "custo": "safe",
+   "linha": 3051,
+   "familia": "camada/estilo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "layer_lock",
+   "funcao": "layer_lock",
+   "resumo": "Lock a layer so its entities can be seen but not edited.",
+   "titulo": "Lock Layer",
+   "custo": "safe",
+   "linha": 3061,
+   "familia": "camada/estilo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "layer_unlock",
+   "funcao": "layer_unlock",
+   "resumo": "Unlock a layer so its entities can be edited again.",
+   "titulo": "Unlock Layer",
+   "custo": "safe",
+   "linha": 3071,
+   "familia": "camada/estilo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "layer_hide",
+   "funcao": "layer_hide",
+   "resumo": "Turn a layer off so its entities stop showing.",
+   "titulo": "Hide Layer",
+   "custo": "safe",
+   "linha": 3081,
+   "familia": "camada/estilo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "layer_show",
+   "funcao": "layer_show",
+   "resumo": "Turn a layer that was switched off back on.",
+   "titulo": "Show Layer",
+   "custo": "safe",
+   "linha": 3091,
+   "familia": "camada/estilo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "layer_isolate",
+   "funcao": "layer_isolate",
+   "resumo": "Hide every layer except one, to work on it alone.",
+   "titulo": "Isolate Layer",
+   "custo": "safe",
+   "linha": 3104,
+   "familia": "camada/estilo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "linetype_list",
+   "funcao": "linetype_list",
+   "resumo": "List the dash patterns currently loaded in the drawing.",
+   "titulo": "List Loaded Linetypes",
+   "custo": "read",
+   "linha": 3125,
+   "familia": "camada/estilo",
+   "args": []
+  },
+  {
+   "nome": "linetype_load",
+   "funcao": "linetype_load",
+   "resumo": "Load a linetype such as CENTER or HIDDEN, without the FILEDIA dialog trap.",
+   "titulo": "Load Linetype",
+   "custo": "mutate",
+   "linha": 3138,
+   "familia": "camada/estilo",
+   "args": [
+    "name",
+    "file"
+   ]
+  },
+  {
+   "nome": "block_list",
+   "funcao": "block_list",
+   "resumo": "List the block definitions the drawing already carries.",
+   "titulo": "List Blocks",
+   "custo": "read",
+   "linha": 3171,
+   "familia": "bloco",
+   "args": [
+    "fields",
+    "compact"
+   ]
+  },
+  {
+   "nome": "block_insert",
+   "funcao": "block_insert",
+   "resumo": "Place a block, filling in its attribute values as you go.",
+   "titulo": "Insert Block",
+   "custo": "mutate",
+   "linha": 3197,
+   "familia": "bloco",
+   "args": [
+    "name",
+    "x",
+    "y",
+    "scale_x",
+    "scale_y",
+    "rotation",
+    "attributes",
+    "layer"
+   ]
+  },
+  {
+   "nome": "block_explode",
+   "funcao": "block_explode",
+   "resumo": "Break a block reference apart into its component entities.",
+   "titulo": "Explode Block",
+   "custo": "destructive",
+   "linha": 3229,
+   "familia": "bloco",
+   "args": [
+    "handle"
+   ]
+  },
+  {
+   "nome": "block_get_attributes",
+   "funcao": "block_get_attributes",
+   "resumo": "Read the tag/value pairs off a block reference.",
+   "titulo": "Get Block Attributes",
+   "custo": "read",
+   "linha": 3263,
+   "familia": "bloco",
+   "args": [
+    "handle"
+   ]
+  },
+  {
+   "nome": "block_set_attributes",
+   "funcao": "block_set_attributes",
+   "resumo": "Fill in a block reference's attributes, such as title-block fields.",
+   "titulo": "Set Block Attributes",
+   "custo": "mutate",
+   "linha": 3283,
+   "familia": "bloco",
+   "args": [
+    "handle",
+    "attributes"
+   ]
+  },
+  {
+   "nome": "block_create_from_entities",
+   "funcao": "block_create_from_entities",
+   "resumo": "Turn existing entities into a reusable block definition.",
+   "titulo": "Create Block From Entities",
+   "custo": "mutate",
+   "linha": 3310,
+   "familia": "bloco",
+   "args": [
+    "name",
+    "handles",
+    "base_x",
+    "base_y"
+   ]
+  },
+  {
+   "nome": "block_define",
+   "funcao": "block_define",
+   "resumo": "Define a block from typed primitives and attribute definitions, on both engines.",
+   "titulo": "Define Block",
+   "custo": "mutate",
+   "linha": 3340,
+   "familia": "bloco",
+   "args": [
+    "name",
+    "entities",
+    "attdefs",
+    "base_x",
+    "base_y",
+    "overwrite",
+    "create_layers"
+   ]
+  },
+  {
+   "nome": "block_find_references",
+   "funcao": "block_find_references",
+   "resumo": "Find every place a given block is inserted.",
+   "titulo": "Find Blocks By Name",
+   "custo": "read",
+   "linha": 3388,
+   "familia": "bloco",
+   "args": [
+    "name",
+    "fields",
+    "compact"
+   ]
+  },
+  {
+   "nome": "boundary_trace",
+   "funcao": "boundary_trace",
+   "resumo": "Trace the closed boundary around a point, like BOUNDARY.",
+   "titulo": "Trace Boundary",
+   "custo": "mutate",
+   "linha": 3423,
+   "familia": "consulta",
+   "args": [
+    "x",
+    "y",
+    "layer",
+    "tolerance"
+   ]
+  },
+  {
+   "nome": "boundary_from_entities",
+   "funcao": "boundary_from_entities",
+   "resumo": "Join named entities into one closed boundary polyline.",
+   "titulo": "Boundary from Entities",
+   "custo": "mutate",
+   "linha": 3447,
+   "familia": "consulta",
+   "args": [
+    "handles",
+    "tolerance"
+   ]
+  },
+  {
+   "nome": "analysis_list_properties",
+   "funcao": "analysis_list_properties",
+   "resumo": "Dump every DXF property of one entity, like LIST.",
+   "titulo": "List Entity Properties",
+   "custo": "read",
+   "linha": 3466,
+   "familia": "consulta",
+   "args": [
+    "handle"
+   ]
+  },
+  {
+   "nome": "analysis_entity_stats",
+   "funcao": "analysis_entity_stats",
+   "resumo": "Count the drawing's objects, broken down by type and by layer.",
+   "titulo": "Entity Statistics",
+   "custo": "read",
+   "linha": 3484,
+   "familia": "consulta",
+   "args": []
+  },
+  {
+   "nome": "analysis_find_in_region",
+   "funcao": "analysis_find_in_region",
+   "resumo": "List everything that falls inside a rectangular window.",
+   "titulo": "Find Entities in Region",
+   "custo": "read",
+   "linha": 3499,
+   "familia": "3D/solido",
+   "args": [
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "fields",
+    "compact"
+   ]
+  },
+  {
+   "nome": "analysis_measure_distance",
+   "funcao": "analysis_measure_distance",
+   "resumo": "Measure the gap between two points: distance, dx/dy and angle.",
+   "titulo": "Measure Distance",
+   "custo": "read",
+   "linha": 3530,
+   "familia": "consulta",
+   "args": [
+    "x1",
+    "y1",
+    "x2",
+    "y2"
+   ]
+  },
+  {
+   "nome": "analysis_measure_area",
+   "funcao": "analysis_measure_area",
+   "resumo": "Measure a polygon's area and perimeter from its vertices.",
+   "titulo": "Measure Area",
+   "custo": "read",
+   "linha": 3555,
+   "familia": "consulta",
+   "args": [
+    "points"
+   ]
+  },
+  {
+   "nome": "analysis_measure_entity",
+   "funcao": "analysis_measure_entity",
+   "resumo": "Area and perimeter of an existing entity, by handle.",
+   "titulo": "Measure Entity",
+   "custo": "read",
+   "linha": 3601,
+   "familia": "consulta",
+   "args": [
+    "handle",
+    "flatten_tolerance"
+   ]
+  },
+  {
+   "nome": "analysis_bounding_box",
+   "funcao": "analysis_bounding_box",
+   "resumo": "Get the overall extents of everything drawn.",
+   "titulo": "Drawing Bounding Box",
+   "custo": "read",
+   "linha": 3635,
+   "familia": "consulta",
+   "args": []
+  },
+  {
+   "nome": "analysis_select_by_layer",
+   "funcao": "analysis_select_by_layer",
+   "resumo": "Grab the handles of everything sitting on one layer.",
+   "titulo": "Select Entities By Layer",
+   "custo": "read",
+   "linha": 3645,
+   "familia": "camada/estilo",
+   "args": [
+    "layer_name",
+    "fields",
+    "compact"
+   ]
+  },
+  {
+   "nome": "analysis_select_by_type",
+   "funcao": "analysis_select_by_type",
+   "resumo": "Grab the handles of every entity of one type: all the circles, all the lines.",
+   "titulo": "Select Entities By Type",
+   "custo": "read",
+   "linha": 3683,
+   "familia": "consulta",
+   "args": [
+    "entity_type",
+    "fields",
+    "compact"
+   ]
+  },
+  {
+   "nome": "analysis_layer_stats",
+   "funcao": "analysis_layer_stats",
+   "resumo": "Report how many entities, and which types, sit on each layer.",
+   "titulo": "Layer Statistics",
+   "custo": "read",
+   "linha": 3719,
+   "familia": "camada/estilo",
+   "args": []
+  },
+  {
+   "nome": "cad_batch",
+   "funcao": "cad_batch",
+   "resumo": "Run an ordered list of tool calls in one round trip, binding results between steps.",
+   "titulo": "Batch: Run Tools",
+   "custo": "destructive",
+   "linha": 4325,
+   "familia": "sistema",
+   "args": [
+    "steps",
+    "on_error",
+    "dry_run",
+    "verbose"
+   ]
+  },
+  {
+   "nome": "entity_batch_create",
+   "funcao": "entity_batch_create",
+   "resumo": "Draw many entities in one call instead of one round trip each.",
+   "titulo": "Batch Create Entities",
+   "custo": "mutate",
+   "linha": 4722,
+   "familia": "sistema",
+   "args": [
+    "entities"
+   ]
+  },
+  {
+   "nome": "entity_batch_modify",
+   "funcao": "entity_batch_modify",
+   "resumo": "Move, rotate, scale, restyle or delete many entities in one call.",
+   "titulo": "Batch Modify Entities",
+   "custo": "destructive",
+   "linha": 4785,
+   "familia": "sistema",
+   "args": [
+    "operations"
+   ]
+  },
+  {
+   "nome": "template_apply_layers",
+   "funcao": "template_apply_layers",
+   "resumo": "Create a standard layer set: architectural, mechanical, electrical or piping.",
+   "titulo": "Apply Layer Template",
+   "custo": "mutate",
+   "linha": 4900,
+   "familia": "camada/estilo",
+   "args": [
+    "template"
+   ]
+  },
+  {
+   "nome": "template_list",
+   "funcao": "template_list",
+   "resumo": "Show the available layer templates and the layers in each.",
+   "titulo": "List Available Templates",
+   "custo": "read",
+   "linha": 4936,
+   "familia": "consulta",
+   "args": []
+  },
+  {
+   "nome": "validation_check",
+   "funcao": "validation_check",
+   "resumo": "Sanity-check the drawing for empty layers, zero-length lines and duplicates.",
+   "titulo": "Validate Drawing",
+   "custo": "read",
+   "linha": 4960,
+   "familia": "outros",
+   "args": [
+    "checks"
+   ]
+  },
+  {
+   "nome": "view_zoom_extents",
+   "funcao": "view_zoom_extents",
+   "resumo": "Zoom out until every entity fits on screen.",
+   "titulo": "Zoom Extents",
+   "custo": "safe",
+   "linha": 5033,
+   "familia": "consulta",
+   "args": []
+  },
+  {
+   "nome": "view_zoom_window",
+   "funcao": "view_zoom_window",
+   "resumo": "Zoom in on a rectangular region of the drawing.",
+   "titulo": "Zoom Window",
+   "custo": "safe",
+   "linha": 5043,
+   "familia": "arquitetura",
+   "args": [
+    "x1",
+    "y1",
+    "x2",
+    "y2"
+   ]
+  },
+  {
+   "nome": "view_screenshot",
+   "funcao": "view_screenshot",
+   "resumo": "Capture a PNG picture of the drawing as it currently looks.",
+   "titulo": "Screenshot",
+   "custo": "read",
+   "linha": 5059,
+   "familia": "visualizacao",
+   "args": [
+    "overlay_handles"
+   ]
+  },
+  {
+   "nome": "view_zoom_and_screenshot",
+   "funcao": "view_zoom_and_screenshot",
+   "resumo": "Fit the drawing on screen, then capture it: the quickest visual check.",
+   "titulo": "Zoom and Screenshot",
+   "custo": "read",
+   "linha": 5109,
+   "familia": "visualizacao",
+   "args": [
+    "x1",
+    "y1",
+    "x2",
+    "y2"
+   ]
+  },
+  {
+   "nome": "transaction_begin",
+   "funcao": "transaction_begin",
+   "resumo": "Open a rollback checkpoint before a risky edit.",
+   "titulo": "Begin Transaction",
+   "custo": "mutate",
+   "linha": 5151,
+   "familia": "edicao",
+   "args": []
+  },
+  {
+   "nome": "transaction_commit",
+   "funcao": "transaction_commit",
+   "resumo": "Keep the changes and drop the checkpoint.",
+   "titulo": "Commit Transaction",
+   "custo": "safe",
+   "linha": 5171,
+   "familia": "edicao",
+   "args": []
+  },
+  {
+   "nome": "transaction_rollback",
+   "funcao": "transaction_rollback",
+   "resumo": "Throw away every change made since transaction_begin.",
+   "titulo": "Rollback Transaction",
+   "custo": "destructive",
+   "linha": 5189,
+   "familia": "edicao",
+   "args": []
+  },
+  {
+   "nome": "system_status",
+   "funcao": "system_status",
+   "resumo": "Check the connection: which engine is live and what document is open.",
+   "titulo": "Server Status",
+   "custo": "read",
+   "linha": 5215,
+   "familia": "sistema",
+   "args": []
+  },
+  {
+   "nome": "system_capabilities",
+   "funcao": "system_capabilities",
+   "resumo": "Ask the active backend which features it really supports.",
+   "titulo": "Backend Capabilities",
+   "custo": "read",
+   "linha": 5254,
+   "familia": "sistema",
+   "args": []
+  },
+  {
+   "nome": "system_get_variable",
+   "funcao": "system_get_variable",
+   "resumo": "Read one AutoCAD system variable, such as DIMSCALE or LTSCALE.",
+   "titulo": "Get System Variable",
+   "custo": "read",
+   "linha": 5264,
+   "familia": "sistema",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "system_set_variable",
+   "funcao": "system_set_variable",
+   "resumo": "Set one AutoCAD system variable by name.",
+   "titulo": "Set System Variable",
+   "custo": "safe",
+   "linha": 5280,
+   "familia": "sistema",
+   "args": [
+    "name",
+    "value"
+   ]
+  },
+  {
+   "nome": "drawing_settings",
+   "funcao": "drawing_settings",
+   "resumo": "Read or change drawing units, precision, linetype and dimension scale by name.",
+   "titulo": "Drawing Settings (read / change)",
+   "custo": "safe",
+   "linha": 5316,
+   "familia": "desenho",
+   "args": [
+    "settings"
+   ]
+  },
+  {
+   "nome": "system_run_command",
+   "funcao": "system_run_command",
+   "resumo": "Send a raw command string to the AutoCAD command line (COM only).",
+   "titulo": "Run AutoCAD Command",
+   "custo": "escape",
+   "linha": 5380,
+   "familia": "sistema",
+   "args": [
+    "command"
+   ]
+  },
+  {
+   "nome": "system_run_lisp",
+   "funcao": "system_run_lisp",
+   "resumo": "Evaluate an AutoLISP expression inside AutoCAD (COM only).",
+   "titulo": "Execute AutoLISP",
+   "custo": "escape",
+   "linha": 5409,
+   "familia": "sistema",
+   "args": [
+    "expression"
+   ]
+  },
+  {
+   "nome": "system_about",
+   "funcao": "system_about",
+   "resumo": "See what this server can do: version, tool groups and active profile.",
+   "titulo": "Backend Info",
+   "custo": "read",
+   "linha": 5435,
+   "familia": "sistema",
+   "args": []
+  },
+  {
+   "nome": "gear_draw_helical_front_view",
+   "funcao": "gear_draw_helical_front_view",
+   "resumo": "Draw a helical gear front view: true involute teeth, circles, bore and keyway.",
+   "titulo": "Gear: Helical Front View",
+   "custo": "mutate",
+   "linha": 5485,
+   "familia": "mecanica",
+   "args": [
+    "module",
+    "teeth",
+    "helix_angle",
+    "pressure_angle",
+    "hand",
+    "center_x",
+    "center_y",
+    "bore_diameter",
+    "keyway_width",
+    "keyway_depth"
+   ]
+  },
+  {
+   "nome": "gear_draw_spur_front_view",
+   "funcao": "gear_draw_spur_front_view",
+   "resumo": "Draw a straight-tooth spur gear front view with true involute teeth.",
+   "titulo": "Gear: Spur Front View",
+   "custo": "mutate",
+   "linha": 5549,
+   "familia": "mecanica",
+   "args": [
+    "module",
+    "teeth",
+    "pressure_angle",
+    "center_x",
+    "center_y",
+    "bore_diameter",
+    "keyway_width",
+    "keyway_depth"
+   ]
+  },
+  {
+   "nome": "gear_draw_section_aa",
+   "funcao": "gear_draw_section_aa",
+   "resumo": "Draw the hatched side cross-section A-A of a gear you already drew.",
+   "titulo": "Gear: Section A-A View",
+   "custo": "mutate",
+   "linha": 5585,
+   "familia": "mecanica",
+   "args": [
+    "gear_metadata",
+    "x_offset",
+    "face_width"
+   ]
+  },
+  {
+   "nome": "keyway_draw_keyed_bore",
+   "funcao": "keyway_draw_keyed_bore",
+   "resumo": "Draw a bore with a DIN 6885 keyway, auto-sized from the bore diameter.",
+   "titulo": "Keyway: Keyed Bore (front view)",
+   "custo": "mutate",
+   "linha": 5619,
+   "familia": "desenho",
+   "args": [
+    "center_x",
+    "center_y",
+    "bore_diameter",
+    "keyway_width",
+    "keyway_depth",
+    "layer"
+   ]
+  },
+  {
+   "nome": "keyway_draw_section",
+   "funcao": "keyway_draw_section",
+   "resumo": "Draw the side cross-section of a keyed bore.",
+   "titulo": "Keyway: Side Section",
+   "custo": "mutate",
+   "linha": 5647,
+   "familia": "desenho",
+   "args": [
+    "center_x",
+    "center_y",
+    "bore_diameter",
+    "face_width",
+    "keyway_width",
+    "keyway_depth"
+   ]
+  },
+  {
+   "nome": "titleblock_apply_iso_a3",
+   "funcao": "titleblock_apply_iso_a3",
+   "resumo": "Stamp an ISO 7200 title block and sheet frame onto an A3 drawing.",
+   "titulo": "TitleBlock: ISO A3",
+   "custo": "mutate",
+   "linha": 5678,
+   "familia": "plot/arquivo",
+   "args": [
+    "title",
+    "drawing_no",
+    "part_no",
+    "material",
+    "scale",
+    "units",
+    "drawn_by",
+    "checked_by",
+    "date",
+    "sheet",
+    "revision",
+    "company",
+    "origin_x",
+    "origin_y",
+    "layout"
+   ]
+  },
+  {
+   "nome": "drawing_finalize",
+   "funcao": "drawing_finalize",
+   "resumo": "Finish the drawing: validate, critique, save, screenshot and score it.",
+   "titulo": "Drawing: Finalize (validate + save + screenshot)",
+   "custo": "destructive",
+   "linha": 5743,
+   "familia": "desenho",
+   "args": [
+    "save_path",
+    "screenshot_path",
+    "expected",
+    "strict_critique"
+   ]
+  },
+  {
+   "nome": "drawing_deliver",
+   "funcao": "drawing_deliver",
+   "resumo": "Hand the drawing off: a hashed, validated bundle of files plus a manifest.",
+   "titulo": "Drawing: Deliver Auditable Bundle",
+   "custo": "destructive",
+   "linha": 5870,
+   "familia": "desenho",
+   "args": [
+    "output_dir",
+    "formats",
+    "min_score",
+    "strict_critique",
+    "expected"
+   ]
+  },
+  {
+   "nome": "drawing_preflight",
+   "funcao": "drawing_preflight",
+   "resumo": "Check the brief before you draw: units, part type, tolerances, missing inputs.",
+   "titulo": "Drawing: Preflight",
+   "custo": "read",
+   "linha": 5928,
+   "familia": "desenho",
+   "args": [
+    "intent",
+    "requirements",
+    "sheet_size",
+    "scale",
+    "layer_set_id",
+    "view_count",
+    "dim_style",
+    "allow_assumptions"
+   ]
+  },
+  {
+   "nome": "drawing_plan",
+   "funcao": "drawing_plan",
+   "resumo": "Commit sheet size, scale, layer set and dimension style before any geometry.",
+   "titulo": "Drawing: Plan (commit intent before drawing)",
+   "custo": "safe",
+   "linha": 5970,
+   "familia": "desenho",
+   "args": [
+    "intent",
+    "sheet_size",
+    "scale",
+    "layer_set_id",
+    "view_count",
+    "dim_style",
+    "notes",
+    "requirements",
+    "spec_hash"
+   ]
+  },
+  {
+   "nome": "drawing_critique",
+   "funcao": "drawing_critique",
+   "resumo": "Review the drawing for drafting mistakes: must come back empty before finalize.",
+   "titulo": "Drawing: Critique (premium quality checks)",
+   "custo": "read",
+   "linha": 6032,
+   "familia": "desenho",
+   "args": [
+    "focus"
+   ]
+  },
+  {
+   "nome": "drawing_refine",
+   "funcao": "drawing_refine",
+   "resumo": "Auto-repair what the critique found, then re-check, up to three rounds.",
+   "titulo": "Drawing: Refine",
+   "custo": "destructive",
+   "linha": 6070,
+   "familia": "desenho",
+   "args": [
+    "max_rounds",
+    "min_score",
+    "focus",
+    "allowed_repairs",
+    "dry_run"
+   ]
+  },
+  {
+   "nome": "point_from_snap",
+   "funcao": "point_from_snap",
+   "resumo": "Get an exact endpoint, midpoint, centre, quadrant or perpendicular foot.",
+   "titulo": "Point: Snap (deterministic OSNAP)",
+   "custo": "read",
+   "linha": 6102,
+   "familia": "desenho",
+   "args": [
+    "handle",
+    "snap",
+    "ref_x",
+    "ref_y"
+   ]
+  },
+  {
+   "nome": "point_intersection",
+   "funcao": "point_intersection",
+   "resumo": "Find where two lines or circles cross, exactly.",
+   "titulo": "Point: Intersection (deterministic)",
+   "custo": "read",
+   "linha": 6123,
+   "familia": "3D/solido",
+   "args": [
+    "handle1",
+    "handle2",
+    "ref_x",
+    "ref_y"
+   ]
+  },
+  {
+   "nome": "point_tangent",
+   "funcao": "point_tangent",
+   "resumo": "Find where a line from an outside point touches a circle.",
+   "titulo": "Point: Tangent from external point",
+   "custo": "read",
+   "linha": 6145,
+   "familia": "desenho",
+   "args": [
+    "circle_handle",
+    "from_x",
+    "from_y",
+    "ref_x",
+    "ref_y"
+   ]
+  },
+  {
+   "nome": "construction_xline",
+   "funcao": "construction_xline",
+   "resumo": "Lay down an infinite guide line to build geometry against.",
+   "titulo": "Construction: XLine (infinite reference)",
+   "custo": "mutate",
+   "linha": 6167,
+   "familia": "desenho",
+   "args": [
+    "x",
+    "y",
+    "angle_deg",
+    "layer"
+   ]
+  },
+  {
+   "nome": "construction_clear",
+   "funcao": "construction_clear",
+   "resumo": "Wipe the construction scaffolding off the drawing before finalize.",
+   "titulo": "Construction: Clear (delete scaffold)",
+   "custo": "destructive",
+   "linha": 6189,
+   "familia": "edicao",
+   "args": [
+    "layer"
+   ]
+  },
+  {
+   "nome": "drawing_apply_iso_layers",
+   "funcao": "drawing_apply_iso_layers",
+   "resumo": "Set up a standard ISO layer set with the right colours and lineweights.",
+   "titulo": "Drawing: Apply ISO Layer Set (bootstrap)",
+   "custo": "mutate",
+   "linha": 6207,
+   "familia": "camada/estilo",
+   "args": [
+    "standard"
+   ]
+  },
+  {
+   "nome": "dimension_auto",
+   "funcao": "dimension_auto",
+   "resumo": "Dimension a set of entities at once, as a chain, baseline or ordinate run.",
+   "titulo": "Dimension: Auto (chain / baseline / ordinate)",
+   "custo": "mutate",
+   "linha": 6240,
+   "familia": "cota/anotacao",
+   "args": [
+    "handles",
+    "style",
+    "offset"
+   ]
+  },
+  {
+   "nome": "entity_select_smart",
+   "funcao": "entity_select_smart",
+   "resumo": "Pick every entity matching a description: type, layer, colour, length, location.",
+   "titulo": "Entity: Smart Select (semantic predicate)",
+   "custo": "read",
+   "linha": 6265,
+   "familia": "selecao",
+   "args": [
+    "predicate",
+    "fields",
+    "compact"
+   ]
+  },
+  {
+   "nome": "gd_frame",
+   "funcao": "gd_frame",
+   "resumo": "Draw an ISO 1101 feature control frame: symbol, tolerance zone and datums.",
+   "titulo": "GD&T: Feature Control Frame (ISO 1101)",
+   "custo": "mutate",
+   "linha": 6312,
+   "familia": "mecanica",
+   "args": [
+    "symbol",
+    "tolerance",
+    "x",
+    "y",
+    "datums",
+    "height",
+    "diameter",
+    "modifier",
+    "layer"
+   ]
+  },
+  {
+   "nome": "datum_feature",
+   "funcao": "datum_feature",
+   "resumo": "Mark a datum on a feature: filled triangle plus the boxed datum letter.",
+   "titulo": "GD&T: Datum Feature (ISO 1101)",
+   "custo": "mutate",
+   "linha": 6375,
+   "familia": "mecanica",
+   "args": [
+    "letter",
+    "x",
+    "y",
+    "size",
+    "layer"
+   ]
+  },
+  {
+   "nome": "layout_list",
+   "funcao": "layout_list",
+   "resumo": "List the sheet tabs: Model plus every paper-space layout.",
+   "titulo": "List Layouts",
+   "custo": "read",
+   "linha": 6401,
+   "familia": "plot/arquivo",
+   "args": []
+  },
+  {
+   "nome": "layout_create",
+   "funcao": "layout_create",
+   "resumo": "Add a new paper-space sheet tab to the drawing.",
+   "titulo": "Create Layout",
+   "custo": "mutate",
+   "linha": 6411,
+   "familia": "plot/arquivo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "layout_set_current",
+   "funcao": "layout_set_current",
+   "resumo": "Switch to a sheet tab, or back to model space.",
+   "titulo": "Set Current Layout",
+   "custo": "safe",
+   "linha": 6425,
+   "familia": "plot/arquivo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "viewport_create",
+   "funcao": "viewport_create",
+   "resumo": "Put a scaled window onto model space on a sheet, at 1:1, 1:2 and so on.",
+   "titulo": "Create Viewport",
+   "custo": "mutate",
+   "linha": 6441,
+   "familia": "plot/arquivo",
+   "args": [
+    "layout",
+    "center_x",
+    "center_y",
+    "width",
+    "height",
+    "view_center_x",
+    "view_center_y",
+    "scale"
+   ]
+  },
+  {
+   "nome": "layout_delete",
+   "funcao": "layout_delete",
+   "resumo": "Delete a sheet tab and everything drawn on it.",
+   "titulo": "Delete Layout",
+   "custo": "destructive",
+   "linha": 6471,
+   "familia": "plot/arquivo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "layout_rename",
+   "funcao": "layout_rename",
+   "resumo": "Rename a sheet tab, keeping its geometry and handles.",
+   "titulo": "Rename Layout",
+   "custo": "mutate",
+   "linha": 6490,
+   "familia": "plot/arquivo",
+   "args": [
+    "old_name",
+    "new_name"
+   ]
+  },
+  {
+   "nome": "layout_copy",
+   "funcao": "layout_copy",
+   "resumo": "Duplicate a sheet with its page setup and geometry.",
+   "titulo": "Copy Layout",
+   "custo": "mutate",
+   "linha": 6504,
+   "familia": "plot/arquivo",
+   "args": [
+    "source",
+    "new_name"
+   ]
+  },
+  {
+   "nome": "viewport_list",
+   "funcao": "viewport_list",
+   "resumo": "List the viewports on a sheet with their scales and locks.",
+   "titulo": "List Viewports",
+   "custo": "read",
+   "linha": 6525,
+   "familia": "plot/arquivo",
+   "args": [
+    "layout"
+   ]
+  },
+  {
+   "nome": "viewport_set_scale",
+   "funcao": "viewport_set_scale",
+   "resumo": "Set a viewport's scale, e.g. 1:2 or 1:50.",
+   "titulo": "Set Viewport Scale",
+   "custo": "mutate",
+   "linha": 6547,
+   "familia": "plot/arquivo",
+   "args": [
+    "handle",
+    "scale"
+   ]
+  },
+  {
+   "nome": "viewport_lock",
+   "funcao": "viewport_lock",
+   "resumo": "Lock a viewport so its scale cannot be zoomed away.",
+   "titulo": "Lock Viewport",
+   "custo": "safe",
+   "linha": 6569,
+   "familia": "plot/arquivo",
+   "args": [
+    "handle",
+    "locked"
+   ]
+  },
+  {
+   "nome": "viewport_delete",
+   "funcao": "viewport_delete",
+   "resumo": "Remove a viewport from a sheet.",
+   "titulo": "Delete Viewport",
+   "custo": "destructive",
+   "linha": 6583,
+   "familia": "plot/arquivo",
+   "args": [
+    "handle",
+    "force"
+   ]
+  },
+  {
+   "nome": "entity_change_space",
+   "funcao": "entity_change_space",
+   "resumo": "Move entities between model space and a sheet through a viewport.",
+   "titulo": "Change Space",
+   "custo": "mutate",
+   "linha": 6605,
+   "familia": "edicao",
+   "args": [
+    "handles",
+    "viewport_handle",
+    "direction",
+    "freeze_dimensions"
+   ]
+  },
+  {
+   "nome": "solid_box",
+   "funcao": "solid_box",
+   "resumo": "Create a 3D solid box (live AutoCAD, opt-in via ENABLE_3D).",
+   "titulo": "Solid: Box",
+   "custo": "mutate",
+   "linha": 6657,
+   "familia": "3D/solido",
+   "args": [
+    "cx",
+    "cy",
+    "cz",
+    "length",
+    "width",
+    "height"
+   ]
+  },
+  {
+   "nome": "solid_cylinder",
+   "funcao": "solid_cylinder",
+   "resumo": "Create a 3D solid cylinder or shaft (live AutoCAD, opt-in via ENABLE_3D).",
+   "titulo": "Solid: Cylinder",
+   "custo": "mutate",
+   "linha": 6679,
+   "familia": "3D/solido",
+   "args": [
+    "cx",
+    "cy",
+    "cz",
+    "radius",
+    "height"
+   ]
+  },
+  {
+   "nome": "solid_extrude",
+   "funcao": "solid_extrude",
+   "resumo": "Pull a closed profile up into a 3D solid (live AutoCAD, opt-in via ENABLE_3D).",
+   "titulo": "Solid: Extrude",
+   "custo": "mutate",
+   "linha": 6700,
+   "familia": "3D/solido",
+   "args": [
+    "profile_handle",
+    "height",
+    "taper_angle"
+   ]
+  },
+  {
+   "nome": "solid_revolve",
+   "funcao": "solid_revolve",
+   "resumo": "Spin a closed profile around an axis into a 3D solid (opt-in via ENABLE_3D).",
+   "titulo": "Solid: Revolve",
+   "custo": "mutate",
+   "linha": 6721,
+   "familia": "3D/solido",
+   "args": [
+    "profile_handle",
+    "axis_x1",
+    "axis_y1",
+    "axis_x2",
+    "axis_y2",
+    "angle"
+   ]
+  },
+  {
+   "nome": "solid_boolean",
+   "funcao": "solid_boolean",
+   "resumo": "Union, subtract or intersect two 3D solids; the tool solid is consumed.",
+   "titulo": "Solid: Boolean",
+   "custo": "destructive",
+   "linha": 6747,
+   "familia": "3D/solido",
+   "args": [
+    "target_handle",
+    "tool_handle",
+    "operation"
+   ]
+  },
+  {
+   "nome": "pid_symbol_list",
+   "funcao": "pid_symbol_list",
+   "resumo": "List the P&ID symbol catalogue: families, variants, ports, parameters.",
+   "titulo": "P&ID: Symbol Catalogue",
+   "custo": "read",
+   "linha": 6774,
+   "familia": "P&ID",
+   "args": [
+    "family"
+   ]
+  },
+  {
+   "nome": "pid_symbol_insert",
+   "funcao": "pid_symbol_insert",
+   "resumo": "Place a P&ID symbol (valve, pump, vessel, instrument bubble, connector) as a tagged block with ports.",
+   "titulo": "P&ID: Insert Symbol",
+   "custo": "mutate",
+   "linha": 6803,
+   "familia": "P&ID",
+   "args": [
+    "symbol",
+    "x",
+    "y",
+    "rotation",
+    "scale",
+    "tag",
+    "desc",
+    "actuator",
+    "fail",
+    "type",
+    "location",
+    "params",
+    "shape",
+    "direction",
+    "link",
+    "layer"
+   ]
+  },
+  {
+   "nome": "pid_line_draw",
+   "funcao": "pid_line_draw",
+   "resumo": "Draw a P&ID line port-to-port: orthogonal route, ISA-5.1 class, line number, markers, arrow.",
+   "titulo": "P&ID: Draw Line",
+   "custo": "mutate",
+   "linha": 6879,
+   "familia": "P&ID",
+   "args": [
+    "from_",
+    "to",
+    "line_class",
+    "route",
+    "stub",
+    "line_number",
+    "size",
+    "service",
+    "spec",
+    "insulation",
+    "number_format",
+    "label",
+    "arrow"
+   ]
+  },
+  {
+   "nome": "pid_graph",
+   "funcao": "pid_graph",
+   "resumo": "Read the P&ID back as a graph: symbols, lines, junctions, dangling ends, confidence.",
+   "titulo": "P&ID: Connectivity Graph",
+   "custo": "read",
+   "linha": 6954,
+   "familia": "P&ID",
+   "args": [
+    "tolerance",
+    "label_search",
+    "scope",
+    "include_foreign",
+    "include_geometry"
+   ]
+  },
+  {
+   "nome": "pid_instrument_index",
+   "funcao": "pid_instrument_index",
+   "resumo": "Instrument index derived from the P&ID graph (tag, function, loop, connections); optional CSV.",
+   "titulo": "P&ID: Instrument Index",
+   "custo": "read",
+   "linha": 7001,
+   "familia": "P&ID",
+   "args": [
+    "csv_path",
+    "tolerance",
+    "scope"
+   ]
+  },
+  {
+   "nome": "pid_line_list",
+   "funcao": "pid_line_list",
+   "resumo": "Line list derived from the P&ID graph (number, class, size, spec, from/to); optional CSV.",
+   "titulo": "P&ID: Line List",
+   "custo": "read",
+   "linha": 7031,
+   "familia": "P&ID",
+   "args": [
+    "csv_path",
+    "tolerance",
+    "scope"
+   ]
+  },
+  {
+   "nome": "pid_equipment_list",
+   "funcao": "pid_equipment_list",
+   "resumo": "Equipment list derived from the P&ID graph (tag, kind, ports, connections); optional CSV.",
+   "titulo": "P&ID: Equipment List",
+   "custo": "read",
+   "linha": 7059,
+   "familia": "P&ID",
+   "args": [
+    "csv_path",
+    "tolerance",
+    "scope"
+   ]
+  },
+  {
+   "nome": "pid_from_spec",
+   "funcao": "pid_from_spec",
+   "resumo": "Draw a whole P&ID from one declarative spec in one transaction; returns graph + critique.",
+   "titulo": "P&ID: From Spec",
+   "custo": "mutate",
+   "linha": 7089,
+   "familia": "P&ID",
+   "args": [
+    "spec",
+    "dry_run"
+   ]
+  },
+  {
+   "nome": "pid_tag_parse",
+   "funcao": "pid_tag_parse",
+   "resumo": "Parse an ISA-5.1 instrument tag or an equipment tag; explains every letter.",
+   "titulo": "P&ID: Parse Tag",
+   "custo": "read",
+   "linha": 7125,
+   "familia": "P&ID",
+   "args": [
+    "tag",
+    "kind",
+    "equipment_prefixes"
+   ]
+  },
+  {
+   "nome": "dimstyle_list",
+   "funcao": "dimstyle_list",
+   "resumo": "List dimension styles with their ISO-25/ANSI variables and the current one.",
+   "titulo": "Styles: List Dimension Styles",
+   "custo": "read",
+   "linha": 7162,
+   "familia": "camada/estilo",
+   "args": []
+  },
+  {
+   "nome": "dimstyle_create",
+   "funcao": "dimstyle_create",
+   "resumo": "Create a dimension style from the ISO-25 or ANSI preset, with per-variable overrides.",
+   "titulo": "Styles: Create Dimension Style",
+   "custo": "mutate",
+   "linha": 7190,
+   "familia": "camada/estilo",
+   "args": [
+    "name",
+    "preset",
+    "overrides",
+    "set_current"
+   ]
+  },
+  {
+   "nome": "dimstyle_modify",
+   "funcao": "dimstyle_modify",
+   "resumo": "Change DIM* variables on an existing dimension style; reports only what moved.",
+   "titulo": "Styles: Modify Dimension Style",
+   "custo": "mutate",
+   "linha": 7235,
+   "familia": "camada/estilo",
+   "args": [
+    "name",
+    "overrides"
+   ]
+  },
+  {
+   "nome": "dimstyle_set_current",
+   "funcao": "dimstyle_set_current",
+   "resumo": "Make a dimension style current so new dimensions use it.",
+   "titulo": "Styles: Set Current Dimension Style",
+   "custo": "safe",
+   "linha": 7263,
+   "familia": "camada/estilo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "textstyle_list",
+   "funcao": "textstyle_list",
+   "resumo": "List text styles: font file, height, width factor, oblique angle.",
+   "titulo": "Styles: List Text Styles",
+   "custo": "read",
+   "linha": 7281,
+   "familia": "camada/estilo",
+   "args": []
+  },
+  {
+   "nome": "textstyle_create",
+   "funcao": "textstyle_create",
+   "resumo": "Create a text style from a bundled font (isocp, isocpeur, arial, romans) or any file.",
+   "titulo": "Styles: Create Text Style",
+   "custo": "mutate",
+   "linha": 7300,
+   "familia": "camada/estilo",
+   "args": [
+    "name",
+    "font",
+    "height",
+    "width_factor",
+    "oblique_deg",
+    "set_current"
+   ]
+  },
+  {
+   "nome": "textstyle_set_current",
+   "funcao": "textstyle_set_current",
+   "resumo": "Make a text style current so new text uses it.",
+   "titulo": "Styles: Set Current Text Style",
+   "custo": "safe",
+   "linha": 7339,
+   "familia": "camada/estilo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "mleaderstyle_list",
+   "funcao": "mleaderstyle_list",
+   "resumo": "List multileader styles: arrow size, landing gap, text style and height.",
+   "titulo": "Styles: List Multileader Styles",
+   "custo": "read",
+   "linha": 7357,
+   "familia": "camada/estilo",
+   "args": []
+  },
+  {
+   "nome": "mleaderstyle_create",
+   "funcao": "mleaderstyle_create",
+   "resumo": "Create a multileader style from the ISO or ANSI preset, on both engines.",
+   "titulo": "Styles: Create Multileader Style",
+   "custo": "mutate",
+   "linha": 7376,
+   "familia": "camada/estilo",
+   "args": [
+    "name",
+    "preset",
+    "overrides"
+   ]
+  },
+  {
+   "nome": "drawing_apply_standard",
+   "funcao": "drawing_apply_standard",
+   "resumo": "Put the drawing on ISO or ANSI in one call: dimstyle, text style, units, mech layers.",
+   "titulo": "Drawing: Apply Drafting Standard",
+   "custo": "mutate",
+   "linha": 7412,
+   "familia": "desenho",
+   "args": [
+    "standard",
+    "layers",
+    "units"
+   ]
+  },
+  {
+   "nome": "page_setup_list",
+   "funcao": "page_setup_list",
+   "resumo": "Read each sheet's page setup: paper, orientation, ctb, scale, device.",
+   "titulo": "List Page Setups",
+   "custo": "read",
+   "linha": 7454,
+   "familia": "plot/arquivo",
+   "args": [
+    "layout"
+   ]
+  },
+  {
+   "nome": "page_setup_apply",
+   "funcao": "page_setup_apply",
+   "resumo": "Set a sheet's paper, orientation, ctb, plot scale and device (PAGESETUP).",
+   "titulo": "Apply Page Setup",
+   "custo": "safe",
+   "linha": 7485,
+   "familia": "plot/arquivo",
+   "args": [
+    "layout",
+    "paper",
+    "orientation",
+    "plot_style",
+    "scale",
+    "plot_area",
+    "device",
+    "margins_mm",
+    "center"
+   ]
+  },
+  {
+   "nome": "plot_style_list",
+   "funcao": "plot_style_list",
+   "resumo": "List the plot style tables (ctb): the AutoCAD catalogue, plus what is installed.",
+   "titulo": "List Plot Styles",
+   "custo": "read",
+   "linha": 7540,
+   "familia": "plot/arquivo",
+   "args": []
+  },
+  {
+   "nome": "batch_plot",
+   "funcao": "batch_plot",
+   "resumo": "Plot every sheet (or the named ones) to PDF; each sheet size is read back from its PDF.",
+   "titulo": "Batch Plot",
+   "custo": "mutate",
+   "linha": 7561,
+   "familia": "sistema",
+   "args": [
+    "output_dir",
+    "layouts",
+    "format",
+    "file_pattern"
+   ]
+  },
+  {
+   "nome": "drawing_template_list",
+   "funcao": "drawing_template_list",
+   "resumo": "List the five bundled drawing templates: standard, sheet, layers, styles, page setup.",
+   "titulo": "List Drawing Templates",
+   "custo": "read",
+   "linha": 7608,
+   "familia": "consulta",
+   "args": []
+  },
+  {
+   "nome": "drawing_template_save",
+   "funcao": "drawing_template_save",
+   "resumo": "Save the current drawing as a template: .dwt on live AutoCAD, .dxf headlessly.",
+   "titulo": "Save As Template",
+   "custo": "mutate",
+   "linha": 7639,
+   "familia": "plot/arquivo",
+   "args": [
+    "path",
+    "name",
+    "description"
+   ]
+  },
+  {
+   "nome": "document_list",
+   "funcao": "document_list",
+   "resumo": "List the open documents: which is active, which have unsaved changes.",
+   "titulo": "List Documents",
+   "custo": "read",
+   "linha": 7682,
+   "familia": "sistema",
+   "args": []
+  },
+  {
+   "nome": "document_activate",
+   "funcao": "document_activate",
+   "resumo": "Switch which open document every later tool call targets.",
+   "titulo": "Activate Document",
+   "custo": "safe",
+   "linha": 7705,
+   "familia": "sistema",
+   "args": [
+    "name_or_path"
+   ]
+  },
+  {
+   "nome": "document_close",
+   "funcao": "document_close",
+   "resumo": "Close one open document by name; never drops unsaved work unless told to.",
+   "titulo": "Close Document",
+   "custo": "destructive",
+   "linha": 7731,
+   "familia": "sistema",
+   "args": [
+    "name_or_path",
+    "save",
+    "discard"
+   ]
+  },
+  {
+   "nome": "layer_state_save",
+   "funcao": "layer_state_save",
+   "resumo": "Save the layer table (on/frozen/locked/colour/linetype/lineweight/plot + current) under a name, in the file.",
+   "titulo": "Save Layer State",
+   "custo": "safe",
+   "linha": 7763,
+   "familia": "plot/arquivo",
+   "args": [
+    "name",
+    "description"
+   ]
+  },
+  {
+   "nome": "layer_state_restore",
+   "funcao": "layer_state_restore",
+   "resumo": "Restore a saved layer state, all properties or a chosen subset.",
+   "titulo": "Restore Layer State",
+   "custo": "safe",
+   "linha": 7787,
+   "familia": "camada/estilo",
+   "args": [
+    "name",
+    "properties"
+   ]
+  },
+  {
+   "nome": "layer_state_list",
+   "funcao": "layer_state_list",
+   "resumo": "List the layer states saved in this drawing.",
+   "titulo": "List Layer States",
+   "custo": "read",
+   "linha": 7817,
+   "familia": "camada/estilo",
+   "args": []
+  },
+  {
+   "nome": "layer_state_delete",
+   "funcao": "layer_state_delete",
+   "resumo": "Delete one saved layer state from the drawing.",
+   "titulo": "Delete Layer State",
+   "custo": "destructive",
+   "linha": 7830,
+   "familia": "camada/estilo",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "view_named_save",
+   "funcao": "view_named_save",
+   "resumo": "Save a named view: a centre and height (and width) to come back to.",
+   "titulo": "Save Named View",
+   "custo": "safe",
+   "linha": 7847,
+   "familia": "plot/arquivo",
+   "args": [
+    "name",
+    "center",
+    "height",
+    "width"
+   ]
+  },
+  {
+   "nome": "view_named_restore",
+   "funcao": "view_named_restore",
+   "resumo": "Restore a named view.",
+   "titulo": "Restore Named View",
+   "custo": "safe",
+   "linha": 7872,
+   "familia": "visualizacao",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "view_named_list",
+   "funcao": "view_named_list",
+   "resumo": "List the named views saved in this drawing.",
+   "titulo": "List Named Views",
+   "custo": "read",
+   "linha": 7896,
+   "familia": "consulta",
+   "args": []
+  },
+  {
+   "nome": "ucs_list",
+   "funcao": "ucs_list",
+   "resumo": "List the user coordinate systems, with the implicit world one.",
+   "titulo": "List UCS",
+   "custo": "read",
+   "linha": 7908,
+   "familia": "sistema",
+   "args": []
+  },
+  {
+   "nome": "ucs_set",
+   "funcao": "ucs_set",
+   "resumo": "Define (or replace) a named UCS from an origin and two perpendicular axes, and make it current.",
+   "titulo": "Set UCS",
+   "custo": "safe",
+   "linha": 7934,
+   "familia": "sistema",
+   "args": [
+    "name",
+    "origin",
+    "x_axis",
+    "y_axis"
+   ]
+  },
+  {
+   "nome": "ucs_restore",
+   "funcao": "ucs_restore",
+   "resumo": "Make a saved UCS current, or `world` to reset to WCS.",
+   "titulo": "Restore UCS",
+   "custo": "safe",
+   "linha": 7959,
+   "familia": "sistema",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "nome": "system_launch",
+   "funcao": "system_launch",
+   "resumo": "Attach to the running AutoCAD or start it, optionally opening a file (live only).",
+   "titulo": "Launch / Attach AutoCAD",
+   "custo": "safe",
+   "linha": 7983,
+   "familia": "sistema",
+   "args": [
+    "visible",
+    "open_path"
+   ]
+  },
+  {
+   "nome": "system_preferences_get",
+   "funcao": "system_preferences_get",
+   "resumo": "Read AutoCAD preferences from the whitelist (OPTIONS dialog values; live only).",
+   "titulo": "Get Preferences",
+   "custo": "read",
+   "linha": 8008,
+   "familia": "sistema",
+   "args": [
+    "keys"
+   ]
+  },
+  {
+   "nome": "system_preferences_set",
+   "funcao": "system_preferences_set",
+   "resumo": "Change one whitelisted AutoCAD preference; reports old and new (live only).",
+   "titulo": "Set Preference",
+   "custo": "safe",
+   "linha": 8036,
+   "familia": "sistema",
+   "args": [
+    "key",
+    "value"
+   ]
+  },
+  {
+   "nome": "user_pick_point",
+   "funcao": "user_pick_point",
+   "resumo": "Ask the operator to pick a point on screen (live only; blocks until they do).",
+   "titulo": "Ask Operator: Pick Point",
+   "custo": "read",
+   "linha": 8061,
+   "familia": "desenho",
+   "args": [
+    "prompt"
+   ]
+  },
+  {
+   "nome": "user_select",
+   "funcao": "user_select",
+   "resumo": "Ask the operator to select one entity or a set on screen (live only).",
+   "titulo": "Ask Operator: Select",
+   "custo": "read",
+   "linha": 8085,
+   "familia": "selecao",
+   "args": [
+    "prompt",
+    "mode"
+   ]
+  },
+  {
+   "nome": "system_prompt_message",
+   "funcao": "system_prompt_message",
+   "resumo": "Print a message on AutoCAD's command line (live only).",
+   "titulo": "Command-Line Message",
+   "custo": "safe",
+   "linha": 8108,
+   "familia": "sistema",
+   "args": [
+    "text"
+   ]
+  },
+  {
+   "nome": "system_variable_describe",
+   "funcao": "system_variable_describe",
+   "resumo": "Explain a system variable: type, range, default, where it is saved, which engine honours it.",
+   "titulo": "Describe System Variable",
+   "custo": "read",
+   "linha": 8126,
+   "familia": "sistema",
+   "args": [
+    "name",
+    "search"
+   ]
+  },
+  {
+   "nome": "drawing_properties_get",
+   "funcao": "drawing_properties_get",
+   "resumo": "Read the drawing's title, subject, author, keywords, comments and custom properties.",
+   "titulo": "Drawing Properties (read)",
+   "custo": "read",
+   "linha": 8177,
+   "familia": "consulta",
+   "args": []
+  },
+  {
+   "nome": "drawing_properties_set",
+   "funcao": "drawing_properties_set",
+   "resumo": "Set the drawing's summary fields and add, change or delete custom properties.",
+   "titulo": "Drawing Properties (write)",
+   "custo": "safe",
+   "linha": 8198,
+   "familia": "desenho",
+   "args": [
+    "title",
+    "subject",
+    "author",
+    "keywords",
+    "comments",
+    "custom"
+   ]
+  },
+  {
+   "nome": "mech_part_draw",
+   "funcao": "mech_part_draw",
+   "resumo": "Draw a machine part from a segment list or an outline plus typed features.",
+   "titulo": "Mechanical: Draw Part",
+   "custo": "mutate",
+   "linha": 8263,
+   "familia": "mecanica",
+   "args": [
+    "spec",
+    "at_x",
+    "at_y",
+    "rotation",
+    "views",
+    "projection",
+    "dimension",
+    "style"
+   ]
+  },
+  {
+   "nome": "mech_view_add",
+   "funcao": "mech_view_add",
+   "resumo": "Add another view of a drawn part: side, top, section (full/half/offset) or detail.",
+   "titulo": "Mechanical: Add View",
+   "custo": "mutate",
+   "linha": 8364,
+   "familia": "mecanica",
+   "args": [
+    "part_id",
+    "kind",
+    "side",
+    "style",
+    "plane",
+    "detail",
+    "gap",
+    "scale"
+   ]
+  },
+  {
+   "nome": "mech_dimension_part",
+   "funcao": "mech_dimension_part",
+   "resumo": "Dimension a drawn part: ISO 129 dimensions, ISO 286 fits, a hole table.",
+   "titulo": "Mechanical: Dimension Part",
+   "custo": "mutate",
+   "linha": 8454,
+   "familia": "mecanica",
+   "args": [
+    "part_id",
+    "style",
+    "hole_table_threshold",
+    "fits",
+    "views"
+   ]
+  },
+  {
+   "nome": "mech_hole_pattern",
+   "funcao": "mech_hole_pattern",
+   "resumo": "Draw a linear, grid or polar hole pattern with centre marks on any drawing.",
+   "titulo": "Mechanical: Hole Pattern",
+   "custo": "mutate",
+   "linha": 8535,
+   "familia": "mecanica",
+   "args": [
+    "pattern",
+    "x",
+    "y",
+    "diameter",
+    "count",
+    "spacing",
+    "count_y",
+    "spacing_y",
+    "pcd",
+    "start_angle",
+    "angle",
+    "layer",
+    "centre_marks",
+    "dimension"
+   ]
+  },
+  {
+   "nome": "mech_part_from_spec",
+   "funcao": "mech_part_from_spec",
+   "resumo": "Draw a whole mechanical sheet - several parts and their views - in one transaction.",
+   "titulo": "Mechanical: Sheet From Spec",
+   "custo": "mutate",
+   "linha": 8611,
+   "familia": "mecanica",
+   "args": [
+    "spec"
+   ]
+  },
+  {
+   "nome": "mech_part_inspect",
+   "funcao": "mech_part_inspect",
+   "resumo": "Read the part model back off the drawing: segments, features, views, omissions.",
+   "titulo": "Mechanical: Inspect Part",
+   "custo": "read",
+   "linha": 8652,
+   "familia": "mecanica",
+   "args": [
+    "part_id"
+   ]
+  },
+  {
+   "nome": "std_part_list",
+   "funcao": "std_part_list",
+   "resumo": "Search the standard-parts catalogue: ISO bolts, nuts, washers, cap screws, bearings.",
+   "titulo": "Standard Parts: Catalogue",
+   "custo": "read",
+   "linha": 8694,
+   "familia": "consulta",
+   "args": [
+    "query",
+    "standard"
+   ]
+  },
+  {
+   "nome": "std_part_insert",
+   "funcao": "std_part_insert",
+   "resumo": "Insert an ISO standard part - hex bolt, nut, washer, cap screw or ball bearing - as a tagged block.",
+   "titulo": "Standard Parts: Insert",
+   "custo": "mutate",
+   "linha": 8740,
+   "familia": "bloco",
+   "args": [
+    "designation",
+    "x",
+    "y",
+    "view",
+    "rotation",
+    "layer",
+    "material"
+   ]
+  },
+  {
+   "nome": "std_feature_draw",
+   "funcao": "std_feature_draw",
+   "resumo": "Draw a standard feature - thread, undercut, ring or O-ring groove, centre hole - onto existing geometry.",
+   "titulo": "Standard Parts: Draw Feature",
+   "custo": "mutate",
+   "linha": 8819,
+   "familia": "desenho",
+   "args": [
+    "kind",
+    "x",
+    "y",
+    "params",
+    "rotation",
+    "layer"
+   ]
+  },
+  {
+   "nome": "surface_texture",
+   "funcao": "surface_texture",
+   "resumo": "Draw an ISO 21920-1 surface-texture symbol: Ra/Rz, process, lay, allowance.",
+   "titulo": "Surface Texture Symbol (ISO 21920-1)",
+   "custo": "mutate",
+   "linha": 8891,
+   "familia": "3D/solido",
+   "args": [
+    "x",
+    "y",
+    "ra",
+    "rz",
+    "machining",
+    "process",
+    "lay",
+    "allowance",
+    "all_around",
+    "leader_to",
+    "height",
+    "rotation",
+    "standard",
+    "layer"
+   ]
+  },
+  {
+   "nome": "weld_symbol",
+   "funcao": "weld_symbol",
+   "resumo": "Draw an ISO 2553 weld symbol: reference line, identification line, size and pitch.",
+   "titulo": "Weld Symbol (ISO 2553)",
+   "custo": "mutate",
+   "linha": 8984,
+   "familia": "mecanica",
+   "args": [
+    "x",
+    "y",
+    "kind",
+    "size",
+    "length",
+    "pitch",
+    "side",
+    "field_weld",
+    "all_around",
+    "process",
+    "leader_to",
+    "height",
+    "rotation",
+    "layer"
+   ]
+  },
+  {
+   "nome": "centre_marks",
+   "funcao": "centre_marks",
+   "resumo": "Draw ISO 128-23 centre marks or centre lines on circles, read from the drawing.",
+   "titulo": "Centre Marks (ISO 128-23)",
+   "custo": "mutate",
+   "linha": 9063,
+   "familia": "mecanica",
+   "args": [
+    "handles",
+    "centers",
+    "style",
+    "extension",
+    "layer"
+   ]
+  },
+  {
+   "nome": "section_line",
+   "funcao": "section_line",
+   "resumo": "Draw an ISO 128-40 cutting-plane line and return the plane the section view uses.",
+   "titulo": "Section Line (ISO 128-40)",
+   "custo": "mutate",
+   "linha": 9121,
+   "familia": "desenho",
+   "args": [
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "label",
+    "direction",
+    "style",
+    "height",
+    "layer"
+   ]
+  },
+  {
+   "nome": "hatch_material",
+   "funcao": "hatch_material",
+   "resumo": "Hatch a region with the ISO 128-50 section pattern for a named material.",
+   "titulo": "Material Hatch (ISO 128-50)",
+   "custo": "mutate",
+   "linha": 9172,
+   "familia": "arquitetura",
+   "args": [
+    "material",
+    "boundary",
+    "handles",
+    "scale",
+    "angle",
+    "layer"
+   ]
+  },
+  {
+   "nome": "sheet_frame",
+   "funcao": "sheet_frame",
+   "resumo": "Draw an ISO 5457 sheet frame with the zone grid and centring marks.",
+   "titulo": "Sheet: ISO 5457 Frame",
+   "custo": "mutate",
+   "linha": 9238,
+   "familia": "desenho",
+   "args": [
+    "size",
+    "orientation",
+    "zones",
+    "marks",
+    "origin_x",
+    "origin_y",
+    "layout"
+   ]
+  },
+  {
+   "nome": "titleblock_apply",
+   "funcao": "titleblock_apply",
+   "resumo": "Stamp an ISO 7200 title block (and frame) on any sheet from A4 to A0.",
+   "titulo": "Sheet: ISO 7200 Title Block",
+   "custo": "mutate",
+   "linha": 9308,
+   "familia": "plot/arquivo",
+   "args": [
+    "title",
+    "drawing_no",
+    "size",
+    "orientation",
+    "projection",
+    "part_no",
+    "material",
+    "scale",
+    "units",
+    "drawn_by",
+    "checked_by",
+    "date",
+    "sheet",
+    "revision",
+    "company",
+    "frame",
+    "zones",
+    "marks",
+    "origin_x",
+    "origin_y",
+    "layout"
+   ]
+  },
+  {
+   "nome": "revision_add",
+   "funcao": "revision_add",
+   "resumo": "Append a revision row, with optional revision clouds and triangular tags.",
+   "titulo": "Sheet: Add Revision",
+   "custo": "mutate",
+   "linha": 9405,
+   "familia": "plot/arquivo",
+   "args": [
+    "rev",
+    "description",
+    "date",
+    "by",
+    "clouds",
+    "tags",
+    "size",
+    "orientation",
+    "origin_x",
+    "origin_y",
+    "cloud_segment",
+    "layout"
+   ]
+  },
+  {
+   "nome": "bom_extract",
+   "funcao": "bom_extract",
+   "resumo": "Read the bill of materials out of the drawing's block references.",
+   "titulo": "Sheet: Extract Bill of Materials",
+   "custo": "read",
+   "linha": 9475,
+   "familia": "arquitetura",
+   "args": [
+    "layer",
+    "group_by",
+    "columns",
+    "limit"
+   ]
+  },
+  {
+   "nome": "bom_table",
+   "funcao": "bom_table",
+   "resumo": "Draw the parts list as a real TABLE above the title block.",
+   "titulo": "Sheet: Draw Parts List",
+   "custo": "mutate",
+   "linha": 9549,
+   "familia": "arquitetura",
+   "args": [
+    "rows",
+    "size",
+    "orientation",
+    "origin_x",
+    "origin_y",
+    "at_x",
+    "at_y",
+    "direction",
+    "columns",
+    "row_height",
+    "layout"
+   ]
+  },
+  {
+   "nome": "balloon_add",
+   "funcao": "balloon_add",
+   "resumo": "Add an ISO 6433 balloon linked to its item row.",
+   "titulo": "Sheet: Add Balloon",
+   "custo": "mutate",
+   "linha": 9623,
+   "familia": "cota/anotacao",
+   "args": [
+    "item",
+    "x",
+    "y",
+    "leader_x",
+    "leader_y",
+    "targets",
+    "radius",
+    "layer",
+    "layout"
+   ]
+  },
+  {
+   "nome": "xref_attach",
+   "funcao": "xref_attach",
+   "resumo": "Attach a DWG/DXF as an external reference (attachment or overlay).",
+   "titulo": "Sheet: Attach Xref",
+   "custo": "mutate",
+   "linha": 9683,
+   "familia": "plot/arquivo",
+   "args": [
+    "path",
+    "x",
+    "y",
+    "scale",
+    "rotation",
+    "kind"
+   ]
+  },
+  {
+   "nome": "xref_manage",
+   "funcao": "xref_manage",
+   "resumo": "List, reload, bind, detach or repath an external reference.",
+   "titulo": "Sheet: Manage Xrefs",
+   "custo": "mutate",
+   "linha": 9719,
+   "familia": "bloco",
+   "args": [
+    "action",
+    "name",
+    "new_path"
+   ]
+  },
+  {
+   "nome": "image_attach",
+   "funcao": "image_attach",
+   "resumo": "Attach a raster image (PNG/JPG) as an underlay.",
+   "titulo": "Sheet: Attach Image",
+   "custo": "mutate",
+   "linha": 9753,
+   "familia": "plot/arquivo",
+   "args": [
+    "path",
+    "x",
+    "y",
+    "scale",
+    "rotation"
+   ]
+  },
+  {
+   "nome": "data_extract",
+   "funcao": "data_extract",
+   "resumo": "Write the bill of materials to a CSV file, or to XLSX when openpyxl is present.",
+   "titulo": "Sheet: Extract Data",
+   "custo": "safe",
+   "linha": 9788,
+   "familia": "sistema",
+   "args": [
+    "path",
+    "fmt",
+    "layer",
+    "group_by",
+    "columns"
+   ]
+  },
+  {
+   "nome": "drawing_export_dwg",
+   "funcao": "drawing_export_dwg",
+   "resumo": "Write the drawing as a real DWG at a chosen AutoCAD version.",
+   "titulo": "Drawing: Export DWG",
+   "custo": "safe",
+   "linha": 9827,
+   "familia": "plot/arquivo",
+   "args": [
+    "path",
+    "version"
+   ]
+  },
+  {
+   "nome": "arch_wall",
+   "funcao": "arch_wall",
+   "resumo": "Add walls to the plan: clean L/T/X junctions, cut openings, material poché.",
+   "titulo": "Architecture: Wall",
+   "custo": "mutate",
+   "linha": 9867,
+   "familia": "arquitetura",
+   "args": [
+    "walls",
+    "poche"
+   ]
+  },
+  {
+   "nome": "arch_opening",
+   "funcao": "arch_opening",
+   "resumo": "Host a door or a window in a drawn wall by distance along it; the wall is cut.",
+   "titulo": "Architecture: Door / Window",
+   "custo": "mutate",
+   "linha": 9920,
+   "familia": "arquitetura",
+   "args": [
+    "wall",
+    "offset",
+    "width",
+    "kind",
+    "swing",
+    "hand",
+    "sill",
+    "height",
+    "tag",
+    "opening_id",
+    "lang",
+    "poche"
+   ]
+  },
+  {
+   "nome": "arch_stair",
+   "funcao": "arch_stair",
+   "resumo": "Draw a straight, L or U stair in plan and report its Blondel step rule.",
+   "titulo": "Architecture: Stair",
+   "custo": "mutate",
+   "linha": 10010,
+   "familia": "arquitetura",
+   "args": [
+    "stair_id",
+    "start_x",
+    "start_y",
+    "width",
+    "risers",
+    "riser_height",
+    "going",
+    "direction_deg",
+    "kind",
+    "turn",
+    "lang",
+    "scale"
+   ]
+  },
+  {
+   "nome": "arch_dimension_chains",
+   "funcao": "arch_dimension_chains",
+   "resumo": "Dimension the plan's facades: openings, walls and overall chains outside each side.",
+   "titulo": "Architecture: Dimension Chains",
+   "custo": "mutate",
+   "linha": 10075,
+   "familia": "arquitetura",
+   "args": [
+    "sides",
+    "scale",
+    "first_offset",
+    "step"
+   ]
+  },
+  {
+   "nome": "arch_room",
+   "funcao": "arch_room",
+   "resumo": "Label a room with its name, number and measured area.",
+   "titulo": "Architecture: Label Room",
+   "custo": "mutate",
+   "linha": 10147,
+   "familia": "arquitetura",
+   "args": [
+    "name",
+    "x",
+    "y",
+    "number",
+    "room_id",
+    "lang",
+    "scale"
+   ]
+  },
+  {
+   "nome": "arch_rooms_detect",
+   "funcao": "arch_rooms_detect",
+   "resumo": "Find the rooms of any plan and measure them; never modifies it.",
+   "titulo": "Architecture: Detect Rooms",
+   "custo": "read",
+   "linha": 10205,
+   "familia": "arquitetura",
+   "args": [
+    "layers",
+    "min_area",
+    "tol"
+   ]
+  },
+  {
+   "nome": "arch_schedule",
+   "funcao": "arch_schedule",
+   "resumo": "Draw a door, window or room schedule from the plan records.",
+   "titulo": "Architecture: Schedule",
+   "custo": "mutate",
+   "linha": 10258,
+   "familia": "arquitetura",
+   "args": [
+    "kind",
+    "x",
+    "y",
+    "lang",
+    "scale"
+   ]
+  },
+  {
+   "nome": "arch_catalogue_list",
+   "funcao": "arch_catalogue_list",
+   "resumo": "Search the furniture and sanitary catalogue in English or Turkish.",
+   "titulo": "Architecture: Catalogue",
+   "custo": "read",
+   "linha": 10307,
+   "familia": "arquitetura",
+   "args": [
+    "query",
+    "family",
+    "lang"
+   ]
+  },
+  {
+   "nome": "arch_catalogue_insert",
+   "funcao": "arch_catalogue_insert",
+   "resumo": "Insert a furniture or sanitary item - bed, sofa, WC, basin, bathtub - as a block.",
+   "titulo": "Architecture: Catalogue Insert",
+   "custo": "mutate",
+   "linha": 10359,
+   "familia": "arquitetura",
+   "args": [
+    "name",
+    "x",
+    "y",
+    "rotation"
+   ]
+  },
+  {
+   "nome": "arch_grid",
+   "funcao": "arch_grid",
+   "resumo": "Draw a structural grid: axis lines with numbered and lettered bubbles at both ends.",
+   "titulo": "Architecture: Structural Grid",
+   "custo": "mutate",
+   "linha": 10409,
+   "familia": "arquitetura",
+   "args": [
+    "x_axes",
+    "y_axes",
+    "labels",
+    "extension",
+    "scale"
+   ]
+  },
+  {
+   "nome": "arch_symbol",
+   "funcao": "arch_symbol",
+   "resumo": "Draw a plan symbol: north arrow, section mark, level mark or elevation mark.",
+   "titulo": "Architecture: Symbol",
+   "custo": "mutate",
+   "linha": 10478,
+   "familia": "arquitetura",
+   "args": [
+    "kind",
+    "x",
+    "y",
+    "params",
+    "lang",
+    "scale"
+   ]
+  },
+  {
+   "nome": "arch_plan_from_spec",
+   "funcao": "arch_plan_from_spec",
+   "resumo": "Draw a whole floor plan - walls, doors, windows, stairs, rooms, chains, schedules - in one transaction.",
+   "titulo": "Architecture: Plan From Spec",
+   "custo": "mutate",
+   "linha": 10545,
+   "familia": "arquitetura",
+   "args": [
+    "spec"
+   ]
+  },
+  {
+   "nome": "drawing_understand",
+   "funcao": "drawing_understand",
+   "resumo": "Read a foreign drawing: units, extents, clusters, layers, tags, rooms, languages.",
+   "titulo": "Understand: Describe Drawing",
+   "custo": "read",
+   "linha": 10607,
+   "familia": "consulta",
+   "args": [
+    "path"
+   ]
+  },
+  {
+   "nome": "drawing_scale_check",
+   "funcao": "drawing_scale_check",
+   "resumo": "Is this drawing to scale against a reference? Tag distances, ratios, a verdict.",
+   "titulo": "Understand: Scale Check",
+   "custo": "read",
+   "linha": 10676,
+   "familia": "edicao",
+   "args": [
+    "reference",
+    "path",
+    "min_pair_mm"
+   ]
+  },
+  {
+   "nome": "drawing_diff",
+   "funcao": "drawing_diff",
+   "resumo": "Compare two revisions of a drawing: what moved, changed, was added or removed.",
+   "titulo": "Drawing: Diff Two Revisions",
+   "custo": "mutate",
+   "linha": 10838,
+   "familia": "consulta",
+   "args": [
+    "old_path",
+    "new_path",
+    "tol",
+    "move_tol",
+    "limit",
+    "markup",
+    "rev",
+    "description"
+   ]
+  },
+  {
+   "nome": "drawing_topology_check",
+   "funcao": "drawing_topology_check",
+   "resumo": "Find dangling ends, near misses and unjoined crossings in a pipe or cable network.",
+   "titulo": "Drawing: Topology Check",
+   "custo": "read",
+   "linha": 10970,
+   "familia": "desenho",
+   "args": [
+    "layers",
+    "path",
+    "gap",
+    "tol",
+    "limit"
+   ]
+  },
+  {
+   "nome": "pipe_takeoff",
+   "funcao": "pipe_takeoff",
+   "resumo": "Pipe takeoff from a P&ID and its layout: rows by room, service and diameter.",
+   "titulo": "Plant: Pipe Takeoff",
+   "custo": "safe",
+   "linha": 11081,
+   "familia": "arquitetura",
+   "args": [
+    "pid_path",
+    "layout_path",
+    "output",
+    "lang",
+    "services",
+    "allowance",
+    "vertical_allowance",
+    "length_source",
+    "force",
+    "layers",
+    "tol",
+    "exclude_regions"
+   ]
+  },
+  {
+   "nome": "cable_takeoff",
+   "funcao": "cable_takeoff",
+   "resumo": "Cable takeoff: one row per load, Manhattan length to its panel, rounded up to the metre.",
+   "titulo": "Plant: Cable Takeoff",
+   "custo": "safe",
+   "linha": 11247,
+   "familia": "arquitetura",
+   "args": [
+    "pid_path",
+    "layout_path",
+    "output",
+    "lang",
+    "allowance",
+    "section_rules",
+    "panel_rule"
+   ]
+  }
+ ]
+}

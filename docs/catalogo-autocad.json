@@ -1,0 +1,4512 @@
+{
+  "gerado_em": "2026-10-19T07:17:59-03:00",
+  "produto": {
+    "acadver": "25.0s (LMS Tech)",
+    "desenho": "teste_trim.dwg",
+    "pasta": "C:\\temp\\mcp_cad_com\\"
+  },
+  "comandos": {
+    "total_uniao": 863,
+    "c_simbolo": [
+      "-BLOCKREPLACE",
+      "-BLOCKTOXREF",
+      "-CDORDER",
+      "-LAYOUTMERGE",
+      "-REDIRMODE",
+      "-TCASE",
+      "-XLIST",
+      "3DARRAY",
+      "ACADINFO",
+      "ACETUCS-BACK",
+      "ACETUCS-BOTTOM",
+      "ACETUCS-FRONT",
+      "ACETUCS-LEFT",
+      "ACETUCS-RIGHT",
+      "ACETUCS-TOP",
+      "ADDVARS2SCR",
+      "AI_CIRCTAN",
+      "AI_CUSTOM_SAFE",
+      "AI_DESELECT",
+      "AI_DIM_TEXTABOVE",
+      "AI_DIM_TEXTCENTER",
+      "AI_DIM_TEXTHOME",
+      "AI_DRAWORDER",
+      "AI_FMS",
+      "AI_MOLC",
+      "AI_PRODUCT_SUPPORT",
+      "AI_PRODUCT_SUPPORT_SAFE",
+      "AI_PSPACE",
+      "AI_SELALL",
+      "AI_TILEMODE1",
+      "AI_TRAINING_SAFE",
+      "ALIASEDIT",
+      "ALIGNSPACE",
+      "ATTIN",
+      "ATTOUT",
+      "ATTREDEF",
+      "BCOUNT",
+      "BEXTEND",
+      "BLOCK?",
+      "BLOCKREPLACE",
+      "BLOCKTOXREF",
+      "BREAKLINE",
+      "BSCALE",
+      "BTRIM",
+      "BURST",
+      "CDORDER",
+      "CHURLS",
+      "CLIPIT",
+      "COPYM",
+      "COPYTOLAYER",
+      "DATE",
+      "DDEMODES",
+      "DDGRIPS",
+      "DDRMODES",
+      "DDSELECT",
+      "DIMREASSOC",
+      "EDGE",
+      "ETBUG",
+      "EXOFFSET",
+      "EXPLAN",
+      "EXPRESSMENU",
+      "EXPRESSTOOLS",
+      "EXTRIM",
+      "FASTSEL",
+      "FLATTEN",
+      "FS",
+      "FSMODE",
+      "GATTE",
+      "GETSEL",
+      "GIFIN",
+      "GOTOURL",
+      "IMAGEAPP",
+      "IMAGEEDIT",
+      "IMAGEOVERLAP",
+      "LAYDEL",
+      "LAYMCH",
+      "LAYMCUR",
+      "LAYMRG",
+      "LAYOUTMERGE",
+      "LAYVPI",
+      "LSP",
+      "LSPDUMP",
+      "LSPSURF",
+      "MKLTYPE",
+      "MKSHAPE",
+      "MOVEBAK",
+      "MPEDIT",
+      "MSTRETCH",
+      "MVSETUP",
+      "PCXIN",
+      "PLT2DWG",
+      "PSBSCALE",
+      "PSFILL",
+      "PSTSCALE",
+      "QQUIT",
+      "REDIR",
+      "REDIRMODE",
+      "REPURLS",
+      "REVERT",
+      "RTEDIT",
+      "RTEXT",
+      "RTEXTAPP",
+      "RTUCS",
+      "SAVEALL",
+      "SHOWURLS",
+      "SHP2BLK",
+      "SSX",
+      "SUPERHATCH",
+      "TCASE",
+      "TCIRCLE",
+      "TCOUNT",
+      "TEXTFIT",
+      "TEXTMASK",
+      "TEXTUNMASK",
+      "TFHELP",
+      "TFRAMES",
+      "TIFFIN",
+      "TJUST",
+      "TORIENT",
+      "TREX",
+      "TSCALE",
+      "TSPACEINVADERS",
+      "TUTCLEAR",
+      "TUTDEMO",
+      "TXTEXP",
+      "VARS2SCR",
+      "VLDEBUG",
+      "VLIDE",
+      "VLISP",
+      "VPSCALE",
+      "VPSYNC",
+      "XDATA",
+      "XDLIST",
+      "XLIST",
+      "XP",
+      "XPLODE"
+    ],
+    "cuix": [
+      "ACISIN",
+      "ADCCLOSE",
+      "ADDSELECTED",
+      "ADJUST",
+      "AIDIMFLIPARROW",
+      "AIDIMPREC",
+      "AIDIMSTYLE",
+      "AIDIMTEXTMOVE",
+      "AIOBJECTSCALEADD",
+      "AIOBJECTSCALEREMOVE",
+      "AI_DIM_TEXTABOVE",
+      "AI_DIM_TEXTCENTER",
+      "AI_DIM_TEXTHOME",
+      "AI_SELALL",
+      "ALIGN",
+      "ANALYSISCURVATURE",
+      "ANALYSISDRAFT",
+      "ANALYSISOPTIONS",
+      "ANALYSISZEBRA",
+      "ANIPATH",
+      "ANNOALLVISIBLE",
+      "ANNORESET",
+      "APPLOAD",
+      "ARC",
+      "AREA",
+      "ARRAY",
+      "ARRAYCLOSE",
+      "ARRAYEDIT",
+      "ARRAYPATH",
+      "ARRAYPOLAR",
+      "ARRAYRECT",
+      "ARX",
+      "ATTACH",
+      "ATTDEF",
+      "ATTEDIT",
+      "ATTEXT",
+      "ATTIPEDIT",
+      "ATTSYNC",
+      "AUDIT",
+      "AUTOCONSTRAIN",
+      "AUTOPUBLISH",
+      "BACTION",
+      "BACTIONBAR",
+      "BACTIONTOOL",
+      "BATTMAN",
+      "BCLOSE",
+      "BCONSTRUCTION",
+      "BCPARAMETER",
+      "BEDIT",
+      "BESETTINGS",
+      "BHATCH",
+      "BLEND",
+      "BLOCK",
+      "BLOCKICON",
+      "BLOCKSPALETTE",
+      "BLOCKSPALETTECLOSE",
+      "BMPOUT",
+      "BOUNDARY",
+      "BOX",
+      "BPARAMETER",
+      "BREAK",
+      "BREAKATPOINT",
+      "BREPLACE",
+      "BROWSER",
+      "BSAVE",
+      "BSAVEAS",
+      "BTABLE",
+      "BTESTBLOCK",
+      "BVHIDE",
+      "BVMODE",
+      "BVSHOW",
+      "BVSTATE",
+      "CAMERA",
+      "CAMERADISPLAY",
+      "CENTERDISASSOCIATE",
+      "CENTERLINE",
+      "CENTERMARK",
+      "CENTERREASSOCIATE",
+      "CENTERRESET",
+      "CHAMFER",
+      "CHAMFEREDGE",
+      "CHANGE",
+      "CHECKSTANDARDS",
+      "CHPROP",
+      "CHSPACE",
+      "CIRCLE",
+      "CIRCLERAD",
+      "CLASSICGROUP",
+      "CLASSICINSERT",
+      "CLASSICLAYER",
+      "CLASSICXREF",
+      "CLEANSCREENOFF",
+      "CLEANSCREENON",
+      "CLIP",
+      "CLOSE",
+      "CLOSEALL",
+      "CLOSEALLOTHER",
+      "COMMANDLINE",
+      "COMMANDLINEHIDE",
+      "COMPARE",
+      "CONE",
+      "CONFIG",
+      "CONSTRAINTBAR",
+      "CONSTRAINTNAMEFORMAT",
+      "CONSTRAINTSETTINGS",
+      "CONVTONURBS",
+      "CONVTOSOLID",
+      "CONVTOSURFACE",
+      "COPY",
+      "COPYBASE",
+      "COPYCLIP",
+      "COPYLINK",
+      "COPYTOLAYER",
+      "COUNT",
+      "COUNTLIST",
+      "COUNTLISTCLOSE",
+      "CUI",
+      "CUIEXPORT",
+      "CUIIMPORT",
+      "CUILOAD",
+      "CUIUNLOAD",
+      "CUTBASE",
+      "CUTCLIP",
+      "CVADD",
+      "CVHIDE",
+      "CVREBUILD",
+      "CVREMOVE",
+      "CVSHOW",
+      "CYLINDER",
+      "DATAEXTRACTION",
+      "DATALINK",
+      "DATALINKUPDATE",
+      "DBCCLOSE",
+      "DBCONNECT",
+      "DCALIGNED",
+      "DCANGULAR",
+      "DCCONVERT",
+      "DCDIAMETER",
+      "DCDISPLAY",
+      "DCHORIZONTAL",
+      "DCLINEAR",
+      "DCRADIUS",
+      "DCVERTICAL",
+      "DELAY",
+      "DELCONSTRAINT",
+      "DESKTOPANALYTICS",
+      "DETECT",
+      "DETECTPALETTE",
+      "DETECTPALETTECLOSE",
+      "DGNATTACH",
+      "DGNCLIP",
+      "DGNIMPORT",
+      "DGNLAYERS",
+      "DGNOSNAP",
+      "DIM",
+      "DIMALIGNED",
+      "DIMANGULAR",
+      "DIMARC",
+      "DIMBASELINE",
+      "DIMBREAK",
+      "DIMCENTER",
+      "DIMCONTINUE",
+      "DIMDIAMETER",
+      "DIMDISASSOCIATE",
+      "DIMEDIT",
+      "DIMINSPECT",
+      "DIMJOGGED",
+      "DIMJOGLINE",
+      "DIMLINEAR",
+      "DIMORDINATE",
+      "DIMOVERRIDE",
+      "DIMRADIUS",
+      "DIMREASSOCIATE",
+      "DIMSPACE",
+      "DIMSTYLE",
+      "DIMTEDIT",
+      "DISTANTLIGHT",
+      "DIVIDE",
+      "DONUT",
+      "DRAWINGRECOVERY",
+      "DRAWORDER",
+      "DTEXT",
+      "DVIEW",
+      "DWFATTACH",
+      "DWFCLIP",
+      "DWFLAYERS",
+      "DWFOSNAP",
+      "DWGCONVERT",
+      "DWGPROPS",
+      "DXBIN",
+      "DXFOUT",
+      "EATTEDIT",
+      "EDGE",
+      "EDGESURF",
+      "EDITTABLECELL",
+      "ELEV",
+      "ELLIPSE",
+      "ERASE",
+      "ETRANSMIT",
+      "EXIT",
+      "EXPLODE",
+      "EXPORT",
+      "EXPORTEPLOTFORMAT",
+      "EXPORTLAYOUT",
+      "EXTEND",
+      "EXTERNALREFERENCES",
+      "EXTERNALREFERENCESCLOSE",
+      "FILL",
+      "FILLET",
+      "FILLETEDGE",
+      "FILTER",
+      "FIND",
+      "FLATSHOT",
+      "FRAME",
+      "GCCOINCIDENT",
+      "GCCOLLINEAR",
+      "GCCONCENTRIC",
+      "GCEQUAL",
+      "GCFIX",
+      "GCHORIZONTAL",
+      "GCPARALLEL",
+      "GCPERPENDICULAR",
+      "GCSMOOTH",
+      "GCSYMMETRIC",
+      "GCTANGENT",
+      "GCVERTICAL",
+      "GEOGRAPHICLOCATION",
+      "GEOMAP",
+      "GEOMAPIMAGE",
+      "GEOMAPIMAGEUPDATE",
+      "GEOMARKLATLONG",
+      "GEOMARKME",
+      "GEOMARKPOINT",
+      "GEOMARKPOSITION",
+      "GEOREMOVE",
+      "GEOREORIENTMARKER",
+      "GOTOSTART",
+      "GRADIENT",
+      "GROUP",
+      "GROUPEDIT",
+      "HATCH",
+      "HATCHEDIT",
+      "HATCHGENERATEBOUNDARY",
+      "HATCHSETBOUNDARY",
+      "HATCHSETORIGIN",
+      "HATCHTOBACK",
+      "HELIX",
+      "HIDE",
+      "HIDEOBJECTS",
+      "HIDEPALETTES",
+      "HYPERLINK",
+      "IMAGE",
+      "IMAGEADJUST",
+      "IMAGEATTACH",
+      "IMAGECLIP",
+      "IMAGEFRAME",
+      "IMAGEQUALITY",
+      "IMPORT",
+      "IMPRINT",
+      "INSERT",
+      "INSERTOBJ",
+      "INTERFERE",
+      "INTERSECT",
+      "ISOLATEOBJECTS",
+      "JOIN",
+      "JUSTIFYTEXT",
+      "LAYCUR",
+      "LAYDEL",
+      "LAYERCLOSE",
+      "LAYERP",
+      "LAYERSTATE",
+      "LAYERSTATESAVE",
+      "LAYFRZ",
+      "LAYISO",
+      "LAYLCK",
+      "LAYMCH",
+      "LAYMCUR",
+      "LAYMRG",
+      "LAYOFF",
+      "LAYON",
+      "LAYOUT",
+      "LAYOUTWIZARD",
+      "LAYTHW",
+      "LAYTRANS",
+      "LAYULK",
+      "LAYUNISO",
+      "LAYVPI",
+      "LAYWALK",
+      "LENGTHEN",
+      "LIGHT",
+      "LIGHTGLYPHDISPLAY",
+      "LIGHTINGUNITS",
+      "LIGHTLIST",
+      "LIGHTLISTCLOSE",
+      "LINE",
+      "LIST",
+      "LIVESECTION",
+      "LSEDIT",
+      "LSLIB",
+      "LSNEW",
+      "MARKUP",
+      "MARKUPCLOSE",
+      "MARKUPIMPORT",
+      "MASSPROP",
+      "MATBROWSERCLOSE",
+      "MATBROWSEROPEN",
+      "MATEDITORCLOSE",
+      "MATEDITOROPEN",
+      "MATERIALASSIGN",
+      "MATERIALATTACH",
+      "MATERIALMAP",
+      "MATLIB",
+      "MEASURE",
+      "MEASUREGEOM",
+      "MENULOAD",
+      "MENUUNLOAD",
+      "MESH",
+      "MESHCAP",
+      "MESHCOLLAPSE",
+      "MESHCREASE",
+      "MESHEXTRUDE",
+      "MESHMERGE",
+      "MESHOPTIONS",
+      "MESHPRIMITIVEOPTIONS",
+      "MESHSMOOTH",
+      "MESHSPIN",
+      "MESHSPLIT",
+      "MESHUNCREASE",
+      "MIRROR",
+      "MIRROR3D",
+      "MLEADER",
+      "MLEADERALIGN",
+      "MLEADERCOLLECT",
+      "MLEADEREDIT",
+      "MLEADERSTYLE",
+      "MLEDIT",
+      "MLINE",
+      "MLSTYLE",
+      "MODEL",
+      "MOVE",
+      "MREDO",
+      "MSLIDE",
+      "MSPACE",
+      "MTEDIT",
+      "MTEXT",
+      "MULTIPLE",
+      "MVIEW",
+      "MVSETUP",
+      "NAVBAR",
+      "NAVSMOTION",
+      "NAVSWHEELMODE",
+      "NAVVCUBE",
+      "NCOPY",
+      "NETLOAD",
+      "NEW",
+      "NEWVIEW",
+      "OBJECTSCALE",
+      "OFFSET",
+      "OFFSETEDGE",
+      "OLELINKS",
+      "OLEOPEN",
+      "ONLINEAUTOCAD360",
+      "ONLINEDESIGNSHARE",
+      "OOPS",
+      "OPEN",
+      "OPENFROMWEBMOBILE",
+      "OPTIONS",
+      "OVERKILL",
+      "PAGESETUP",
+      "PAI_DESELECT",
+      "PARAMETERS",
+      "PARAMETERSCLOSE",
+      "PARTIALOAD",
+      "PASTEASHYPERLINK",
+      "PASTEBLOCK",
+      "PASTECLIP",
+      "PASTEORIG",
+      "PASTESPEC",
+      "PCEXTRACTCENTERLINE",
+      "PCEXTRACTCORNER",
+      "PCEXTRACTEDGE",
+      "PCEXTRACTSECTION",
+      "PCINWIZARD",
+      "PDFATTACH",
+      "PDFCLIP",
+      "PDFIMPORT",
+      "PDFLAYERS",
+      "PDFOSNAP",
+      "PDFSHXTEXT",
+      "PDFSHXTEXTSETTINGS",
+      "PEDIT",
+      "PERFANALYZER",
+      "PERSPECTIVE",
+      "PLAN",
+      "PLANESURF",
+      "PLINE",
+      "PLOT",
+      "PLOTSTAMP",
+      "PLOTSTYLE",
+      "PLOTTERMANAGER",
+      "PNGOUT",
+      "POINT",
+      "POINTCLOUDATTACH",
+      "POINTCLOUDAUTOUPDATE",
+      "POINTCLOUDCOLORMAP",
+      "POINTCLOUDCROP",
+      "POINTCLOUDCROPSTATE",
+      "POINTCLOUDDENSITY",
+      "POINTCLOUDMANAGER",
+      "POINTCLOUDMANAGERCLOSE",
+      "POINTCLOUDRTDENSITY",
+      "POINTCLOUDSTYLIZE",
+      "POINTCLOUDUNCROP",
+      "POINTLIGHT",
+      "POLYGON",
+      "POLYSOLID",
+      "PRESSPULL",
+      "PREVIEW",
+      "PROJECTGEOMETRY",
+      "PROPERTIES",
+      "PROPERTIESCLOSE",
+      "PSETUPIN",
+      "PSPACE",
+      "PUBLISH",
+      "PURGE",
+      "PYRAMID",
+      "P_ACCESS_SUBCTR",
+      "P_AIMLEADEREDITADD",
+      "P_AIMLEADEREDITREMOVE",
+      "P_AI_BROWSE",
+      "P_AI_CUSTOM_SAFE",
+      "P_AI_DOWNLOAD_OFFLINEHELP",
+      "P_AI_DRAWORDER",
+      "P_AI_EDITCUSTFILE",
+      "P_AI_PRODUCT_SUPPORT_SAFE",
+      "P_AI_SEND_FEEDBACK",
+      "P_AI_TRAINING_SAFE",
+      "P_AI_VIEWPORTS_ALERT",
+      "P_MSPACE",
+      "P_PSPACE",
+      "P_TEXTTOFRONT",
+      "P_VISUALSTYLES",
+      "QCCLOSE",
+      "QDIM",
+      "QLEADER",
+      "QNEW",
+      "QSAVE",
+      "QSELECT",
+      "QUICKCUI",
+      "QUIT",
+      "QVDRAWING",
+      "QVDRAWINGCLOSE",
+      "QVLAYOUT",
+      "QVLAYOUTCLOSE",
+      "Q_CONSTRAINTBAR",
+      "Q_DCDISPLAY",
+      "Q_EXPORTSETTINGS",
+      "Q_SYSWINDOWS",
+      "R14PENWIZARD",
+      "RAY",
+      "RECOVER",
+      "RECOVERALL",
+      "RECTANG",
+      "REDEFINE",
+      "REDO",
+      "REFCLOSE",
+      "REFEDIT",
+      "REFSET",
+      "REGEN",
+      "REGENALL",
+      "REGENAUTO",
+      "REGION",
+      "RENAME",
+      "RENDER",
+      "RENDERCROP",
+      "RENDERENVIRONMENT",
+      "RENDERENVIRONMENTCLOSE",
+      "RENDEREXPOSURE",
+      "RENDEREXPOSURECLOSE",
+      "RENDERONLINE",
+      "RENDERPRESETS",
+      "RENDERPRESETSCLOSE",
+      "RENDERWINDOW",
+      "REPLAY",
+      "RESETBLOCK",
+      "REVERSE",
+      "REVSURF",
+      "RIBBON",
+      "RIBBONCLOSE",
+      "RMAT",
+      "ROTATE",
+      "ROTATE3D",
+      "RPREF",
+      "RPREFCLOSE",
+      "RULESURF",
+      "R_EXTRUDE",
+      "R_LAYOUT",
+      "R_LOFT",
+      "R_REVOLVE",
+      "R_SKETCH",
+      "R_SOLIDEDIT",
+      "R_SPLINE",
+      "R_SPLINEDIT",
+      "R_SWEEP",
+      "R_UCS",
+      "SAVE",
+      "SAVEAS",
+      "SAVEIMG",
+      "SAVETOWEBMOBILE",
+      "SCALE",
+      "SCALETEXT",
+      "SCENE",
+      "SECTION",
+      "SECTIONPLANE",
+      "SECTIONPLANEJOG",
+      "SECTIONPLANESETTINGS",
+      "SECTIONPLANETOBLOCK",
+      "SECTIONSPINNERS",
+      "SELECT",
+      "SELECTSIMILAR",
+      "SETBYLAYER",
+      "SETUV",
+      "SHADE",
+      "SHADEMODE",
+      "SHADOWDRAG",
+      "SHARE",
+      "SHAREVIEW",
+      "SHEETSET",
+      "SHOWPALETTES",
+      "SHOWRENDERGALLERY",
+      "SLICE",
+      "SOLDRAW",
+      "SOLID",
+      "SOLIDEDIT",
+      "SOLIDHIST",
+      "SOLPROF",
+      "SOLVIEW",
+      "SPACETRANS",
+      "SPHERE",
+      "SPOTLIGHT",
+      "STANDARDS",
+      "STATS",
+      "STRETCH",
+      "STYLESMANAGER",
+      "SUBTRACT",
+      "SUNPROPERTIES",
+      "SUNPROPERTIESCLOSE",
+      "SURFACEASSOCIATIVITY",
+      "SURFACEAUTOTRIM",
+      "SURFACEMODELINGMODE",
+      "SURFBLEND",
+      "SURFEXTEND",
+      "SURFEXTRACTCURVE",
+      "SURFFILLET",
+      "SURFNETWORK",
+      "SURFOFFSET",
+      "SURFPATCH",
+      "SURFSCULPT",
+      "SURFTRIM",
+      "SURFUNTRIM",
+      "SYSVARMONITOR",
+      "TABLE",
+      "TABLEDIT",
+      "TABLET",
+      "TABSURF",
+      "TASKBAR",
+      "TEXT",
+      "TEXTALIGN",
+      "TEXTEDIT",
+      "THICKEN",
+      "TILEMODE",
+      "TOLERANCE",
+      "TOOLBAR",
+      "TOOLPALETTESCLOSE",
+      "TORUS",
+      "TRANSPARENCY",
+      "TRIM",
+      "TXT2MTXT",
+      "UCS",
+      "UCSICON",
+      "ULAYERS",
+      "UNDEFINE",
+      "UNDO",
+      "UNGROUP",
+      "UNION",
+      "UNISOLATEOBJECTS",
+      "UOSNAP",
+      "VBAIDE",
+      "VBALOAD",
+      "VBAMAN",
+      "VBARUN",
+      "VIEW",
+      "VIEWDETAIL",
+      "VIEWEDIT",
+      "VIEWPROJ",
+      "VIEWRES",
+      "VIEWSECTION",
+      "VIEWSYMBOLSKETCH",
+      "VIEWUPDATE",
+      "VISUALSTYLES",
+      "VISUALSTYLESCLOSE",
+      "VLIDE",
+      "VPCLIP",
+      "VPLAYER",
+      "VPMAX",
+      "VPMIN",
+      "VPOINT",
+      "VPORTS",
+      "VSCURRENT",
+      "VSLIDE",
+      "VSMATERIALMODE",
+      "WALKFLYSETTINGS",
+      "WBLOCK",
+      "WEBLIGHT",
+      "WEDGE",
+      "WIPEOUT",
+      "WMFIN",
+      "WMFOUT",
+      "WSCURRENT",
+      "WSSAVE",
+      "WSSETTINGS",
+      "XATTACH",
+      "XBIND",
+      "XCLIP",
+      "XCLIPFRAME",
+      "XEDGES",
+      "XLINE",
+      "XOPEN",
+      "XPLODE",
+      "XREF"
+    ],
+    "pgp": [
+      "-ACTSTOP",
+      "-ACTUSERMESSAGE",
+      "-ARRAY",
+      "-ATTDEF",
+      "-ATTEDIT",
+      "-BLOCK",
+      "-BOUNDARY",
+      "-COORDINATIONMODELATTACH",
+      "-EXPORT",
+      "-EXPORTTOAUTOCAD",
+      "-GRAPHICSCONFIG",
+      "-GROUP",
+      "-HATCH",
+      "-IMAGE",
+      "-INPUTSEARCHOPTIONS",
+      "-INSERT",
+      "-LAYER",
+      "-LAYOUT",
+      "-LINETYPE",
+      "-MTEXT",
+      "-OSNAP",
+      "-PAN",
+      "-PARAMETERS",
+      "-PARTIALOPEN",
+      "-PURGE",
+      "-RENAME",
+      "-UNITS",
+      "-VIEW",
+      "-VISUALSTYLES",
+      "-VPOINT",
+      "-WBLOCK",
+      "-XBIND",
+      "-XREF",
+      "3DALIGN",
+      "3DARRAY",
+      "3DFACE",
+      "3DMOVE",
+      "3DORBIT",
+      "3DPOLY",
+      "3DPRINT",
+      "3DROTATE",
+      "3DSCALE",
+      "3DWALK",
+      "ACTIVITYINSIGHTSCLOSE",
+      "ACTIVITYINSIGHTSOPEN",
+      "ACTIVITYINSIGHTSSTATE",
+      "ACTIVITYINSIGHTSSUPPORT",
+      "ACTRECORD",
+      "ACTSTOP",
+      "ACTUSERINPUT",
+      "ACTUSERMESSAGE",
+      "ADCENTER",
+      "ALIGN",
+      "ALLPLAY",
+      "ANALYSISCURVATURE",
+      "ANALYSISDRAFTANGLE",
+      "ANALYSISZEBRA",
+      "APPLOAD",
+      "ARC",
+      "AREA",
+      "ARRAY",
+      "ASSISTANTCLOSE",
+      "ASSISTANTOPEN",
+      "ATTDEF",
+      "ATTEDIT",
+      "ATTEXT",
+      "ATTIPEDIT",
+      "BACTION",
+      "BCLOSE",
+      "BCPARAMETER",
+      "BEDIT",
+      "BLOCK",
+      "BOUNDARY",
+      "BPARAMETER",
+      "BREAK",
+      "BSAVE",
+      "BVSTATE",
+      "CAMERA",
+      "CENTERLINE",
+      "CENTERMARK",
+      "CHAMFER",
+      "CHANGE",
+      "CHECKSTANDARDS",
+      "CIRCLE",
+      "CLASSICINSERT",
+      "COLOR",
+      "COMMANDLINE",
+      "CONSTRAINTBAR",
+      "CONSTRAINTSETTINGS",
+      "COORDINATIONMODELATTACH",
+      "COPY",
+      "CTABLESTYLE",
+      "CVADD",
+      "CVHIDE",
+      "CVREBUILD",
+      "CVREMOVE",
+      "CVSHOW",
+      "CYLINDER",
+      "DATAEXTRACTION",
+      "DATALINK",
+      "DATALINKUPDATE",
+      "DBCONNECT",
+      "DDGRIPS",
+      "DELCONSTRAINT",
+      "DIMALIGNED",
+      "DIMANGULAR",
+      "DIMARC",
+      "DIMBASELINE",
+      "DIMCENTER",
+      "DIMCONSTRAINT",
+      "DIMCONTINUE",
+      "DIMDIAMETER",
+      "DIMDISASSOCIATE",
+      "DIMEDIT",
+      "DIMJOGGED",
+      "DIMJOGLINE",
+      "DIMLINEAR",
+      "DIMORDINATE",
+      "DIMOVERRIDE",
+      "DIMRADIUS",
+      "DIMREASSOCIATE",
+      "DIMSTYLE",
+      "DIMTEDIT",
+      "DIST",
+      "DIVIDE",
+      "DONUT",
+      "DRAWINGRECOVERY",
+      "DRAWORDER",
+      "DSETTINGS",
+      "DSVIEWER",
+      "DVIEW",
+      "EDITSHOT",
+      "ELLIPSE",
+      "ERASE",
+      "EXPLODE",
+      "EXPORT",
+      "EXPORTDWF",
+      "EXPORTDWFX",
+      "EXPORTPDF",
+      "EXTEND",
+      "EXTERNALREFERENCES",
+      "EXTRUDE",
+      "FILLET",
+      "FILTER",
+      "FLATSHOT",
+      "GEOGRAPHICLOCATION",
+      "GEOMCONSTRAINT",
+      "GRADIENT",
+      "GRAPHICSCONFIG",
+      "GROUP",
+      "HATCH",
+      "HATCHEDIT",
+      "HATCHTOBACK",
+      "HIDE",
+      "HIDEPALETTES",
+      "IMAGE",
+      "IMAGEADJUST",
+      "IMAGEATTACH",
+      "IMAGECLIP",
+      "IMPORT",
+      "INPUTSEARCHDELAY",
+      "INSERT",
+      "INSERTOBJ",
+      "INTERFERE",
+      "INTERSECT",
+      "ISOLATEOBJECTS",
+      "JOIN",
+      "LAYER",
+      "LAYERSTATE",
+      "LEADER",
+      "LENGTHEN",
+      "LINE",
+      "LINETYPE",
+      "LIST",
+      "LTSCALE",
+      "LWEIGHT",
+      "MARKUP",
+      "MATBROWSEROPEN",
+      "MATCHPROP",
+      "MATERIALMAP",
+      "MATERIALS",
+      "MEASURE",
+      "MEASUREGEOM",
+      "MESHCREASE",
+      "MESHREFINE",
+      "MESHSMOOTH",
+      "MESHSMOOTHLESS",
+      "MESHSMOOTHMORE",
+      "MESHSPLIT",
+      "MESHUNCREASE",
+      "MIRROR",
+      "MIRROR3D",
+      "MLEADER",
+      "MLEADERALIGN",
+      "MLEADERCOLLECT",
+      "MLEADEREDIT",
+      "MLEADERSTYLE",
+      "MLINE",
+      "MOVE",
+      "MSPACE",
+      "MTEXT",
+      "MVIEW",
+      "NAVSMOTION",
+      "NAVSMOTIONCLOSE",
+      "NAVSWHEEL",
+      "NAVVCUBE",
+      "NEWSHOT",
+      "NEWVIEW",
+      "OFFSET",
+      "OPEN",
+      "OPTIONS",
+      "OSNAP",
+      "PAN",
+      "PARAMETERS",
+      "PASTESPEC",
+      "PDFSHX",
+      "PEDIT",
+      "PLINE",
+      "PLOT",
+      "PLOTSTAMP",
+      "POINT",
+      "POINTCLOUDATTACH",
+      "POINTLIGHT",
+      "POLYGON",
+      "POLYSOLID",
+      "PREVIEW",
+      "PROPERTIES",
+      "PROPERTIESCLOSE",
+      "PSPACE",
+      "PTYPE",
+      "PURGE",
+      "PUSHTODOCSCLOSE",
+      "PUSHTODOCSOPEN",
+      "PYRAMID",
+      "QLEADER",
+      "QUICKCALC",
+      "QUICKCUI",
+      "QUICKPROPERTIES",
+      "QUIT",
+      "QVDRAWING",
+      "QVDRAWINGCLOSE",
+      "QVLAYOUT",
+      "QVLAYOUTCLOSE",
+      "RECTANG",
+      "REDRAW",
+      "REDRAWALL",
+      "REGEN",
+      "REGENALL",
+      "REGION",
+      "RENAME",
+      "RENDER",
+      "RENDERCROP",
+      "RENDERENVIRONMENT",
+      "RENDERPRESETS",
+      "RENDERWINDOW",
+      "REVOLVE",
+      "ROTATE",
+      "RPREF",
+      "SAVE",
+      "SAVEAS",
+      "SCALE",
+      "SCRIPT",
+      "SECTION",
+      "SECTIONPLANE",
+      "SECTIONPLANEJOG",
+      "SECTIONPLANETOBLOCK",
+      "SEQUENCEPLAY",
+      "SETVAR",
+      "SHADEMODE",
+      "SHEETSET",
+      "SHOWPALETTES",
+      "SLICE",
+      "SNAP",
+      "SOLID",
+      "SPELL",
+      "SPLINE",
+      "SPLINEDIT",
+      "STANDARDS",
+      "STRETCH",
+      "STYLE",
+      "SUBTRACT",
+      "SURFBLEND",
+      "SURFEXTEND",
+      "SURFFILLET",
+      "SURFNETWORK",
+      "SURFOFFSET",
+      "SURFPATCH",
+      "SURFSCULPT",
+      "TABLE",
+      "TABLESTYLE",
+      "TEXT",
+      "TEXTALIGN",
+      "TEXTEDIT",
+      "THICKNESS",
+      "THUMBSAVE",
+      "TILEMODE",
+      "TOLERANCE",
+      "TOOLBAR",
+      "TOOLPALETTES",
+      "TORUS",
+      "TRIM",
+      "UCS",
+      "UCSMAN",
+      "UNION",
+      "UNISOLATEOBJECTS",
+      "UNITS",
+      "VIEW",
+      "VIEWGO",
+      "VIEWPLAY",
+      "VISUALSTYLES",
+      "VPOINT",
+      "VPORTS",
+      "VSCURRENT",
+      "WBLOCK",
+      "WEDGE",
+      "XATTACH",
+      "XBIND",
+      "XCLIP",
+      "XLINE",
+      "XREF",
+      "ZOOM"
+    ],
+    "cuix_com_hifen": [
+      "ARRAY",
+      "ARRAYCLOSE",
+      "ATTEDIT",
+      "BEDIT",
+      "DIMSTYLE",
+      "HATCHEDIT",
+      "POINTCLOUDMANAGER",
+      "PURGE",
+      "SHADEMODE",
+      "TOOLBAR",
+      "VIEW",
+      "VPOINT",
+      "VPORTS"
+    ]
+  },
+  "sysvars": {
+    "2DRETAINMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "2DRETAINMODELEVEL": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "3DDWFPREC": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "3DOSMODE": {
+      "valor": 139,
+      "tipo": "inteiro"
+    },
+    "ACADVER": {
+      "valor": "25.0s (LMS Tech)",
+      "tipo": "texto"
+    },
+    "ACTMXPROMPT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ACTRECORDSTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ACTRECPATH": {
+      "valor": "C:\\Users\\Correta Engenharia\\AppData\\Roaming\\Autodesk\\AutoCAD 2025\\R25.0\\enu\\support\\Actions",
+      "tipo": "texto"
+    },
+    "ANGBASE": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "ANGDIR": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ANNOMONITOR": {
+      "valor": -2,
+      "tipo": "inteiro"
+    },
+    "ANNOSCALEZOOM": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "APERTURE": {
+      "valor": 10,
+      "tipo": "inteiro"
+    },
+    "APPAUTOLOAD": {
+      "valor": 14,
+      "tipo": "inteiro"
+    },
+    "APPFRAMERESOURCES": {
+      "valor": "pack://application:,,,/AcWindows;component/AppFrame/AcAppFrame.xaml",
+      "tipo": "texto"
+    },
+    "APPLYGLOBALOPACITIES": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ARRAYASSOCIATIVITY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "ARRAYCREATION": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ARRAYEDITSTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ARRAYTYPE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ASMOUTVER": {
+      "valor": 70,
+      "tipo": "inteiro"
+    },
+    "ASMRESTORE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "ASSISTANTSUPPORT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "ASYNCSELECTION": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ATTDIA": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ATTIPE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ATTMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "ATTMULTI": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "ATTREQ": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "AUDITXREFSYMB": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "AUNITS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "AUPREC": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "AUTOPLACEMENT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "AUTOSNAPINDICATORSIZE": {
+      "valor": 15,
+      "tipo": "inteiro"
+    },
+    "BACKGROUNDJIT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "BCONVERTINCLUDEEXISTINGBLOCKS": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "BGCOREPUBLISH": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "BLOCKCREATEMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "BLOCKEXCLUDECOLOR": {
+      "valor": 7,
+      "tipo": "inteiro"
+    },
+    "BLOCKEXTRACTORBLOCKINUSEONLY": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "BLOCKEXTRACTORBLOCKSIZE": {
+      "valor": -1,
+      "tipo": "inteiro"
+    },
+    "BLOCKEXTRACTORCONCURRENCY": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "BLOCKEXTRACTORDWGBLOCKSIZE": {
+      "valor": -1,
+      "tipo": "inteiro"
+    },
+    "BLOCKINCLUDECOLOR": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "BLOCKINDEXING": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "BLOCKINDEXINGLOCAL": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "BLOCKMRULIST": {
+      "valor": 50,
+      "tipo": "inteiro"
+    },
+    "BLOCKNAVIGATE": {
+      "valor": ".",
+      "tipo": "texto"
+    },
+    "BLOCKOPT": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "BLOCKREDEFINEMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "BLOCKSDATACOLLECTION": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "BLOCKSRECENTFOLDER": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "BLOCKSTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "BLOCKSTREAMLOG": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "BLOCKSTREAM_FAVORITES": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "BLOCKSTREAM_LOCALSERVERASSERT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "BLOCKSTREAM_MPTHUMBNAIL": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "BLOCKSTREAM_PREVIEWGENMETHOD": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "BLOCKSTREAM_USELOCALSERVER": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "BLOCKSYNCFOLDER": {
+      "valor": "C:\\Users\\Correta Engenharia\\AppData\\Roaming\\Autodesk\\AutoCAD 2025\\R25.0\\enu\\",
+      "tipo": "texto"
+    },
+    "BLOCKTARGETCOLOR": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "BLOCKTESTWINDOW": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "BPTEXTHORIZONTAL": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "CACHEDPRODUCTNAME": {
+      "valor": "AutoCAD 2025",
+      "tipo": "texto"
+    },
+    "CACHEMAXBLOCKSIDEDB": {
+      "valor": 10,
+      "tipo": "inteiro"
+    },
+    "CACHEMAXFILES": {
+      "valor": 256,
+      "tipo": "inteiro"
+    },
+    "CACHEMAXTOTALSIZE": {
+      "valor": 1024,
+      "tipo": "inteiro"
+    },
+    "CALCINPUT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "CAMERADISPLAY": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CAMERAHEIGHT": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "CAPTURETHUMBNAILS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "CBARTRANSPARENCY": {
+      "valor": 50,
+      "tipo": "inteiro"
+    },
+    "CCONSTRAINTFORM": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CECOLOR": {
+      "valor": "BYLAYER",
+      "tipo": "texto"
+    },
+    "CELTSCALE": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "CELTYPE": {
+      "valor": "ByLayer",
+      "tipo": "texto"
+    },
+    "CELWEIGHT": {
+      "valor": -1,
+      "tipo": "inteiro"
+    },
+    "CENTEREXE": {
+      "valor": 3.5,
+      "tipo": "real"
+    },
+    "CENTERLAYER": {
+      "valor": ".",
+      "tipo": "texto"
+    },
+    "CENTERLTSCALE": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "CENTERLTYPE": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "CENTERLTYPEFILE": {
+      "valor": "acadiso.lin",
+      "tipo": "texto"
+    },
+    "CENTERMARKEXE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "CHAMFERA": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "CHAMFERB": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "CHAMFERC": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "CHAMFERD": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "CLASSICKEYS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CLAYER": {
+      "valor": "TEXTOS",
+      "tipo": "texto"
+    },
+    "CLEANSCREENSTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CLEARTYPE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "CLIPROMPTLINES": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "CLIPROMPTUPDATE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "CMATERIAL": {
+      "valor": "ByLayer",
+      "tipo": "texto"
+    },
+    "CMCOLOR": {
+      "valor": "RGB:0,0,0",
+      "tipo": "texto"
+    },
+    "CMDDIA": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CMDECHO": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CMDSYSVARSEPARATE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "CMDSYSVARSORTMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "CMFADECOLOR": {
+      "valor": 60,
+      "tipo": "inteiro"
+    },
+    "CMFADEOPACITY": {
+      "valor": 40,
+      "tipo": "inteiro"
+    },
+    "CMLJUST": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CMLSCALE": {
+      "valor": 20.0,
+      "tipo": "real"
+    },
+    "CMLSTYLE": {
+      "valor": "STANDARD",
+      "tipo": "texto"
+    },
+    "CMOSNAP": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COLORTHEME": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COMMANDPREVIEW": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COMMENTHIGHLIGHT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COMPARECOLOR1": {
+      "valor": "82",
+      "tipo": "texto"
+    },
+    "COMPARECOLOR2": {
+      "valor": "1",
+      "tipo": "texto"
+    },
+    "COMPARECOLORCOMMON": {
+      "valor": "253",
+      "tipo": "texto"
+    },
+    "COMPARECOLORCONTEXT": {
+      "valor": "7",
+      "tipo": "texto"
+    },
+    "COMPAREDIFFINDEX": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COMPAREDIFFTOTAL": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COMPAREFIRSTEDITBY": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "COMPAREFIRSTNAME": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "COMPAREFIRSTPATH": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "COMPAREFIRSTSAVETIME": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "COMPAREFRONT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COMPAREHATCH": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COMPAREINPLACE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COMPAREPINLEFT": {
+      "valor": 0.01,
+      "tipo": "real"
+    },
+    "COMPAREPINTOP": {
+      "valor": 0.01,
+      "tipo": "real"
+    },
+    "COMPAREPROPS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COMPARERCMARGIN": {
+      "valor": 5,
+      "tipo": "inteiro"
+    },
+    "COMPARERCSHAPE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COMPARESECONDEDITBY": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "COMPARESECONDNAME": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "COMPARESECONDPATH": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "COMPARESECONDSAVETIME": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "COMPARESETTINGDLGPIN": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COMPARESHOW1": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COMPARESHOW2": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COMPARESHOWCOMMON": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COMPARESHOWCONTEXT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COMPARESHOWRC": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COMPARESHOWREFERENCE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COMPARETEXT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COMPARETOLERANCE": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "COMPLETABLESTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COMPLEXLTPREVIEW": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "CONFIGLEVEL": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "CONSENTSTATUS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CONSOLIDATEGEOMETRY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "CONSOLIDATIONMODE": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "CONSOLIDATIONPERFORMANCE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CONSTRAINTBARDISPLAY": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "CONSTRAINTCURSORDISPLAY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "CONSTRAINTINFER": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CONTENTTYPEORDER": {
+      "valor": "B1L1H1T1D1V1",
+      "tipo": "texto"
+    },
+    "CONTEXTIMAGE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COUNTASGEOM": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COUNTCHECK": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "COUNTCOLOR": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "COUNTERRORCOLOR": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COUNTERRORNUM": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COUNTGEOMOPT": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "COUNTINSPECTINGMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COUNTMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COUNTNUMBER": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COUNTPALETTESTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "COUNTSERVICE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "COUNTXREF": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CROSSINGAREACOLOR": {
+      "valor": 100,
+      "tipo": "inteiro"
+    },
+    "CULLINGOBJ": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "CULLINGOBJSELECTION": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CURSORBADGE": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "CURSORTYPE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "CVPORT": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "DCDOCSSUPPORT": {
+      "valor": 59,
+      "tipo": "inteiro"
+    },
+    "DEFAULTINDEX": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DELETIONEFFECT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DESIGNFEEDDWGID": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "DETECTFEEDBACK": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DETECTGROUPCOUNT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DETECTGROUPINDEX": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DETECTPALETTESTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DETECTREVIEW": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DGNFRAME": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DGNIMPORTMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DGNIMPORTUNITCONVERSION": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIGITIZER": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMADEC": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMALT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMALTD": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "DIMALTF": {
+      "valor": 0.0393701,
+      "tipo": "real"
+    },
+    "DIMALTRND": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "DIMALTTD": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "DIMALTTZ": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMALTU": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "DIMALTZ": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMAPOST": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "DIMARCSYM": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMASO": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DIMASSOC": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "DIMASZ": {
+      "valor": 0.18,
+      "tipo": "real"
+    },
+    "DIMATFIT": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "DIMAUNIT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMAZIN": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMBLK": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "DIMBLK1": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "DIMBLK2": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "DIMCEN": {
+      "valor": 2.5,
+      "tipo": "real"
+    },
+    "DIMCLRD": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMCLRE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMCLRT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMCOMMANDACTIVE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMCONSTRAINTICON": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "DIMCONTINUEMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DIMDEC": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "DIMDLE": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "DIMDLI": {
+      "valor": 3.75,
+      "tipo": "real"
+    },
+    "DIMDSEP": {
+      "valor": ",",
+      "tipo": "texto"
+    },
+    "DIMEXE": {
+      "valor": 0.12,
+      "tipo": "real"
+    },
+    "DIMEXO": {
+      "valor": 0.06,
+      "tipo": "real"
+    },
+    "DIMFRAC": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMFXL": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "DIMFXLON": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMGAP": {
+      "valor": 0.06,
+      "tipo": "real"
+    },
+    "DIMJOGANG": {
+      "valor": 1.5708,
+      "tipo": "real"
+    },
+    "DIMJUST": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMLAYER": {
+      "valor": ".",
+      "tipo": "texto"
+    },
+    "DIMLDRBLK": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "DIMLFAC": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "DIMLIM": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMLTEX1": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "DIMLTEX2": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "DIMLTYPE": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "DIMLUNIT": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "DIMLWD": {
+      "valor": -2,
+      "tipo": "inteiro"
+    },
+    "DIMLWE": {
+      "valor": -2,
+      "tipo": "inteiro"
+    },
+    "DIMPICKBOX": {
+      "valor": 5,
+      "tipo": "inteiro"
+    },
+    "DIMPOST": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "DIMRND": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "DIMSAH": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMSCALE": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "DIMSD1": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMSD2": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMSE1": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMSE2": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMSHO": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DIMSOXD": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMSTYLE": {
+      "valor": "ISO-25",
+      "tipo": "texto"
+    },
+    "DIMTAD": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DIMTDEC": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "DIMTFAC": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "DIMTFILL": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMTFILLCLR": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMTIH": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMTIX": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMTM": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "DIMTMOVE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMTOFL": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DIMTOH": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMTOL": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMTOLJ": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMTP": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "DIMTSZ": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "DIMTVP": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "DIMTXSTY": {
+      "valor": "Standard",
+      "tipo": "texto"
+    },
+    "DIMTXT": {
+      "valor": 0.22,
+      "tipo": "real"
+    },
+    "DIMTXTDIRECTION": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMTXTRULER": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DIMTZIN": {
+      "valor": 8,
+      "tipo": "inteiro"
+    },
+    "DIMUPT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DIMZIN": {
+      "valor": 8,
+      "tipo": "inteiro"
+    },
+    "DISPLAYVIEWCUBEIN2D": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DISPLAYVIEWCUBEIN3D": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DISPSILH": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DISPSILHBLOCKS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DRAGCOLOR": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DRAGOPACITY": {
+      "valor": 25,
+      "tipo": "inteiro"
+    },
+    "DWFFRAME": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "DWGCODEPAGE": {
+      "valor": "ANSI_1252",
+      "tipo": "texto"
+    },
+    "DWGCOMPAREMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DWGNAME": {
+      "valor": "teste_trim.dwg",
+      "tipo": "texto"
+    },
+    "DWGPREFIX": {
+      "valor": "C:\\temp\\mcp_cad_com\\",
+      "tipo": "texto"
+    },
+    "DX12FRAMERATEUNLIMITED": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "DYNCONSTRAINTDISPLAY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DYNINFOTIPS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "DYNMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ELEVATION": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "ENABLEIDROP": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ENABLESYNCPDF": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "ERHIGHLIGHT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "EXPERT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "EXPORTEPLOTFORMAT": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "EXPORTMODELSPACE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "EXPORTPAGESETUP": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "EXPORTPAPERSPACE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "EXTMAX": {
+      "valor": [
+        20.2033,
+        12.5,
+        0.0
+      ],
+      "tipo": "ponto/lista"
+    },
+    "EXTMIN": {
+      "valor": [
+        -2.5,
+        -5.47333,
+        0.0
+      ],
+      "tipo": "ponto/lista"
+    },
+    "EXTNAMES": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "FABRICEXPERIMENTS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "FACETERDEVNORMAL": {
+      "valor": 0.698132,
+      "tipo": "real"
+    },
+    "FACETERDEVSURFACE": {
+      "valor": 0.001,
+      "tipo": "real"
+    },
+    "FACETERGRIDRATIO": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "FACETERMAXEDGELENGTH": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "FADINGFUNCTIONTYPE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "FADINGPOWER": {
+      "valor": 0.3,
+      "tipo": "real"
+    },
+    "FASTSHADEDMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "FIBERWORLD": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "FILEDIA": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "FILETABPREVIEW": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "FILETABSTATE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "FILETABTHUMBHOVER": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "FILETABVISIBLE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "FILLETPOLYARC": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "FILLETRAD": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "FILLETRAD3D": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "FILLMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "FRAME": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "FRAMEINTERACTIVITYMODE": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "FRAMESELECTION": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "FULLCONSTRAINTEVALUATION": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "GALLERYVIEW": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "GAUSSSIGMA": {
+      "valor": 52.5,
+      "tipo": "real"
+    },
+    "GAUSSTHETA": {
+      "valor": 10.0,
+      "tipo": "real"
+    },
+    "GEOLOCATEMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "GEOMAPMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "GEOMARKPOSITIONSIZE": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "GESTURAONEFINGERHOLDDISTANCE": {
+      "valor": 55.0,
+      "tipo": "real"
+    },
+    "GESTURAONEFINGERHOLDTIME": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "GESTURAONEFINGERTAPTIME": {
+      "valor": 0.25,
+      "tipo": "real"
+    },
+    "GESTURAPROCESSEVENTMAXTIMEMUL": {
+      "valor": 0.5,
+      "tipo": "real"
+    },
+    "GESTURATWOFINGEREVENTCOUNTER": {
+      "valor": 10.0,
+      "tipo": "real"
+    },
+    "GESTURATWOFINGERHOLDDISTANCE": {
+      "valor": 6.0,
+      "tipo": "real"
+    },
+    "GESTURATWOFINGERPINCHEXPRATIO": {
+      "valor": 0.1,
+      "tipo": "real"
+    },
+    "GESTURATWOFINGERPINCHXMULT": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "GESTURATWOFINGERSEGDISTANCE": {
+      "valor": 200.0,
+      "tipo": "real"
+    },
+    "GESTURATWOFINGERTRVCNTRATIO": {
+      "valor": 0.5,
+      "tipo": "real"
+    },
+    "GESTURATWOFINGERTRVSEGRATIO": {
+      "valor": 5.0,
+      "tipo": "real"
+    },
+    "GFXDX12": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "GLOBALOPACITY": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "GLOWHIGHLIGHTING": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "GPUHATCH": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "GPULINETYPE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "GPUTEXT2D": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "GRIDMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "GRIDSTYLE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "GRIDUNIT": {
+      "valor": [
+        10.0,
+        10.0
+      ],
+      "tipo": "ponto/lista"
+    },
+    "GRIPMULTIFUNCTIONAL": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "GRIPS": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "GRIPSIZE": {
+      "valor": 5,
+      "tipo": "inteiro"
+    },
+    "GRIPSTOUCHAREA": {
+      "valor": 25,
+      "tipo": "inteiro"
+    },
+    "GROUPDISPLAYMODE": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "GSFENABLE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "GSFQAFLAGS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "GSFUSAGEINFO": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "GSTHREADING": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "HALOGAP": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "HATCHBOUNDSET": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "HATCHCREATION": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "HATCHTYPE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "HELPPREFIX": {
+      "valor": "C:\\Program Files\\Autodesk\\AutoCAD 2025\\Help\\index.html",
+      "tipo": "texto"
+    },
+    "HIDETEXT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "HPBACKGROUNDCOLOR": {
+      "valor": ".",
+      "tipo": "texto"
+    },
+    "HPCOLOR": {
+      "valor": ".",
+      "tipo": "texto"
+    },
+    "HPDLGMODE": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "HPDRAWMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "HPLASTPATTERN": {
+      "valor": "ANSI31",
+      "tipo": "texto"
+    },
+    "HPLAYER": {
+      "valor": ".",
+      "tipo": "texto"
+    },
+    "HPLINETYPE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "HPMAXAREAS": {
+      "valor": 100,
+      "tipo": "inteiro"
+    },
+    "HPMAXLOOPS": {
+      "valor": 1000,
+      "tipo": "inteiro"
+    },
+    "HPMAXPATTERNCACHETIME": {
+      "valor": 10,
+      "tipo": "inteiro"
+    },
+    "HPPATHALIGNMENT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "HPPATHWIDTH": {
+      "valor": 0.25,
+      "tipo": "real"
+    },
+    "HPPICKMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "HPQUICKPREVIEW": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "HPRELATIVEPS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "HPTRANSPARENCY": {
+      "valor": ".",
+      "tipo": "texto"
+    },
+    "HYPERLINKBASE": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "IMAGEDRAGPREVIEW": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "IMAGEFRAME": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "INDEXCTL": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "INITIALUSEDETECT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "INPUTSEARCHDELAY": {
+      "valor": 300,
+      "tipo": "inteiro"
+    },
+    "INPUTSEARCHOPTIONFLAGS": {
+      "valor": 31,
+      "tipo": "inteiro"
+    },
+    "INSBASE": {
+      "valor": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "tipo": "ponto/lista"
+    },
+    "INSUNITS": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "INSUNITSDEFSOURCE": {
+      "valor": 4,
+      "tipo": "inteiro"
+    },
+    "INSUNITSDEFTARGET": {
+      "valor": 4,
+      "tipo": "inteiro"
+    },
+    "INTERFERECOLOR": {
+      "valor": "1",
+      "tipo": "texto"
+    },
+    "INTERFEREOBJVS": {
+      "valor": "Realistic",
+      "tipo": "texto"
+    },
+    "INTERFEREVPVS": {
+      "valor": "Wireframe",
+      "tipo": "texto"
+    },
+    "INTERRUPTPREVIEW": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "INTERSECTIONCOLOR": {
+      "valor": 257,
+      "tipo": "inteiro"
+    },
+    "INTERSECTIONDISPLAY": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ISFLIPARC": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "JIGZOOMMAX": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "JIGZOOMMIN": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "LATITUDE": {
+      "valor": 37.795,
+      "tipo": "real"
+    },
+    "LAYEROVERRIDEHIGHLIGHT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "LAYOUTCREATEVIEWPORT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "LAYOUTTAB": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "LEGACYCODESEARCH": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "LENGTHENTYPE": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "LENSLENGTH": {
+      "valor": 50.0,
+      "tipo": "real"
+    },
+    "LICENSEMODEL": {
+      "valor": "MODEL_USER",
+      "tipo": "texto"
+    },
+    "LICENSETYPE": {
+      "valor": "TYPE_USER",
+      "tipo": "texto"
+    },
+    "LICENSEUSAGE": {
+      "valor": "USAGE_USER",
+      "tipo": "texto"
+    },
+    "LICENSEUSAGESUBMODEL": {
+      "valor": "STD#1",
+      "tipo": "texto"
+    },
+    "LIGHTGLYPHDISPLAY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "LIMCHECK": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "LIMMAX": {
+      "valor": [
+        420.0,
+        297.0
+      ],
+      "tipo": "ponto/lista"
+    },
+    "LIMMIN": {
+      "valor": [
+        0.0,
+        0.0
+      ],
+      "tipo": "ponto/lista"
+    },
+    "LINEEXTRACTCOLOR": {
+      "valor": "3271557123",
+      "tipo": "texto"
+    },
+    "LINEEXTRACTCONNECTSEG": {
+      "valor": 10.0,
+      "tipo": "real"
+    },
+    "LINEEXTRACTCONNECTSEGM": {
+      "valor": 300.0,
+      "tipo": "real"
+    },
+    "LINEEXTRACTMAXPOINTS": {
+      "valor": 18000,
+      "tipo": "inteiro"
+    },
+    "LINEEXTRACTMINSEGMENTLEN": {
+      "valor": 6.0,
+      "tipo": "real"
+    },
+    "LINEEXTRACTMINSEGMENTLENM": {
+      "valor": 150.0,
+      "tipo": "real"
+    },
+    "LINEEXTRACTOUTPUTLAYER": {
+      "valor": "Use Current",
+      "tipo": "texto"
+    },
+    "LINEEXTRACTOUTPUTTYPE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "LINEEXTRACTPOLYLINEWIDTH": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "LINEEXTRACTPREVIEW": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "LINEEXTRACTREDUCECOLVERT": {
+      "valor": 5,
+      "tipo": "inteiro"
+    },
+    "LINEEXTRACTTYPE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "LINEFADING": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "LINEFADINGLEVEL": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "LINESMOOTHING": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "LISPPROMPT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "LISPSYS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "LOFTANG1": {
+      "valor": 1.5708,
+      "tipo": "real"
+    },
+    "LOFTANG2": {
+      "valor": 1.5708,
+      "tipo": "real"
+    },
+    "LOFTMAG1": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "LOFTMAG2": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "LOFTNORMALS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "LOFTPARAM": {
+      "valor": 7,
+      "tipo": "inteiro"
+    },
+    "LONGITUDE": {
+      "valor": -122.394,
+      "tipo": "real"
+    },
+    "LTGAPSELECTION": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "LTSCALE": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "LUNITS": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "LUPREC": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "LWDISPLAY": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "MACROINSIGHTSSUPPORT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MACRONOTIFY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MARKUPASSISTMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MARKUPASSISTSERVICE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MARKUPIMPORTALIGN": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "MARKUPPAPERDISPLAY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MARKUPPAPERTRANSPARENCY": {
+      "valor": 90,
+      "tipo": "inteiro"
+    },
+    "MARKUPSELECTIONMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MATCHMODE": {
+      "valor": 262143,
+      "tipo": "inteiro"
+    },
+    "MAXACTVP": {
+      "valor": 64,
+      "tipo": "inteiro"
+    },
+    "MAXINTERSECTIONCURVEPOINTS": {
+      "valor": 300,
+      "tipo": "inteiro"
+    },
+    "MAXTOUCHES": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "MEASUREMENT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MEASUREMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MESHTYPE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MIRRHATCH": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "MIRRORSOURCE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "MIRRTEXT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "MISTYPETIMES": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "MLEADERLAYER": {
+      "valor": ".",
+      "tipo": "texto"
+    },
+    "MOCOOPTIMIZE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MOUSEMOVEELAPSEDTHRESHOLD": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MSLTSCALE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MTEXTAUTOSTACK": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MTEXTCOMMANDACTIVE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "MTEXTDETECTSPACE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "MTEXTEDENCODING": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "MVIEWPREVIEW": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "NAVBARDISPLAY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "NEXTFIBERWORLD": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "NORTHDIRECTION": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "OBJECTISOLATIONMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "OLEQUALITY": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "OLESTARTUP": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "OMITFROZENVPEXTENTFORPLOT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ONBOARDINGCOMPLETED": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ONBOARDINGSUPPRESSED": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "ONLINEUSERID": {
+      "valor": "MH8LV7ZLDWBQYNX7",
+      "tipo": "texto"
+    },
+    "ONLINEUSERNAME": {
+      "valor": "rafael.alexandreCWV64",
+      "tipo": "texto"
+    },
+    "ORBITAUTOTARGET": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "ORTHOMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "OSMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PALETTEOPAQUE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PAPERUPDATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PARAMETERCOPYMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PASTESPECMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PCMSTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PDFIMPORTFILTER": {
+      "valor": 8,
+      "tipo": "inteiro"
+    },
+    "PDFIMPORTIMAGEPATH": {
+      "valor": "PDF Images",
+      "tipo": "texto"
+    },
+    "PDFIMPORTLAYERS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PDFIMPORTMODE": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "PDFOSNAP": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PDFSHX": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PDFSHXBESTFONT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PDFSHXLAYER": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PDFSHXTEXTSETTINGS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PDFSHXTHRESHOLD": {
+      "valor": 95,
+      "tipo": "inteiro"
+    },
+    "PDFTEXTRENDER": {
+      "valor": 85,
+      "tipo": "inteiro"
+    },
+    "PDMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PDSIZE": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "PEDITACCEPT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PERFANALYZERACTIONSTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PERFANALYZERPALETTESTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PERFANALYZERRESULTFILE": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "PERVERTEXCOLOR": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PICKAUTO": {
+      "valor": 5,
+      "tipo": "inteiro"
+    },
+    "PICKBOX": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "PICKFIRST": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PLACEMENTMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PLACEMENTSWITCH": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PLINEGCENMAX": {
+      "valor": 50000,
+      "tipo": "inteiro"
+    },
+    "PLINEGEN": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PLINEREVERSEWIDTHS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PLINEWID": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "PLOTTOFILEPATH": {
+      "valor": "C:\\Users\\Correta Engenharia\\Documents",
+      "tipo": "texto"
+    },
+    "PLOTTRANSPARENCYOVERRIDE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PLQUIET": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUD2DVSDISPLAY": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDAUTOUPDATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDBOUNDARY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDCACHESIZE": {
+      "valor": 512,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDCLIPFRAME": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDDENSITY": {
+      "valor": 15,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDEVENTLOG": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDLIGHTING": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDLIGHTSOURCE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDLOCK": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDLOD": {
+      "valor": 10,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDPERFTRACK": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDPOINTMAX": {
+      "valor": 10000000,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDPOINTMAXLEGACY": {
+      "valor": 1500000,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDPOINTSIZE": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDPROGRESSIVEUPDATE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDRTDENSITY": {
+      "valor": 5,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDSHADING": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "POINTCLOUDVISRETAIN": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "POLARADDANG": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "POLARANG": {
+      "valor": 1.5708,
+      "tipo": "real"
+    },
+    "POLARMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PRESELECTIONEFFECT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PRESELECTIONEFFECTTEST": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PRESELECTIONNOTIFICATION": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PREVIEWCREATIONTRANSPARENCY": {
+      "valor": 60,
+      "tipo": "inteiro"
+    },
+    "PREVIEWDELAY": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PROJECTNAME": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "PROMPTSTYPE": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "PROPERTYPREVIEW": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PROPOBJLIMIT": {
+      "valor": 25000,
+      "tipo": "inteiro"
+    },
+    "PROPPREVTIMEOUT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PROXYGRAPHICS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PSLTSCALE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PSOLHEIGHT": {
+      "valor": 4.0,
+      "tipo": "real"
+    },
+    "PSOLWIDTH": {
+      "valor": 0.25,
+      "tipo": "real"
+    },
+    "PSTYLEMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PSTYLEPOLICY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PSVPSCALE": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "PUBLISHDWFUSINGINSUNITS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PUCSBASE": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "PURGEANONBLOCKS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PURGESYSTEM": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PURGEXREF": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "PUSHTOAUTODESKDOCSSUPPORT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "PUSHTODOCSSTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "QTEXTMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "QUICKMEASUREENABLED": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "RASTERPERCENT": {
+      "valor": 20,
+      "tipo": "inteiro"
+    },
+    "RASTERTHRESHOLD": {
+      "valor": 20,
+      "tipo": "inteiro"
+    },
+    "REBUILD2DCV": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "REBUILD2DDEGREE": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "REBUILD2DOPTION": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "REBUILDDEGREEU": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "REBUILDDEGREEV": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "REBUILDOPTIONS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "REBUILDU": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "REBUILDV": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "RECOVER3DSOLIDS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "RECOVERAUTO": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "RECOVERSOLIDSWEEPS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "REFPATHTYPE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "REGENMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "REMEMBERMISTYPE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "REVCLOUDAPPROXARCLEN": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "REVCLOUDARCSTYLE": {
+      "valor": "Normal",
+      "tipo": "texto"
+    },
+    "REVCLOUDARCVARIANCE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "REVCLOUDCREATEMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "REVCLOUDGRIPS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "REVCLOUDMAXARCLENGTH": {
+      "valor": 0.5,
+      "tipo": "real"
+    },
+    "REVCLOUDMINARCLENGTH": {
+      "valor": 0.5,
+      "tipo": "real"
+    },
+    "RIBBONBGLOAD": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "RIBBONCONTEXTSELLIM": {
+      "valor": 2500,
+      "tipo": "inteiro"
+    },
+    "RIBBONDOCKEDHEIGHT": {
+      "valor": 100,
+      "tipo": "inteiro"
+    },
+    "RIBBONICONRESIZE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "RIBBONINSERT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "RIBBONSELECTMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "RIBBONSTATE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "ROLLOVEROPACITY": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "RTREGENAUTO": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SAFEMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SAFEMODEAPPS": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "SCREENMENU": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SDIMAUTOPREFIX": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SDIMEXT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SDIMPREFERALIGNED": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SECTIONOFFSETINC": {
+      "valor": 6.0,
+      "tipo": "real"
+    },
+    "SECTIONTHICKNESSINC": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "SECURELOAD": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SELECTIONAREA": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SELECTIONAREAOPACITY": {
+      "valor": 25,
+      "tipo": "inteiro"
+    },
+    "SELECTIONCYCLING": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SELECTIONEFFECT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SELECTIONEFFECTCOLOR": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SELECTIONOFFSCREEN": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SELECTIONPREVIEWLIMIT": {
+      "valor": 20000,
+      "tipo": "inteiro"
+    },
+    "SELECTIONTOUCHAREA": {
+      "valor": 15,
+      "tipo": "inteiro"
+    },
+    "SELECTSIMILARMODE": {
+      "valor": 130,
+      "tipo": "inteiro"
+    },
+    "SHADEDGE": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "SHADEDIF": {
+      "valor": 70,
+      "tipo": "inteiro"
+    },
+    "SHADOWPLANELOCATION": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "SHAREDVIEWSTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SHAREVIEWPROPERTIES": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SHAREVIEWTYPE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SHEETSETWEBSTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SHORTDRAWORDERSCAN": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SHOWHIST": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SHOWNEWSTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SHOWPAGESETUPFORNEWLAYOUTS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SINGLEFINGERPAN": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SKETCHHLTRANSPARENCY": {
+      "valor": 5,
+      "tipo": "inteiro"
+    },
+    "SKETCHHLWIDTH": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "SKETCHINC": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "SKPOLY": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SKTOLERANCE": {
+      "valor": 0.5,
+      "tipo": "real"
+    },
+    "SMDEBUG": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SMJOURNAL": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SMOOTHMESHCONVERT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SMSTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SMTHREADHOTMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SMUNFIXEDTRANSFORM": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SMVERSION": {
+      "valor": "UNSET (Modeler not initialized?)",
+      "tipo": "texto"
+    },
+    "SNAPBASE": {
+      "valor": [
+        0.0,
+        0.0
+      ],
+      "tipo": "ponto/lista"
+    },
+    "SNAPGRIDLEGACY": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SNAPMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SNAPUNIT": {
+      "valor": [
+        10.0,
+        10.0
+      ],
+      "tipo": "ponto/lista"
+    },
+    "SOLIDCHECK": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SOLIDHIST": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SORTENTS": {
+      "valor": 127,
+      "tipo": "inteiro"
+    },
+    "SORTORDER": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SPLDEGREE": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "SPLFRAME": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SPLINESEGS": {
+      "valor": 8,
+      "tipo": "inteiro"
+    },
+    "SPLINETYPE": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "SPLINE_FASTDRAW": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SPLKNOTS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SPLMETHOD": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SPLPERIODIC": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SPOTDIALOGONNEWPAGE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SPOTRESULT": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "SPOTRESULTOPT": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "SSMDETECTMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "STARTMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "STARTUP": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "STATUSBAR": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "STATUSBARSTATE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "STEPSIZE": {
+      "valor": 6.0,
+      "tipo": "real"
+    },
+    "STEPSPERSEC": {
+      "valor": 2.0,
+      "tipo": "real"
+    },
+    "STROKE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "STYLUSFORCETHRESHOLD": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "SUBOBJSELECTIONMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SUPPRESSALERTS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SUPPRESSXREFSELFMSG": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SURFACEASSOCIATIVITY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SURFACEASSOCIATIVITYDRAG": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SURFACEAUTOTRIM": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SURFACEMODELINGMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SURFOFFSETCONNECT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SURFTAB1": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "SURFTAB2": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "SURFTRIMAUTOEXTEND": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SURFTRIMPROJECTION": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "SURFTYPE": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "SURFU": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "SURFV": {
+      "valor": 6,
+      "tipo": "inteiro"
+    },
+    "SYSMON": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "SYSPLOTCFG": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "SYSVARMONITORDIFNUMBER": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "SYSVARMONITORSHOWBUBBLE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TBSHOWSHORTCUTS": {
+      "valor": "yes",
+      "tipo": "texto"
+    },
+    "TDCREATE": {
+      "valor": 2461330.0,
+      "tipo": "real"
+    },
+    "TDINDWG": {
+      "valor": 0.00291667,
+      "tipo": "real"
+    },
+    "TDUCREATE": {
+      "valor": 2461330.0,
+      "tipo": "real"
+    },
+    "TDUPDATE": {
+      "valor": 2461330.0,
+      "tipo": "real"
+    },
+    "TDUSRTIMER": {
+      "valor": 0.00292824,
+      "tipo": "real"
+    },
+    "TDUUPDATE": {
+      "valor": 2461330.0,
+      "tipo": "real"
+    },
+    "TELEMETRYSERVICES": {
+      "valor": 3,
+      "tipo": "inteiro"
+    },
+    "TEMPOVERRIDES": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TEXTALIGNMODE": {
+      "valor": 9,
+      "tipo": "inteiro"
+    },
+    "TEXTALIGNSPACING": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "TEXTALIGNSPACINGVALUE": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "TEXTALLCAPS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TEXTATLASTHRESHOLD": {
+      "valor": 0.2,
+      "tipo": "real"
+    },
+    "TEXTAUTOCORRECTCAPS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TEXTCOMMANDACTIVE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TEXTEDITMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TEXTEDITOR": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TEXTGAPSELECTION": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TEXTJUSTIFY": {
+      "valor": ".",
+      "tipo": "texto"
+    },
+    "TEXTLAYER": {
+      "valor": ".",
+      "tipo": "texto"
+    },
+    "TEXTSIZE": {
+      "valor": 0.2,
+      "tipo": "real"
+    },
+    "TEXTSTYLE": {
+      "valor": "Standard",
+      "tipo": "texto"
+    },
+    "THICKNESS": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "THUMBSIZE2D": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TILEMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TIMEZONE": {
+      "valor": -8000,
+      "tipo": "inteiro"
+    },
+    "TOGGLEVULKAN": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "TOOLTIPS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TOOLTIPSIZE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TOOLTIPTRANSPARENCY": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TOUCHCURSOROFFSET": {
+      "valor": 60,
+      "tipo": "inteiro"
+    },
+    "TOUCHINPUTMODE": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "TOUCHMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TOUCHPROTOTYPES": {
+      "valor": 4,
+      "tipo": "inteiro"
+    },
+    "TRACECURRENT": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "TRACEDISPLAYMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TRACEFADECTL": {
+      "valor": 40,
+      "tipo": "inteiro"
+    },
+    "TRACEMARKUPFADECTL": {
+      "valor": 85,
+      "tipo": "inteiro"
+    },
+    "TRACEMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TRACEOSNAP": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TRACEPALETTESTATE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TRACEPAPERCTL": {
+      "valor": 20,
+      "tipo": "inteiro"
+    },
+    "TRACEPINLEFT": {
+      "valor": 0.01,
+      "tipo": "real"
+    },
+    "TRACEPINTOP": {
+      "valor": 0.01,
+      "tipo": "real"
+    },
+    "TRACESETTINGSPIN": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TRACEVPSUPPORT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TRACEWID": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "TRANSPARENCYDISPLAY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TRAVERSALTHREAD": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TRAYICONS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TRAYNOTIFY": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TRAYTIMEOUT": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TREEDEPTH": {
+      "valor": 3020,
+      "tipo": "inteiro"
+    },
+    "TRIMARCASCURVE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TRIMEDGES": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TRIMEXTENDMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TRUSTEDPATHS": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "TXT2MTXTCOMBINEMTEXT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TXT2MTXTLINESPACING": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "TXT2MTXTTEXTORDER": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "TXT2MTXTWORDWRAP": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "UCS2DDISPLAYSETTING": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "UCS3DPARADISPLAYSETTING": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "UCS3DPERPDISPLAYSETTING": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "UCSBASE": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "UCSNAME": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "UCSORG": {
+      "valor": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "tipo": "ponto/lista"
+    },
+    "UCSSELECTMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "UCSXDIR": {
+      "valor": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "tipo": "ponto/lista"
+    },
+    "UCSYDIR": {
+      "valor": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "tipo": "ponto/lista"
+    },
+    "UILOCALE": {
+      "valor": "en-US",
+      "tipo": "texto"
+    },
+    "UNITMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "UOSNAP": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "UPDATEXREFPATHFORSAVE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "USEFUZZYALIGNMENT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "USERI1": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "USERI2": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "USERI3": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "USERI4": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "USERI5": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "USERNAME": {
+      "valor": "Correta Engenharia",
+      "tipo": "texto"
+    },
+    "USERR1": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "USERR2": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "USERR3": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "USERR4": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "USERR5": {
+      "valor": 0.0,
+      "tipo": "real"
+    },
+    "VERSIONEDITBY": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "VERSIONPROVIDER": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "VERSIONSAVETIME": {
+      "valor": "",
+      "tipo": "texto"
+    },
+    "VIEWBACKSTATUS": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "VIEWCREATION": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "VIEWDETAILCREATION": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "VIEWDETAILEDITOR": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "VIEWEDITOR": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "VIEWFWDSTATUS": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "VIEWSECTIONCREATION": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "VIEWSECTIONEDITOR": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "VIEWSKETCHMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "VIEWUPDATEAUTO": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "VISRETAIN": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "VISRETAINMODE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "VPCONTROL": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "VSACURVATUREHIGH": {
+      "valor": 1.0,
+      "tipo": "real"
+    },
+    "VSACURVATURELOW": {
+      "valor": -1.0,
+      "tipo": "real"
+    },
+    "VSACURVATURETYPE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "VSADRAFTANGLEHIGH": {
+      "valor": 3.0,
+      "tipo": "real"
+    },
+    "VSADRAFTANGLELOW": {
+      "valor": -3.0,
+      "tipo": "real"
+    },
+    "VSAZEBRACOLOR1": {
+      "valor": "RGB:255,255,255",
+      "tipo": "texto"
+    },
+    "VSAZEBRACOLOR2": {
+      "valor": "RGB:0,0,0",
+      "tipo": "texto"
+    },
+    "VSAZEBRADIRECTION": {
+      "valor": 90,
+      "tipo": "inteiro"
+    },
+    "VSAZEBRASIZE": {
+      "valor": 45,
+      "tipo": "inteiro"
+    },
+    "VSAZEBRATYPE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "WBDEFAULTBROWSER": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "WBHELPTYPE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "WBLOCKCREATEMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "WHIPALLSZB": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "WHIPARC": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "WHIPPREVIEWBGCOLOR": {
+      "valor": "RGB:33,40,48",
+      "tipo": "texto"
+    },
+    "WINDOWAREACOLOR": {
+      "valor": 150,
+      "tipo": "inteiro"
+    },
+    "WIPEOUTFRAME": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "WORKSPACELABEL": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "WORLDVIEW": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "WSAUTOSAVE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "WSCURRENT": {
+      "valor": "Drafting & Annotation",
+      "tipo": "texto"
+    },
+    "XCLIPFRAME": {
+      "valor": 2,
+      "tipo": "inteiro"
+    },
+    "XCOMPAREBAKPATH": {
+      "valor": "C:\\Users\\Correta Engenharia\\AppData\\Local\\Autodesk\\AutoCAD 2025\\R25.0\\enu\\XCompareBackup",
+      "tipo": "texto"
+    },
+    "XCOMPAREBAKSIZE": {
+      "valor": 500,
+      "tipo": "inteiro"
+    },
+    "XCOMPARECLEANINTERVAL": {
+      "valor": 24,
+      "tipo": "inteiro"
+    },
+    "XCOMPARECOLORMODE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "XCOMPAREENABLE": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "XCOMPARELASTCLEANTIME": {
+      "valor": "2026-10-19 06:49:06",
+      "tipo": "texto"
+    },
+    "XEDIT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "XREFCOMPAREDEFAULT": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "XREFCTL": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "XREFLAYER": {
+      "valor": ".",
+      "tipo": "texto"
+    },
+    "XREFMATERIALMERGEBEHAVIOR": {
+      "valor": 1,
+      "tipo": "inteiro"
+    },
+    "XREFOVERRIDE": {
+      "valor": 0,
+      "tipo": "inteiro"
+    },
+    "XREFREGAPPCTL": {
+      "valor": 2,
+      "tipo": "inteiro"
+    }
+  },
+  "sysvars_ausentes": [
+    "ACADMAINTVER",
+    "ACTIVITYINSIGHTS",
+    "ASSISTANT",
+    "AUTHORPALETTEPATH",
+    "BROWSERCANVAS",
+    "CACHEDONLINEUSERNAME",
+    "CEPSNTYPE",
+    "COMMANDMACROS",
+    "COREDLL",
+    "CSHADOW",
+    "DWGTTDESTAMP",
+    "ENDCAPS",
+    "FINGERPRINTGUID",
+    "FLOATING",
+    "GESTURATAGESTURETIMERMINTIME",
+    "GESTURATAPROCESSEVENTTIMERTIME",
+    "HANDSEED",
+    "JOINSTYLE",
+    "MENU",
+    "OBSCOLOR",
+    "OBSLTYPE",
+    "OSMISSING",
+    "PARKERSUPPORT",
+    "PARKERVIEWEDLOGGING",
+    "PARKER_4C9AC0CC7AD7",
+    "PARKER_C451609E1EE3",
+    "PELEVATION",
+    "PEXTMAX",
+    "PEXTMIN",
+    "PINSBASE",
+    "PLIMCHECK",
+    "PLIMMAX",
+    "PLIMMIN",
+    "PUCSNAME",
+    "PUCSORG",
+    "PUCSORGBACK",
+    "PUCSORGBOTTOM",
+    "PUCSORGFRONT",
+    "PUCSORGLEFT",
+    "PUCSORGRIGHT",
+    "PUCSORGTOP",
+    "PUCSORTHOREF",
+    "PUCSORTHOVIEW",
+    "PUCSXDIR",
+    "PUCSYDIR",
+    "REALWORLDSCALE",
+    "REQUIREDVERSIONS",
+    "STYLESHEET",
+    "TILEMODELIGHTSYNCH",
+    "TOOLPALETTEPATH",
+    "UCSORGBACK",
+    "UCSORGBOTTOM",
+    "UCSORGFRONT",
+    "UCSORGLEFT",
+    "UCSORGRIGHT",
+    "UCSORGTOP",
+    "UCSORTHOREF",
+    "UCSORTHOVIEW",
+    "USRTIMER",
+    "VERSIONGUID"
+  ],
+  "fontes": {
+    "comandos_c": "(atoms-family 1) na sessao",
+    "comandos_menu": "acad.CUIX",
+    "apelidos": "acad.pgp",
+    "sysvars": "MsiKeyFile (601) + $VARS do DXF + 60 classicas"
+  }
+}
