@@ -126,13 +126,36 @@ class Ponte:
     def info_desenho(self) -> dict:
         return self.pedir("info")
 
-    def exec(self, comando: str, pontos: list[list[float]] | None = None) -> dict:
-        """Executa um comando e espera. `pontos` entram como Point3d."""
-        return self.pedir("exec", comando=comando, pontos=pontos or [])
+    def exec(self, comando: str, pontos: list[list[float]] | None = None,
+             confirmar: bool = False) -> dict:
+        """Executa um comando. Com `confirmar`, espera acabar e devolve o prompt."""
+        return self.pedir("exec", comando=comando, pontos=pontos or [], confirmar=confirmar)
 
     def transacao(self, ops: list[dict]) -> dict:
         """move / copy / erase / rotacao / prop por handle, numa transacao."""
         return self.pedir("transaction", ops=ops)
+
+    def trim(self, alvo: str, corte: str, keep: list[float]) -> dict:
+        """Encurta a reta `alvo` ate' a `corte`, mantendo o lado de `keep`."""
+        return self.transacao([{"op": "trim", "alvo": alvo, "corte": corte, "keep": keep}])
+
+    def extend(self, alvo: str, limite: str,
+               ponto: list[float] | None = None) -> dict:
+        """Estende a reta `alvo` ate' a `limite` (extremo auto se `ponto` for None)."""
+        op = {"op": "extend", "alvo": alvo, "limite": limite}
+        if ponto:
+            op["ponto"] = ponto
+        return self.transacao([op])
+
+    def fillet(self, h1: str, h2: str, raio: float, trim: bool = True,
+               p1: list[float] | None = None, p2: list[float] | None = None) -> dict:
+        """Arredonda o canto entre duas retas com arco tangente de `raio`."""
+        op = {"op": "fillet", "h1": h1, "h2": h2, "raio": raio, "trim": trim}
+        if p1:
+            op["p1"] = p1
+        if p2:
+            op["p2"] = p2
+        return self.transacao([op])
 
     # ------------------------------------------------------------------ extra
     def esperar(self, segundos: float = 10.0) -> bool:

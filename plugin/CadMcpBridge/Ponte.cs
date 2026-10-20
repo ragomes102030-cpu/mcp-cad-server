@@ -10,24 +10,18 @@ using AcApp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 namespace CadMcpBridge
 {
     /// <summary>
-    /// As unicas tres operacoes da ponte. Tudo roda no thread principal do AutoCAD
-    /// via ExecuteInApplicationContext: sem dialogo, sem foco, sem SendStringToExecute.
+    /// Operacoes da ponte. Tudo que toca o documento roda no thread principal do
+    /// AutoCAD via <see cref="Fila"/> (evento Application.Idle), com prazo.
     /// </summary>
     internal static class Ponte
     {
+        private const int PrazoPadraoMs = 20000;
+
         internal static T NoContexto<T>(Func<T> trabalho)
-        {
-            T resultado = default;
-            System.Exception erro = null;
-            var dm = AcApp.DocumentManager;
-            dm.ExecuteInApplicationContext(_ =>
-            {
-                try { resultado = trabalho(); }
-                catch (System.Exception ex) { erro = ex; }
-            }, null);
-            if (erro != null) throw erro;
-            return resultado;
-        }
+            => Fila.NoContexto(trabalho, PrazoPadraoMs);
+
+        internal static T NoContexto<T>(Func<T> trabalho, int timeoutMs)
+            => Fila.NoContexto(trabalho, timeoutMs);
 
         internal static object Info()
         {
@@ -61,65 +55,128 @@ namespace CadMcpBridge
         /// Com FILEDIA/CMDDIA em 0, nada abre caixa de dialogo.
         /// `pontos` entra como Point3d (escolha implicita / vertices).
         /// </summary>
-        internal static object Exec(string comando, double[][] pontos)
+        internal static object Exec(string comando, double[][] pontos, bool confirmar)
         {
-            var doc = AcApp.DocumentManager.MdiActiveDocument;
-            if (doc == null) return new { ok = false, erro = "nenhum desenho aberto" };
-
             var sw = Stopwatch.StartNew();
-            string texto = MontarTexto(comando, pontos);
-            object filedia = GetVar("FILEDIA");
-            object cmddia = GetVar("CMDDIA");
-            SetVar("FILEDIA", 0);
-            SetVar("CMDDIA", 0);
+            string desenho = null;
+            string erro = null;
 
-            // SendStringToExecute, nao Editor.Command.
-            // Editor.Command e sincrono: se a entrada acabar antes da hora (TRIM
-            // esperando a proxima selecao), ele NAO volta - trava a thread
-            // principal e o AutoCAD inteiro para de responder, inclusive o COM.
-            // Ja aconteceu. SendStringToExecute devolve na hora e o comando roda
-            // sozinho, como se fosse digitado.
-            doc.SendStringToExecute(texto, true, false, true);
-            RestaurarQuandoOcioso(filedia, cmddia);
+            NoContexto(() =>
+            {
+                var doc = AcApp.DocumentManager.MdiActiveDocument;
+                if (doc == null) { erro = "nenhum desenho aberto"; return false; }
+
+                desenho = doc.Name;
+                object filedia = GetVar("FILEDIA");
+                object cmddia = GetVar("CMDDIA");
+                SetVar("FILEDIA", 0);
+                SetVar("CMDDIA", 0);
+
+                // SendStringToExecute, nao Editor.Command.
+                // Editor.Command e sincrono: se a entrada acabar antes da hora (TRIM
+                // esperando a proxima selecao), ele NAO volta - trava a thread
+                // principal e o AutoCAD inteiro para de responder, inclusive o COM.
+                // Ja aconteceu. SendStringToExecute devolve na hora e o comando roda
+                // sozinho, como se fosse digitado.
+                doc.SendStringToExecute(MontarTexto(comando, pontos), true, false, true);
+                RestaurarQuandoOcioso(filedia, cmddia);
+                return true;
+            });
+
+            if (erro != null) return new { ok = false, erro };
+
+            if (!confirmar)
+                return new
+                {
+                    ok = true,
+                    comando,
+                    desenho,
+                    duracao_ms = sw.ElapsedMilliseconds,
+                    aviso = "enviado; o comando termina sozinho (assincrono)",
+                };
+
+            return Confirmar(comando, desenho, sw);
+        }
+
+        /// <summary>
+        /// Espera o CMDACTIVE voltar a zero e devolve o ultimo prompt. Cada leitura
+        /// passa pela Fila com prazo curto: enquanto o comando roda a thread
+        /// principal esta ocupada, entao TimeoutException e' esperado e nao fatal.
+        /// </summary>
+        private static object Confirmar(string comando, string desenho, Stopwatch sw)
+        {
+            string lastprompt = null;
+            int cmdactive = -1;
+            bool concluiu = false;
+            var limite = DateTime.UtcNow.AddMilliseconds(PrazoPadraoMs);
+            Thread.Sleep(250);
+
+            while (DateTime.UtcNow < limite)
+            {
+                try
+                {
+                    var estado = Fila.NoContexto(() => (
+                        cmd: Convert.ToInt32(AcApp.GetSystemVariable("CMDACTIVE")),
+                        prompt: Convert.ToString(AcApp.GetSystemVariable("LASTPROMPT"))
+                    ), 500);
+                    cmdactive = estado.cmd;
+                    lastprompt = estado.prompt;
+                    if (cmdactive == 0 && sw.ElapsedMilliseconds > 400)
+                    {
+                        concluiu = true;
+                        break;
+                    }
+                }
+                catch (TimeoutException)
+                {
+                    // comando em andamento: a thread principal nao esta ociosa
+                }
+                Thread.Sleep(120);
+            }
 
             return new
             {
                 ok = true,
                 comando,
+                desenho,
+                concluiu,
+                cmdactive,
+                lastprompt,
                 duracao_ms = sw.ElapsedMilliseconds,
-                desenho = doc.Name,
-                aviso = "enviado; o comando termina sozinho (assincrono)",
             };
         }
 
-        /// <summary>
-        /// Volta FILEDIA/CMDDIA quando o comando acabar. Roda em thread propria
-        /// porque a leitura do CMDACTIVE fica esperando a thread principal.
-        /// </summary>
         private static void RestaurarQuandoOcioso(object filedia, object cmddia)
         {
             var t = new Thread(() =>
             {
-                try
+                for (int i = 0; i < 600; i++)
                 {
-                    for (int i = 0; i < 600; i++)
-                    {
-                        Thread.Sleep(100);
-                        if (Convert.ToInt32(AcApp.GetSystemVariable("CMDACTIVE")) == 0) break;
-                    }
-                }
-                catch
-                {
-                    // sem contexto para ler o CMDACTIVE: restaura de qualquer jeito
-                }
-                finally
-                {
+                    bool ocioso;
                     try
                     {
-                        SetVar("FILEDIA", filedia);
-                        SetVar("CMDDIA", cmddia);
+                        ocioso = NoContexto(
+                            () => Convert.ToInt32(AcApp.GetSystemVariable("CMDACTIVE")) == 0, 500);
                     }
-                    catch { }
+                    catch
+                    {
+                        ocioso = false;
+                    }
+                    if (ocioso)
+                    {
+                        try
+                        {
+                            NoContexto(() =>
+                            {
+                                SetVar("FILEDIA", filedia);
+                                SetVar("CMDDIA", cmddia);
+                                return true;
+                            }, 3000);
+                        }
+                        catch { }
+                        return;
+                    }
+                    Thread.Sleep(100);
                 }
             })
             { IsBackground = true };
@@ -187,8 +244,25 @@ namespace CadMcpBridge
                     {
                         string tipo = Texto(op, "op");
                         string handle = Texto(op, "handle");
+                        using (var lck = AcApp.DocumentManager.MdiActiveDocument?.LockDocument())
+                        {
                         try
                         {
+                            // Edicao por geometria: nao e' por handle unico, entao sai
+                            // antes da busca padrao. Usa a matematica do AutoCAD dentro
+                            // desta mesma transacao (undo + consistencia).
+                            if (tipo == "trim" || tipo == "extend" || tipo == "fillet")
+                            {
+                                object r = tipo switch
+                                {
+                                    "trim" => Geometria.Trim(op, tr, db),
+                                    "extend" => Geometria.Extend(op, tr, db),
+                                    _ => Geometria.Fillet(op, tr, db),
+                                };
+                                feitas.Add(r);
+                                continue;
+                            }
+
                             var id = ObterId(db, handle);
                             if (id.IsNull)
                             {
@@ -238,6 +312,7 @@ namespace CadMcpBridge
                         catch (System.Exception ex)
                         {
                             feitas.Add(new { handle, op = tipo, ok = false, erro = ex.Message });
+                        }
                         }
                     }
                     tr.Commit();

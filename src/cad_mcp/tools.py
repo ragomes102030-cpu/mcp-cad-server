@@ -226,7 +226,15 @@ async def plot_pdf(path: str, folha: str | None = None, escala: float | None = N
     é escolhida sozinha (A4…A0); se não couber, o tool devolve ok=false dizendo
     qual folha/escala usar.
     """
-    return _r(await (await _b()).drawing_plot_pdf(path, media=folha, escala=escala))
+    b = await _b()
+    try:
+        return _r(await b.drawing_plot_pdf(path, media=folha, escala=escala))
+    except TypeError:
+        # Backends headless (ezdxf/file_ipc) expõem só `path`: folha/escala são
+        # do motor COM. Em vez de estourar, plota no padrão e avisa.
+        d = _r(await b.drawing_plot_pdf(path))
+        d["aviso"] = "backend '%s' ignora folha/escala; plotado no padrao" % b.name
+        return d
 
 
 async def drawing_setup(unidades: int = 6, escala_cota: float = 0.1,
@@ -508,6 +516,51 @@ async def quantitativo(layer: str | None = None) -> dict:
     return dados
 
 
+# --- novas ops por geometria (ponte .NET) ---------------------------------
+def _pontes_trim(alvo: str, corte: str, keep: list[float]) -> dict:
+    """Encurta a reta `alvo` ate' a `corte`, mantendo o lado de `keep`."""
+    try:
+        return Ponte().trim(alvo=alvo, corte=corte, keep=keep)
+    except _PonteIndisponivel:
+        return {"ok": False, "erro": "ponte .NET nao carregada (reinicie o AutoCAD)"}
+
+
+def _pontes_extend(alvo: str, limite: str, ponto: list[float] | None = None) -> dict:
+    """Estende a reta `alvo` ate' a `limite` (extremo auto se `ponto` for None)."""
+    try:
+        return Ponte().extend(alvo=alvo, limite=limite, ponto=ponto)
+    except _PonteIndisponivel:
+        return {"ok": False, "erro": "ponte .NET nao carregada (reinicie o AutoCAD)"}
+
+
+def _pontes_fillet(h1: str, h2: str, raio: float, trim: bool = True,
+                   p1: list[float] | None = None, p2: list[float] | None = None) -> dict:
+    """Arredonda o canto entre duas retas com arco tangente de `raio`."""
+    try:
+        return Ponte().fillet(h1=h1, h2=h2, raio=raio, trim=trim, p1=p1, p2=p2)
+    except _PonteIndisponivel:
+        return {"ok": False, "erro": "ponte .NET nao carregada (reinicie o AutoCAD)"}
+
+
+async def trim_entity(alvo: str, corte: str, keep: list[float]) -> dict:
+    """Corta a reta `alvo` na interseccao com `corte`, mantendo o lado de `keep`.
+
+    Geometria nativa via ponte .NET (sem SendCommand). Devolve {ok, handle, ...}.
+    """
+    return _pontes_trim(alvo=alvo, corte=corte, keep=keep)
+
+
+async def extend_entity(alvo: str, limite: str, ponto: list[float] | None = None) -> dict:
+    """Estende a reta `alvo` ate' encontrar a reta `limite`."""
+    return _pontes_extend(alvo=alvo, limite=limite, ponto=ponto)
+
+
+async def fillet_entity(h1: str, h2: str, raio: float, trim: bool = True,
+                        p1: list[float] | None = None, p2: list[float] | None = None) -> dict:
+    """Arredonda o canto entre duas retas com arco tangente de `raio`."""
+    return _pontes_fillet(h1=h1, h2=h2, raio=raio, trim=trim, p1=p1, p2=p2)
+
+
 TOOLS = [
     cad_status,
     inspect_drawing, query_entities, erase, erase_filter, move_entity,
@@ -522,6 +575,7 @@ TOOLS = [
     layer_create, layer_set_current, ensure_standard_layers,
     block_insert, block_attributes, block_set_attribute,
     desenhar_ambiente,
+    trim_entity, extend_entity, fillet_entity,
 ]
 
 # --------------------------------------------------------------- vocabulario
@@ -578,12 +632,36 @@ NOMES = {
     "block_attributes": "block_get_attributes",
     "block_set_attribute": "block_set_attributes",
     "desenhar_ambiente": "arch_room",
+    "trim_entity": "entity_trim",
+    "extend_entity": "entity_extend",
+    "fillet_entity": "entity_fillet",
 }
 
 
 def nome_publico(fn) -> str:
     """Nome exposto no MCP. Cai para o nome da funcao se nao mapeado."""
     return NOMES.get(getattr(fn, "__name__", str(fn)), getattr(fn, "__name__", str(fn)))
+
+
+# --- familias plot/arquivo + camada/estilo (mescla do autocad-mcp-pro) ---
+from . import tools_ext as _ext  # noqa: E402
+
+TOOLS.extend(_ext.TOOLS)
+NOMES.update(_ext.NOMES)
+# expoe as funcoes novas como atributos do modulo (tools.layer_hide, ...)
+globals().update({_f.__name__: _f for _f in _ext.TOOLS})
+
+from . import tools_plot as _plot  # noqa: E402
+
+TOOLS.extend(_plot.TOOLS)
+NOMES.update(_plot.NOMES)
+globals().update({_f.__name__: _f for _f in _plot.TOOLS})
+
+from . import tools_geo as _geo  # noqa: E402
+
+TOOLS.extend(_geo.TOOLS)
+NOMES.update(_geo.NOMES)
+globals().update({_f.__name__: _f for _f in _geo.TOOLS})
 
 
 _publicos = [nome_publico(t) for t in TOOLS]

@@ -16,6 +16,32 @@ from autocad_mcp.screenshot import MatplotlibScreenshotProvider
 log = structlog.get_logger()
 
 
+def _quadrantes(cx: float, cy: float, raio: float) -> list:
+    """Os 4 quadrantes de um circulo: e' o que faz o bbox ser o circulo inteiro."""
+    return [[cx + raio, cy], [cx - raio, cy], [cx, cy + raio], [cx, cy - raio]]
+
+
+def _xy_de(v) -> list:
+    """Ponto de um vertice: aceita Vertex (com .dxf.location) ou tupla (x, y)."""
+    loc = getattr(getattr(v, "dxf", None), "location", None)
+    if loc is not None:
+        return [loc.x, loc.y]
+    return [float(v[0]), float(v[1])]
+
+
+def _area_fechada(pontos) -> float:
+    """Area por shoelace (sinal ignorado). Usada em LWPOLYLINE fechada."""
+    n = len(pontos)
+    if n < 3:
+        return 0.0
+    soma = 0.0
+    for i in range(n):
+        x1, y1 = pontos[i][0], pontos[i][1]
+        x2, y2 = pontos[(i + 1) % n][0], pontos[(i + 1) % n][1]
+        soma += x1 * y2 - x2 * y1
+    return abs(soma) / 2.0
+
+
 class EzdxfBackend(AutoCADBackend):
     """Pure-Python DXF generation via ezdxf."""
 
@@ -129,9 +155,13 @@ class EzdxfBackend(AutoCADBackend):
         result = {}
         header = self._doc.header
         for name in (names or []):
-            try:
-                result[name] = str(header[name])
-            except (KeyError, ezdxf.DXFKeyError):
+            for chave in (name, "$" + name):   # o ezdxf indexa o header por "$NOME"
+                try:
+                    result[name] = str(header[chave])
+                    break
+                except (KeyError, ezdxf.DXFKeyError):
+                    continue
+            else:
                 result[name] = None
         return CommandResult(ok=True, payload=result)
 
@@ -164,8 +194,11 @@ class EzdxfBackend(AutoCADBackend):
 
     async def create_ellipse(self, cx, cy, major_x, major_y, ratio, layer=None) -> CommandResult:
         self._ensure_layer(layer)
+        # major_x/major_y sao o VETOR do eixo maior (relativo ao centro), como no
+        # contrato do acmpro -- nao coordenadas absolutas. Subtrair o centro (como
+        # estava) deslocava a elipse e inflava o raio.
         e = self._msp.add_ellipse(
-            (cx, cy), major_axis=(major_x - cx, major_y - cy, 0), ratio=ratio,
+            (cx, cy), major_axis=(major_x, major_y, 0), ratio=ratio,
             dxfattribs={"layer": layer or "0"},
         )
         return CommandResult(ok=True, payload={"entity_type": "ELLIPSE", "handle": e.dxf.handle})
@@ -746,3 +779,324 @@ class EzdxfBackend(AutoCADBackend):
             "blue": 5, "magenta": 6, "white": 7, "grey": 8, "gray": 8,
         }
         return color_map.get(color.lower(), 7)
+
+    # --- primitivas novas (frente 2: contrato do autocad-mcp-pro) ---
+
+    async def drawing_setup(self, unidades: int = 6, escala_cota: float = 0.1,
+                           ltscale: float = 0.2) -> CommandResult:
+        """Mesmo contrato do motor COM, gravado no cabecalho do DXF.
+
+        Sem isto o DXF sai com INSUNITS=mm (4) e o quantitativo mede errado.
+        Nem toda variavel tem equivalently em `$HEADER`; as que o ezdxf nao
+        conhece sao reportadas em `ignoradas`, nao falham.
+        """
+        if not self._doc:
+            return CommandResult(ok=False, error="No document open")
+        valores = {
+            "$INSUNITS": unidades, "$MEASUREMENT": 1, "$LUNITS": 2, "$LUPREC": 2,
+            "$AUNITS": 0, "$DIMSCALE": escala_cota, "$TEXTSIZE": 0.2,
+            "$DIMDEC": 2, "$DIMZIN": 0, "$DIMTAD": 1, "$DIMASZ": 1.0,
+            "$DIMEXE": 0.6, "$DIMEXO": 0.4, "$DIMTXT": 2.5, "$DIMTIH": 0,
+            "$DIMTOH": 0, "$DIMGAP": 0.5, "$DIMLUNIT": 2, "$LTSCALE": ltscale,
+            "$PSLTSCALE": 1, "$PDMODE": 0, "$MIRRTEXT": 0, "$ATTDIA": 0,
+        }
+        aplicadas, ignoradas = [], []
+        for chave, valor in valores.items():
+            try:
+                self._doc.header[chave] = valor
+                aplicadas.append(chave)
+            except Exception:
+                ignoradas.append(chave)
+        return CommandResult(ok=True, payload={"aplicadas": aplicadas,
+                                              "ignoradas": ignoradas,
+                                              "insunits": self._doc.header.get("$INSUNITS"),
+                                              "dimscale": self._doc.header.get("$DIMSCALE")})
+
+    async def create_point(self, x: float, y: float, layer: str | None = None) -> CommandResult:
+        """Um POINT: no AutoCAD e' marcacao de no, nao geometria desenhavel."""
+        if not self._doc:
+            return CommandResult(ok=False, error="No document open")
+        self._ensure_layer(layer)
+        e = self._msp.add_point((x, y), dxfattribs={"layer": layer or "0"})
+        return CommandResult(ok=True, payload={"handle": e.dxf.handle, "type": "POINT",
+                                              "x": x, "y": y})
+
+    async def create_spline(self, fit_points, layer: str | None = None) -> CommandResult:
+        """SPLINE por pontos de ajuste (NURBS). Exige >= 2 pontos."""
+        if not self._doc:
+            return CommandResult(ok=False, error="No document open")
+        if len(fit_points) < 2:
+            return CommandResult(ok=False, error="spline precisa de ao menos 2 pontos de ajuste")
+        self._ensure_layer(layer)
+        e = self._msp.add_spline(list(fit_points), dxfattribs={"layer": layer or "0"})
+        return CommandResult(ok=True, payload={"handle": e.dxf.handle, "type": "SPLINE",
+                                              "pontos": len(fit_points)})
+
+    async def create_xline(self, x: float, y: float, angle_deg: float,
+                           layer: str | None = None) -> CommandResult:
+        """XLINE: linha infinita de construcao. Nao aparece no plot."""
+        if not self._doc:
+            return CommandResult(ok=False, error="No document open")
+        self._ensure_layer(layer)
+        rad = math.radians(angle_deg)
+        e = self._msp.add_xline((x, y, 0.0), (math.cos(rad), math.sin(rad), 0.0),
+                                dxfattribs={"layer": layer or "0"})
+        return CommandResult(ok=True, payload={"handle": e.dxf.handle, "type": "XLINE",
+                                              "x": x, "y": y, "angulo": angle_deg})
+
+    async def entity_array_polar(self, entity_id: str, count: int, fill_angle: float,
+                                 center_x: float, center_y: float) -> CommandResult:
+        """ARRAY polar: repete a entidade em torno de um centro."""
+        if not self._doc:
+            return CommandResult(ok=False, error="No document open")
+        try:
+            e = self._doc.entitydb.get(entity_id)
+            if e is None:
+                return CommandResult(ok=False, error="Entity %s not found" % entity_id)
+            if count < 1:
+                return CommandResult(ok=False, error="count deve ser >= 1")
+            from ezdxf.math import Matrix44
+
+            for i in range(1, count):
+                ang = math.radians(fill_angle * i / count) if fill_angle else 0.0
+                copia = e.copy()
+                m = (Matrix44.translate(center_x, center_y, 0.0)
+                     @ Matrix44.z_rotate(ang)
+                     @ Matrix44.translate(-center_x, -center_y, 0.0))
+                copia.transform(m)
+                self._msp.add_entity(copia)
+            return CommandResult(ok=True, payload={"criadas": count - 1,
+                                                   "total": count, "handle_base": entity_id})
+        except Exception as ex:
+            return CommandResult(ok=False, error=str(ex))
+
+    async def entity_set_properties(self, entity_id: str, layer: str | None = None,
+                                    color: int | str | None = None,
+                                    linetype: str | None = None,
+                                    lineweight: int | None = None,
+                                    visible: bool | None = None) -> CommandResult:
+        """Muda camada, cor, tipo de linha, espessura e visibilidade de uma entidade."""
+        if not self._doc:
+            return CommandResult(ok=False, error="No document open")
+        try:
+            e = self._doc.entitydb.get(entity_id)
+            if e is None:
+                return CommandResult(ok=False, error="Entity %s not found" % entity_id)
+            mudou = []
+            if layer is not None:
+                self._ensure_layer(layer)
+                e.dxf.layer = layer
+                mudou.append("layer")
+            if color is not None:
+                e.dxf.color = self._color_to_int(color)
+                mudou.append("color")
+            if linetype is not None:
+                if linetype not in self._doc.linetypes:
+                    self._doc.linetypes.add(linetype)
+                e.dxf.linetype = linetype
+                mudou.append("linetype")
+            if lineweight is not None:
+                e.dxf.lineweight = lineweight
+                mudou.append("lineweight")
+            if visible is not None:
+                e.dxf.invisible = 0 if visible else 1
+                mudou.append("visible")
+            return CommandResult(ok=True, payload={"handle": entity_id, "mudou": mudou})
+        except Exception as ex:
+            return CommandResult(ok=False, error=str(ex))
+
+    async def entity_edit_text(self, entity_id: str, text: str | None = None,
+                               height: float | None = None,
+                               rotation: float | None = None) -> CommandResult:
+        """Retextualiza um TEXT sem trocar o handle."""
+        if not self._doc:
+            return CommandResult(ok=False, error="No document open")
+        try:
+            e = self._doc.entitydb.get(entity_id)
+            if e is None:
+                return CommandResult(ok=False, error="Entity %s not found" % entity_id)
+            if e.dxftype() not in ("TEXT", "MTEXT"):
+                return CommandResult(ok=False, error="a entidade %s nao e texto" % e.dxftype())
+            mudou = []
+            if text is not None:
+                e.dxf.text = text
+                mudou.append("text")
+            if height is not None:
+                e.dxf.height = height
+                mudou.append("height")
+            if rotation is not None:
+                e.dxf.rotation = rotation
+                mudou.append("rotation")
+            return CommandResult(ok=True, payload={"handle": entity_id, "mudou": mudou})
+        except Exception as ex:
+            return CommandResult(ok=False, error=str(ex))
+
+    async def entity_delete_many(self, handles: list) -> CommandResult:
+        """Apaga varias entidades de uma vez (destrutivo: o tool pede confirmacao)."""
+        if not self._doc:
+            return CommandResult(ok=False, error="No document open")
+        apagadas, falhas = 0, []
+        for h in handles:
+            r = await self.entity_erase(str(h))
+            if r.ok:
+                apagadas += 1
+            else:
+                falhas.append(str(h))
+        return CommandResult(ok=not falhas, payload={"apagadas": apagadas,
+                                                    "pedidas": len(handles),
+                                                    "falhas": falhas})
+
+    async def hatch_edit(self, entity_id: str, pattern: str | None = None,
+                         scale: float | None = None, angle: float | None = None,
+                         color: int | str | None = None,
+                         style: str | None = None) -> CommandResult:
+        """Muda padrao, escala, angulo, cor ou estilo de uma hachura existente."""
+        if not self._doc:
+            return CommandResult(ok=False, error="No document open")
+        try:
+            e = self._doc.entitydb.get(entity_id)
+            if e is None:
+                return CommandResult(ok=False, error="Entity %s not found" % entity_id)
+            if e.dxftype() != "HATCH":
+                return CommandResult(ok=False, error="a entidade %s nao e HATCH" % e.dxftype())
+            mudou = []
+            if pattern is not None:
+                e.dxf.pattern_name = pattern
+                mudou.append("pattern")
+            if scale is not None:
+                e.dxf.hatch_pattern_scale = scale
+                mudou.append("scale")
+            if angle is not None:
+                e.dxf.hatch_pattern_angle = angle
+                mudou.append("angle")
+            if color is not None:
+                e.dxf.color = self._color_to_int(color)
+                mudou.append("color")
+            if style is not None:
+                tabela = {"nested": 0, "outer": 1, "ignore": 2}
+                e.dxf.hatch_style = tabela.get(str(style).lower(), 0)
+                mudou.append("style")
+            return CommandResult(ok=True, payload={"handle": entity_id, "mudou": mudou})
+        except Exception as ex:
+            return CommandResult(ok=False, error=str(ex))
+
+    async def drawing_properties_get(self) -> CommandResult:
+        """Campos de resumo do desenho.
+
+        ATENCAO: o ezdxf nao escreve o SummaryInfo do AutoCAD (os campos
+        $DWGTITLE/$AUTHOR/... nao existem no DXF que ele emite). O que este
+        backend grava sao **variaveis customizadas de cabecalho** -- o valor
+        sobrevive ao round-trip do DXF, mas o AutoCAD nao o mostra em DWGPROPS.
+        No motor COM o que se le e' o SummaryInfo de verdade.
+        """
+        if not self._doc:
+            return CommandResult(ok=False, error="No document open")
+        cv = self._doc.header.custom_vars
+        props = {nome: valor for nome, valor in cv}
+        return CommandResult(ok=True, payload={
+            "title": props.get("DWGTITLE", ""),
+            "subject": props.get("SUBJECT", ""),
+            "author": props.get("AUTHOR", ""),
+            "keywords": props.get("KEYWORDS", ""),
+            "comments": props.get("COMMENTS", ""),
+            "onde": "header custom vars (nao e o SummaryInfo do AutoCAD)",
+        })
+
+    async def drawing_properties_set(self, title=None, subject=None, author=None,
+                                     keywords=None, comments=None,
+                                     custom: dict | None = None) -> CommandResult:
+        """Grava os campos de resumo (como variaveis customizadas de cabecalho)."""
+        if not self._doc:
+            return CommandResult(ok=False, error="No document open")
+        cv = self._doc.header.custom_vars
+        mapa = {"DWGTITLE": title, "SUBJECT": subject, "AUTHOR": author,
+                "KEYWORDS": keywords, "COMMENTS": comments}
+        gravou = []
+        for nome, valor in mapa.items():
+            if valor is not None:
+                if cv.has_tag(nome):
+                    cv.replace(nome, valor)
+                else:
+                    cv.append(nome, valor)
+                gravou.append(nome)
+        if custom:
+            for nome, valor in custom.items():
+                if cv.has_tag(nome):
+                    cv.replace(nome, valor)
+                else:
+                    cv.append(nome, valor)
+                gravou.append(nome)
+        return CommandResult(ok=True, payload={
+            "gravou": gravou,
+            "onde": "header custom vars (nao e o SummaryInfo do AutoCAD)",
+        })
+
+    async def entity_geometry(self, entity_id: str) -> CommandResult:
+        """Geometria normalizada de uma entidade: pontos, centro, raio, angulos.
+
+        E' o que faz `entity_get` e `point_from_snap` serem possiveis: sem isto o
+        agente so' saberia o tipo e a camada.
+        """
+        if not self._doc:
+            return CommandResult(ok=False, error="No document open")
+        try:
+            e = self._doc.entitydb.get(entity_id)
+            if e is None:
+                return CommandResult(ok=False, error="Entity %s not found" % entity_id)
+            t = e.dxftype()
+            g = {"tipo": t, "handle": e.dxf.handle, "camada": e.dxf.get("layer", "0")}
+            if t == "LINE":
+                g["inicio"] = [e.dxf.start.x, e.dxf.start.y]
+                g["fim"] = [e.dxf.end.x, e.dxf.end.y]
+                g["pontos"] = [g["inicio"], g["fim"]]
+            elif t == "CIRCLE":
+                cx, cy, raio = e.dxf.center.x, e.dxf.center.y, e.dxf.radius
+                g["centro"] = [cx, cy]
+                g["raio"] = raio
+                g["pontos"] = [g["centro"]] + _quadrantes(cx, cy, raio)
+            elif t == "ARC":
+                cx, cy, raio = e.dxf.center.x, e.dxf.center.y, e.dxf.radius
+                a0, a1 = math.radians(e.dxf.start_angle), math.radians(e.dxf.end_angle)
+                g["centro"] = [cx, cy]
+                g["raio"] = raio
+                g["angulo_inicio"] = e.dxf.start_angle
+                g["angulo_fim"] = e.dxf.end_angle
+                g["inicio"] = [cx + raio * math.cos(a0), cy + raio * math.sin(a0)]
+                g["fim"] = [cx + raio * math.cos(a1), cy + raio * math.sin(a1)]
+                g["pontos"] = [g["inicio"], g["fim"], g["centro"]] + _quadrantes(cx, cy, raio)
+            elif t in ("LWPOLYLINE", "POLYLINE"):
+                vs = e.vertices() if callable(getattr(e, "vertices", None)) else e.vertices
+                g["pontos"] = [_xy_de(v) for v in vs]
+                g["fechada"] = bool(getattr(e, "closed", False))
+                g["area"] = round(_area_fechada(g["pontos"]), 4) if g["fechada"] else None
+            elif t == "POINT":
+                g["ponto"] = [e.dxf.location.x, e.dxf.location.y]
+                g["pontos"] = [g["ponto"]]
+            elif t in ("TEXT", "MTEXT"):
+                g["ponto"] = [e.dxf.insert.x, e.dxf.insert.y]
+                g["texto"] = e.dxf.text
+                g["altura"] = e.dxf.height
+                g["pontos"] = [g["ponto"]]
+            elif t == "XLINE":
+                c = e.dxf.start          # ezdxf: XLINE guarda 10 em `start`
+                d = e.dxf.unit_vector    # e 11 em `unit_vector`
+                g["centro"] = [c.x, c.y]
+                g["direcao"] = [d.x, d.y]
+                g["pontos"] = [[c.x, c.y], [c.x + d.x, c.y + d.y]]
+            elif t == "ELLIPSE":
+                cx, cy = e.dxf.center.x, e.dxf.center.y
+                g["centro"] = [cx, cy]
+                g["raio"] = e.dxf.major_axis.magnitude
+                g["razao"] = e.dxf.ratio
+                g["pontos"] = [g["centro"]]
+            elif t == "SPLINE":
+                cps = list(e.control_points)
+                fonte = cps if cps else list(getattr(e, "fit_points", []) or [])
+                g["pontos"] = [[p[0], p[1]] for p in fonte]
+                g["grau"] = e.dxf.get("degree")
+                g["por"] = "control_points" if cps else "fit_points"
+            else:
+                g["pontos"] = []
+            return CommandResult(ok=True, payload=g)
+        except Exception as ex:
+            return CommandResult(ok=False, error=str(ex))

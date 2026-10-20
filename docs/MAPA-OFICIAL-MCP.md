@@ -12,10 +12,10 @@ Checagem direta, **antes** de qualquer afirmação sobre capacidade:
 
 | item | resultado |
 |---|---|
-| AutoCAD instalado | `C:\Program Files\Autodesk\AutoCAD 2025\acad.exe`, file version **R25.0.162.0.0** |
-| `ACADVER` (medido antes, `MAPA-AUTOCAD.md`) | `25.0s (LMS Tech)` |
+| AutoCAD instalado | `C:\Program Files\Autodesk\AutoCAD 2025cad.exe`, file version **R25.0.162.0.0** |
+| `ACADVER` (medido na sessão, `sonda_cadbridge.py`) | `25.0s (LMS Tech)` |
 | **Plugin oficial `AutoCAD-MCP-Server-2027.bundle`** | **não existe** — `C:\Program Files\Autodesk\ApplicationPlugins\` não existe; `find` por `*mcp*` em `Program Files\Autodesk` e em `AppData\Roaming\Autodesk` não acha nada |
-| Único bundle MCP presente | `AppData\Roaming\Autodesk\ApplicationPlugins\CadMcpBridge.bundle` — **é o plugin próprio do projeto** (`plugin/CadMcpBridge` de `mcp-cad-server`), **não** o MCP oficial |
+| Único bundle MCP presente | `AppData\Roaming\Autodesk\ApplicationPlugins\CadMcpBridge.bundle` — **é o plugin próprio do projeto** (`plugin/CadMcpBridge`), **não** o MCP oficial |
 | `accoreconsole.exe` | presente em `C:\Program Files\Autodesk\AutoCAD 2025\` |
 
 **Conclusão:** a máquina tem **AutoCAD 2025** e **não tem** o MCP oficial da Autodesk
@@ -23,10 +23,40 @@ Checagem direta, **antes** de qualquer afirmação sobre capacidade:
 documentada, não medida. Qualquer número de cobertura do MCP oficial nesta máquina seria
 inventado.
 
-**O que isto muda no plano:** `sonda_mcp_oficial.py` não tem alvo nesta instalação. O
-trabalho que se faz aqui é (a) sondar **o que o plugin próprio expõe**, e (b) mapear a
-superfície oficial como referência para quando houver AutoCAD 2027. Não confunda as duas
-coisas — elas têm nomes parecidos e são projetos diferentes.
+### O que foi medido aqui (20/10/2026) — e o que é só documento
+
+| afirmação | origem | como foi obtida |
+|---|---|---|
+| AutoCAD 2025 `R25.0.162.0.0`, `ACADVER 25.0s (LMS Tech)` | **medido** | `sonda_cadbridge.py` (COM + leitura de `$TEMP%\cad_mcp_bridge.json`) |
+| Plugin próprio `CadMcpBridge` v1.0 **carregado** em 25.0, porta 8765, pid = o do `acad.exe` | **medido** | `ping`/`info` pela ponte; `pid` bate com o `acad.exe` |
+| O plugin expõe `ping`, `info`, `exec`, `transaction` (JSON-RPC, 1 linha, 127.0.0.1) | **medido** | respostas ao vivo; `plugin/README.md` descreve o mesmo |
+| `TRUSTEDPATHS` cobre o bundle | **medido** | leitura do registro (`HKCU\Software\Autodesk\AutoCAD\R25.0\ACAD-8101:409\Profiles\<<Unnamed Profile>>\Variables`) |
+| MCP oficial **ausente** | **medido** | `C:\Program Files\Autodesk\ApplicationPlugins\` não existe |
+| As 7 tools do MCP oficial, seus inputs, as duas configurações | **documentado** | `help.autodesk.com/view/ADSKMCP/ENU/` — **não medido nesta máquina** |
+| Regras de filtro, `context: "drawing"`, ausência de locale | **documentado** | idem |
+| Release notes set/2026 (camadas e sysvars) | **documentado** | idem |
+| `MCPHTTPSTART` quebrado (DLL faltando, HTTP desligado, não NETLOAD) | **relato de campo** | fórum Autodesk — **não reproduzido aqui** |
+| "Não oficial; COM precisa de sessão viva" | **análise de terceiros** | blog — **não é fato oficial** |
+
+### O que a medição do plugin próprio revelou (e não estava no plano)
+
+1. **O plugin carrega e responde.** `ping` em 242 ms na primeira carga e 25,8 ms na
+   segunda; `info` devolveu `produto`, `versao`, `acad`, `desenho`, `INSUNITS=4`,
+   `FILEDIA=0`, `CMDDIA=0`. Ou seja: o Autoloader funcionou sem diálogo de
+   segurança (o `TRUSTEDPATHS` estava certo).
+2. **`exec` é assíncrono de verdade** — `_.LINE` voltou em 3 ms com
+   `aviso: "enviado; o comando termina sozinho (assincrono)"`. É o que permite
+   iniciar um comando que espera ponto sem travar o chamador.
+3. **Mas `LASTPROMPT` não é capturável de forma confiável.** Ver
+   `ferramentas/mapear_comandos.py`: a leitura dentro do processo usa um prazo de
+   500 ms e dá `TimeoutException` enquanto o comando espera seleção. Medido: uma
+   rodada devolveu os prompts reais, a seguinte devolveu `None`/eco, e uma
+   terceira **deixou o AutoCAD travado** (thread principal ocupada, COM
+   recusando `RPC_E_CALL_REJECTED`, sem responder a ESC). O processo teve de ser
+   encerrado.
+4. **`exec` não confirma resultado** — `ok: true` diz que o comando foi *enviado*.
+   Isto vale para o `CadMcpBridge` e é o mesmo limite que o MCP oficial tem
+   quando apenas lê.
 
 ## Por que este arquivo existe
 
@@ -154,27 +184,38 @@ atualização".
 
 ## Lacunas deste mapa (medidas, não presumidas)
 
-1. **Ainda não existe sonda do MCP oficial** em `ferramentas/`. Contraste com o que já
-   existe: `sonda_autocad.py` (getvar/comandos ao vivo), `mapear_com.py` (type
-   library), `resumir_dotnet.py` (metadata). **MCP oficial = zero sonda** — e agora se
-   sabe **o porquê**: não há alvo (AutoCAD 2025, sem o bundle 2027). A lacuna real nesta
-   máquina é sondar **o plugin próprio** (`CadMcpBridge`), que é outra coisa.
-2. **`mapear_comandos.py` ainda não rodou** (consta no LEIA-ME do projeto) — o
-   gravador de prompts em duas fases (`--iniciar`/`--ler`) segue parado.
-3. **Nada cobre `.scr`** como superfície: o que o AutoCAD aceita de script sequencial, e
-   por que não serve para lógica (só para orquestrar).
-4. **Nada cobre DXF/DWG como formato** de troca para agentes (grupo de código, versões
-   de DXF, o que o `ezdxf` já cobre vs. o que só o AutoCAD resolve).
-5. **Nada cobre o plugin .NET oficial** (`plugin/CadMcpBridge`) como *superfície
-   suportada* — o mapa do projeto o trata como implementação própria, não como API.
+1. **`sonda_mcp_oficial.py` ainda não existe** — e agora se sabe **o porquê**:
+   não há alvo (AutoCAD 2025, sem o bundle 2027). O que existe é
+   `ferramentas/sonda_cadbridge.py`, que sonda **o plugin próprio** (`CadMcpBridge`)
+   — a superfície MCP que existe de fato aqui. Rodou em 20/10/2026 e está
+   registrada em `docs/MAPA-CADBRIDGE.md`.
+2. **`mapear_comandos.py` rodou** (estava pronto e parado). Resultado medido:
+   funciona **intermitentemente** — a captura de `LASTPROMPT` depende de a thread
+   principal estar ociosa. Uma varredura longa **travou o AutoCAD** e o processo
+   teve de ser encerrado. Ver o docstring da ferramenta; antes de varrer, salve o
+   desenho.
+3. **Nada cobre `.scr`** como superfície: o que o AutoCAD aceita de script
+   sequencial, e por que não serve para lógica (só para orquestrar).
+4. **Nada cobre DXF/DWG como formato** de troca para agentes (grupo de código,
+   versões de DXF, o que o `ezdxf` já cobre vs. o que só o AutoCAD resolve).
+5. **`transaction` do plugin não foi exercitado ao vivo** — só o protocolo do
+   cliente tem teste (`tests/test_bridge.py`, com um servidor falso). A ponte
+   respondeu `ping`/`info`; `transaction` ficou por fazer.
 
 ## Ordem sugerida para a próxima rodada de mapeamento
 
-1. `sonda_cadbridge.py` — sondar **o plugin próprio** (`CadMcpBridge.bundle`): o que ele
-   expõe, que protocolo fala (`tools/test_bridge.py` já cobre parte), e o que falta.
-   É o par do `sonda_autocad.py` para a superfície que **existe aqui**.
-2. `mapear_comandos.py` — rodar de fato (está pronto, só não executado).
-3. Mapa de formato (DXF/DWG) — o que um agent pode ler sem abrir o AutoCAD.
-4. `.scr` — o que é seguro automatizar e o que não é.
-5. `sonda_mcp_oficial.py` — **só faz sentido quando houver AutoCAD 2027**. Até lá,
-   documentar a superfície oficial (que é o que este arquivo faz) sem pretender medir.
+1. ~~`sonda_cadbridge.py`~~ — **feito** (20/10/2026): o plugin próprio foi medido
+   ao vivo e `docs/MAPA-CADBRIDGE.md` registra o que ele expõe e o que não prova.
+2. ~~`mapear_comandos.py` rodar de fato~~ — **feito**, com o resultado de que a
+   captura é intermitente e pode travar o AutoCAD.
+3. **Repetir a captura de prompts com o AutoCAD recém-aberto** (thread ociosa) e
+   gravar em `historico/prompts.jsonl` — o que se tem hoje veio de uma rodada que
+   funcionou. Cada varredura deve ser curta e precedida de `enviar_esc`.
+4. **`transaction` ao vivo** — a única superfície do plugin que continua sem
+   medição.
+5. Mapa de formato (DXF/DWG) — o que um agent pode ler sem abrir o AutoCAD.
+6. `.scr` — o que é seguro automatizar e o que não é.
+7. `sonda_mcp_oficial.py` — **só faz sentido quando houver AutoCAD 2027**. Até lá,
+   documentar a superfície oficial (que é o que este arquivo faz) sem pretender
+   medir.
+

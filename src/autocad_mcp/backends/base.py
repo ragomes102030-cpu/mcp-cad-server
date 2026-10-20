@@ -280,3 +280,45 @@ class AutoCADBackend(ABC):
     async def get_screenshot(self) -> CommandResult:
         """Return base64 PNG in payload."""
         return CommandResult(ok=False, error="Not supported on this backend")
+
+    # --- primitivas do contrato autocad-mcp-pro (frente 2) ---
+    # Cada backend diz o que suporta; a implementacao real vive em
+    # ezdxf_backend.py (headless) e com_backend.py (AutoCAD vivo).
+
+    async def create_point(self, x: float, y: float, layer: str | None = None) -> CommandResult:
+        return CommandResult(ok=False, error="Not supported on this backend")
+
+    async def create_spline(self, fit_points, layer: str | None = None) -> CommandResult:
+        return CommandResult(ok=False, error="Not supported on this backend")
+
+    async def create_xline(self, x: float, y: float, angle_deg: float,
+                           layer: str | None = None) -> CommandResult:
+        return CommandResult(ok=False, error="Not supported on this backend")
+
+    async def entity_array_polar(self, entity_id: str, count: int, fill_angle: float,
+                                 center_x: float, center_y: float) -> CommandResult:
+        return CommandResult(ok=False, error="Not supported on this backend")
+
+    async def entity_set_properties(self, entity_id: str, layer=None, color=None,
+                                    linetype=None, lineweight=None,
+                                    visible=None) -> CommandResult:
+        return CommandResult(ok=False, error="Not supported on this backend")
+
+    async def entity_edit_text(self, entity_id: str, text=None, height=None,
+                               rotation=None) -> CommandResult:
+        return CommandResult(ok=False, error="Not supported on this backend")
+
+    async def entity_delete_many(self, handles: list) -> CommandResult:
+        return CommandResult(ok=False, error="Not supported on this backend")
+
+    async def hatch_edit(self, entity_id: str, pattern=None, scale=None, angle=None,
+                         color=None, style=None) -> CommandResult:
+        return CommandResult(ok=False, error="Not supported on this backend")
+
+    async def drawing_properties_get(self) -> CommandResult:
+        return CommandResult(ok=False, error="Not supported on this backend")
+
+    async def drawing_properties_set(self, title=None, subject=None, author=None,
+                                     keywords=None, comments=None,
+                                     custom=None) -> CommandResult:
+        return CommandResult(ok=False, error="Not supported on this backend")

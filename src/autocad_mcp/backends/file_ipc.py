@@ -495,3 +495,123 @@ class FileIPCBackend(AutoCADBackend):
             if data:
                 return CommandResult(ok=True, payload=data)
         return CommandResult(ok=False, error="Screenshot capture failed")
+
+    # --- primitivas novas (frente 2) ---
+    # O dispatcher LISP (vendor/puran-water/lisp/mcp_dispatch.lsp) nao conhece
+    # estas operacoes, entao elas vao por `execute-lisp` com o mesmo corpo DXF
+    # que o motor COM usa.
+
+    def _lisp_entmakex(self, corpo: str) -> CommandResult:
+        return self._dispatch("execute-lisp", {"code": corpo})
+
+    async def create_point(self, x, y, layer=None) -> CommandResult:
+        lay = layer or "0"
+        corpo = ('(progn (entmakex (list (cons 0 "POINT") (cons 100 "AcDbEntity")'
+                 ' (cons 8 "%s") (cons 100 "AcDbPoint") (cons 10 (list %s %s 0.0)))) T)'
+                 % (lay, x, y))
+        return self._lisp_entmakex(corpo)
+
+    async def create_spline(self, fit_points, layer=None) -> CommandResult:
+        if len(fit_points) < 2:
+            return CommandResult(ok=False, error="spline precisa de ao menos 2 pontos")
+        lay = layer or "0"
+        pts = "".join(' (cons 11 (list %s %s))' % (p[0], p[1]) for p in fit_points)
+        corpo = ('(progn (entmakex (list (cons 0 "SPLINE") (cons 100 "AcDbEntity")'
+                 ' (cons 8 "%s") (cons 100 "AcDbSpline") (cons 41 3.0)%s)) T)' % (lay, pts))
+        return self._lisp_entmakex(corpo)
+
+    async def create_xline(self, x, y, angle_deg, layer=None) -> CommandResult:
+        import math as _m
+        lay = layer or "0"
+        r = _m.radians(angle_deg)
+        corpo = ('(progn (entmakex (list (cons 0 "XLINE") (cons 100 "AcDbEntity")'
+                 ' (cons 8 "%s") (cons 100 "AcDbLine") (cons 10 (list %s %s 0.0))'
+                 ' (cons 11 (list %s %s 0.0)))) T)'
+                 % (lay, x, y, x + _m.cos(r), y + _m.sin(r)))
+        return self._lisp_entmakex(corpo)
+
+    async def entity_set_properties(self, entity_id, layer=None, color=None, linetype=None,
+                                    lineweight=None, visible=None) -> CommandResult:
+        partes = []
+        if layer is not None:
+            partes.append('(setq __d (subst (cons 8 "%s") (assoc 8 __d) __d))' % layer)
+        if color is not None:
+            partes.append('(setq __d (subst (cons 62 %s) (assoc 62 __d) __d))' % color)
+        if linetype is not None:
+            partes.append('(setq __d (subst (cons 6 "%s") (assoc 6 __d) __d))' % linetype)
+        if lineweight is not None:
+            partes.append('(setq __d (subst (cons 370 %s) (assoc 370 __d) __d))' % lineweight)
+        if visible is not None:
+            partes.append('(setq __d (subst (cons 60 %s) (assoc 60 __d) __d))'
+                          % (0 if visible else 1))
+        if not partes:
+            return CommandResult(ok=False, error="nenhuma propriedade informada")
+        corpo = ('(progn (setq __e (handent "%s")) (if (null __e) nil'
+                 ' (progn (setq __d (entget __e)) %s (entmod __d) (entupd __e) T)))'
+                 % (entity_id, " ".join(partes)))
+        return self._lisp_entmakex(corpo)
+
+    async def entity_edit_text(self, entity_id, text=None, height=None, rotation=None) -> CommandResult:
+        partes = []
+        if text is not None:
+            partes.append('(setq __d (subst (cons 1 "%s") (assoc 1 __d) __d))' % text)
+        if height is not None:
+            partes.append('(setq __d (subst (cons 40 %s) (assoc 40 __d) __d))' % height)
+        if rotation is not None:
+            partes.append('(setq __d (subst (cons 50 %s) (assoc 50 __d) __d))' % rotation)
+        if not partes:
+            return CommandResult(ok=False, error="nada para alterar")
+        corpo = ('(progn (setq __e (handent "%s")) (if (null __e) nil'
+                 ' (progn (setq __d (entget __e)) %s (entmod __d) (entupd __e) T)))'
+                 % (entity_id, " ".join(partes)))
+        return self._lisp_entmakex(corpo)
+
+    async def entity_delete_many(self, handles) -> CommandResult:
+        if not handles:
+            return CommandResult(ok=False, error="lista de handles vazia")
+        lis = " ".join('(entdel (handent "%s"))' % h for h in handles)
+        return self._lisp_entmakex("(progn %s T)" % lis)
+
+    async def entity_array_polar(self, entity_id, count, fill_angle, center_x,
+                                 center_y) -> CommandResult:
+        corpo = ('(progn (setq __e (handent "%s")) (if (null __e) nil'
+                 ' (progn (setq __o (vlax-ename->vla-object __e)) (setq __i 1)'
+                 ' (while (< __i %d) (vla-copy __o)'
+                 ' (vla-rotate (vlax-ename->vla-object (entlast))'
+                 ' (vlax-3d-point (list %s %s 0.0))'
+                 ' (/ (* pi %s __i) (* %d 180.0))) (setq __i (1+ __i))) T)))'
+                 % (entity_id, count, center_x, center_y, fill_angle, count))
+        return self._lisp_entmakex(corpo)
+
+    async def hatch_edit(self, entity_id, pattern=None, scale=None, angle=None,
+                         color=None, style=None) -> CommandResult:
+        partes = []
+        if pattern is not None:
+            partes.append('(setq __d (subst (cons 2 "%s") (assoc 2 __d) __d))' % pattern)
+        if color is not None:
+            partes.append('(setq __d (subst (cons 62 %s) (assoc 62 __d) __d))' % color)
+        if not partes:
+            return CommandResult(ok=False, error="so pattern/color sao suportados no HATCH")
+        corpo = ('(progn (setq __e (handent "%s")) (if (null __e) nil'
+                 ' (progn (setq __d (entget __e)) %s (entmod __d) (entupd __e) T)))'
+                 % (entity_id, " ".join(partes)))
+        return self._lisp_entmakex(corpo)
+
+    async def entity_geometry(self, entity_id: str) -> CommandResult:
+        """Geometria normalizada -- mesmo LISP do motor COM."""
+        corpo = (
+            '(progn (setq __e (handent "%s"))'
+            ' (if (null __e) "MCPERRO:handle nao existe"'
+            '  (progn (setq __d (entget __e)) (setq __ps nil)'
+            '   (foreach __c __d (if (= (car __c) 10)'
+            '    (setq __ps (cons (list (car (cdr __c)) (cadr (cdr __c))) __ps))))'
+            '   (list (cons (quote tipo) (cdr (assoc 0 __d)))'
+            '    (cons (quote camada) (cdr (assoc 8 __d)))'
+            '    (cons (quote pontos) (reverse __ps))'
+            '    (cons (quote centro) (cdr (assoc 10 __d)))'
+            '    (cons (quote raio) (cdr (assoc 40 __d)))'
+            '    (cons (quote angulo_inicio) (cdr (assoc 50 __d)))'
+            '    (cons (quote angulo_fim) (cdr (assoc 51 __d)))))))'
+            % entity_id
+        )
+        return self._lisp_entmakex(corpo)

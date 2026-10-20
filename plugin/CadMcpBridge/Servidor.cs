@@ -106,7 +106,7 @@ namespace CadMcpBridge
                 {
                     "ping" => Ponte.Info(),
                     "info" => Ponte.Info(),
-                    "exec" => Ponte.Exec(Texto(args, "comando") ?? "", Pontos(args)),
+                    "exec" => Ponte.Exec(Texto(args, "comando") ?? "", Pontos(args), Booleano(args, "confirmar")),
                     "transaction" => Ponte.Transacao(Operacoes(args)),
                     _ => new { ok = false, erro = "metodo desconhecido: " + metodo },
                 };
@@ -123,6 +123,9 @@ namespace CadMcpBridge
             => d != null && d.TryGetValue(chave, out var v) && v != null
                    ? Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture)
                    : null;
+
+        private static bool Booleano(Dictionary<string, object> d, string chave)
+            => d != null && d.TryGetValue(chave, out var v) && v is bool b && b;
 
         private static Dictionary<string, object> Objeto(Dictionary<string, object> d, string chave)
             => d != null && d.TryGetValue(chave, out var v) ? v as Dictionary<string, object> : null;

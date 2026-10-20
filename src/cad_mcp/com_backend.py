@@ -1430,3 +1430,191 @@ class ComBackend(AutoCADBackend):
                                                    "altura": altura})
         except Exception as e:
             return CommandResult(ok=False, error=str(e))
+
+    # --- primitivas novas (frente 2: contrato do autocad-mcp-pro) ---
+    async def create_point(self, x: float, y: float, layer: str | None = None) -> CommandResult:
+        lay = _q(layer or "0")
+        corpo = ('(list (cons 0 "POINT") (cons 100 "AcDbEntity") (cons 8 "%s")'
+                 ' (cons 100 "AcDbPoint") (cons 10 (list %s %s 0.0)))' % (lay, x, y))
+        return self._aval(self._handle(corpo))
+
+    async def create_spline(self, fit_points, layer: str | None = None) -> CommandResult:
+        if len(fit_points) < 2:
+            return CommandResult(ok=False, error="spline precisa de ao menos 2 pontos de ajuste")
+        lay = _q(layer or "0")
+        cons11 = "".join(" (cons 11 (list %s %s))" % (p[0], p[1]) for p in fit_points)
+        corpo = ('(list (cons 0 "SPLINE") (cons 100 "AcDbEntity") (cons 8 "%s")'
+                 ' (cons 100 "AcDbSpline") (cons 41 3.0)%s)' % (lay, cons11))
+        return self._aval(self._handle(corpo))
+
+    async def create_xline(self, x: float, y: float, angle_deg: float,
+                           layer: str | None = None) -> CommandResult:
+        import math as _m
+        lay = _q(layer or "0")
+        r = _m.radians(angle_deg)
+        corpo = ('(list (cons 0 "XLINE") (cons 100 "AcDbEntity") (cons 8 "%s")'
+                 ' (cons 100 "AcDbLine") (cons 10 (list %s %s 0.0))'
+                 ' (cons 11 (list %s %s 0.0)))'
+                 % (lay, x, y, x + _m.cos(r), y + _m.sin(r)))
+        return self._aval(self._handle(corpo))
+
+    async def entity_array_polar(self, entity_id: str, count: int, fill_angle: float,
+                                 center_x: float, center_y: float) -> CommandResult:
+        if count < 1:
+            return CommandResult(ok=False, error="count deve ser >= 1")
+        expr = (
+            '(progn (setq __e (handent "%s"))'
+            ' (if (null __e) "MCPERRO:handle nao existe"'
+            '  (progn (setq __o (vlax-ename->vla-object __e)) (setq __i 1)'
+            '   (while (< __i %d)'
+            '    (vla-copy __o)'
+            '    (vla-rotate (vlax-ename->vla-object (entlast))'
+            '     (vlax-3d-point (list %s %s 0.0))'
+            '     (/ (* pi %s __i) (* %d 180.0)))'
+            '    (setq __i (1+ __i))) T)))'
+            % (_q(entity_id), count, center_x, center_y, fill_angle, count)
+        )
+        r = self._aval(expr)
+        if r.ok and not (isinstance(r.payload, str) and str(r.payload).startswith("MCPERRO:")):
+            r.payload = {"criadas": count - 1, "total": count, "handle_base": entity_id}
+        return r
+
+    async def entity_set_properties(self, entity_id: str, layer: str | None = None,
+                                    color: int | str | None = None,
+                                    linetype: str | None = None,
+                                    lineweight: int | None = None,
+                                    visible: bool | None = None) -> CommandResult:
+        def trecho(grupo, valor):
+            return '(if %s (setq __d (subst (cons %s %s) (assoc %s __d) __d)))' % (
+                _q(valor), grupo, valor, grupo)
+
+        partes = []
+        if layer is not None:
+            partes.append(trecho(8, _q(layer)))
+        if color is not None:
+            partes.append(trecho(62, color))
+        if linetype is not None:
+            partes.append(trecho(6, _q(linetype)))
+        if lineweight is not None:
+            partes.append(trecho(370, lineweight))
+        if visible is not None:
+            partes.append(trecho(60, 1 if not visible else 0))
+        if not partes:
+            return CommandResult(ok=False, error="nenhuma propriedade informada")
+        expr = ('(progn (setq __e (handent "%s")) (if (null __e) "MCPERRO:handle nao existe"'
+                ' (progn (setq __d (entget __e)) %s (entmod __d) (entupd __e) T)))'
+                % (_q(entity_id), " ".join(partes)))
+        return self._aval(expr)
+
+    async def entity_edit_text(self, entity_id: str, text: str | None = None,
+                               height: float | None = None,
+                               rotation: float | None = None) -> CommandResult:
+        partes = []
+        if text is not None:
+            partes.append('(setq __d (subst (cons 1 %s) (assoc 1 __d) __d))' % _q(text))
+        if height is not None:
+            partes.append('(setq __d (subst (cons 40 %s) (assoc 40 __d) __d))' % height)
+        if rotation is not None:
+            partes.append('(setq __d (subst (cons 50 %s) (assoc 50 __d) __d))' % rotation)
+        if not partes:
+            return CommandResult(ok=False, error="nada para alterar (text/height/rotation)")
+        expr = ('(progn (setq __e (handent "%s")) (if (null __e) "MCPERRO:handle nao existe"'
+                ' (progn (setq __d (entget __e)) %s (entmod __d) (entupd __e) T)))'
+                % (_q(entity_id), " ".join(partes)))
+        return self._aval(expr)
+
+    async def entity_delete_many(self, handles: list) -> CommandResult:
+        if not handles:
+            return CommandResult(ok=False, error="lista de handles vazia")
+        lis = " ".join('(entdel (handent "%s"))' % _q(str(h)) for h in handles)
+        r = self._aval("(progn %s T)" % lis)
+        if r.ok:
+            r.payload = {"apagadas": len(handles), "pedidas": len(handles), "falhas": []}
+        return r
+
+    async def hatch_edit(self, entity_id: str, pattern: str | None = None,
+                         scale: float | None = None, angle: float | None = None,
+                         color: int | str | None = None,
+                         style: str | None = None) -> CommandResult:
+        # No DXF o HATCH nao guarda escala/angulo por entidade (ficam na tabela
+        # de padroes), entao o motor COM so' escreve o que o formato suporta.
+        partes, mudou = [], []
+        if pattern is not None:
+            partes.append('(setq __d (subst (cons 2 %s) (assoc 2 __d) __d))' % _q(pattern))
+            mudou.append("pattern")
+        if color is not None:
+            partes.append('(setq __d (subst (cons 62 %s) (assoc 62 __d) __d))' % color)
+            mudou.append("color")
+        if not partes:
+            return CommandResult(ok=False, error="motor COM so suporta pattern/color no HATCH")
+        if scale is not None or angle is not None or style is not None:
+            mudou.append("(scale/angle/style: nao persistem por HATCH no DXF)")
+        expr = ('(progn (setq __e (handent "%s")) (if (null __e) "MCPERRO:handle nao existe"'
+                ' (progn (setq __d (entget __e)) %s (entmod __d) (entupd __e) T)))'
+                % (_q(entity_id), " ".join(partes)))
+        return self._aval(expr)
+
+    async def drawing_properties_get(self) -> CommandResult:
+        """SummaryInfo de verdade (o que o DWGPROPS do AutoCAD mostra)."""
+        try:
+            si = self._chamar(lambda: self._d().SummaryInfo)
+            return CommandResult(ok=True, payload={
+                "title": str(self._chamar(lambda: si.Title)),
+                "subject": str(self._chamar(lambda: si.Subject)),
+                "author": str(self._chamar(lambda: si.Author)),
+                "keywords": str(self._chamar(lambda: si.Keywords)),
+                "comments": str(self._chamar(lambda: si.Comments)),
+                "where": "SummaryInfo do documento",
+            })
+        except Exception as exc:
+            return CommandResult(ok=False, error=_com_erro(exc))
+
+    async def drawing_properties_set(self, title: str | None = None, subject: str | None = None,
+                                     author: str | None = None, keywords: str | None = None,
+                                     comments: str | None = None,
+                                     custom: dict | None = None) -> CommandResult:
+        """Grava o SummaryInfo do documento (DWGPROPS)."""
+        gravou = []
+        try:
+            si = self._chamar(lambda: self._d().SummaryInfo)
+            for campo, valor in (("Title", title), ("Subject", subject), ("Author", author),
+                                 ("Keywords", keywords), ("Comments", comments)):
+                if valor is not None:
+                    self._chamar(lambda c=campo, v=valor: setattr(si, c, v))
+                    gravou.append(campo.lower())
+            if custom:
+                for nome, valor in custom.items():
+                    try:
+                        self._chamar(lambda n=nome, v=valor: si.SetCustomBySummaryInfo(n, v))
+                        gravou.append("custom:%s" % nome)
+                    except Exception as exc:      # noqa: BLE001
+                        return CommandResult(ok=False, error="custom '%s': %s" % (nome, _com_erro(exc)))
+            return CommandResult(ok=True, payload={"gravou": gravou,
+                                                   "onde": "SummaryInfo do documento"})
+        except Exception as exc:
+            return CommandResult(ok=False, error=_com_erro(exc))
+
+    async def entity_geometry(self, entity_id: str) -> CommandResult:
+        """Geometria normalizada (pontos, centro, raio, angulos) de uma entidade.
+
+        O LISP le os grupos DXF 10/11/40/50/51. Para LWPOLYLINE o grupo 10 se
+        repete: o codigo coleta todos.
+        """
+        expr = (
+            '(progn (setq __e (handent "%s"))'
+            ' (if (null __e) "MCPERRO:handle nao existe"'
+            '  (progn (setq __d (entget __e)) (setq __ps nil)'
+            '   (foreach __c __d (if (= (car __c) 10)'
+            '    (setq __ps (cons (list (car (cdr __c)) (cadr (cdr __c))) __ps))))'
+            '   (list (cons (quote tipo) (cdr (assoc 0 __d)))'
+            '    (cons (quote camada) (cdr (assoc 8 __d)))'
+            '    (cons (quote pontos) (reverse __ps))'
+            '    (cons (quote centro) (cdr (assoc 10 __d)))'
+            '    (cons (quote raio) (cdr (assoc 40 __d)))'
+            '    (cons (quote razao) (cdr (assoc 42 __d)))'
+            '    (cons (quote angulo_inicio) (cdr (assoc 50 __d)))'
+            '    (cons (quote angulo_fim) (cdr (assoc 51 __d)))'
+            '    (cons (quote tipo) (cdr (assoc 0 __d)))))))'
+            % _q(entity_id)
+        )
+        return self._aval(expr)

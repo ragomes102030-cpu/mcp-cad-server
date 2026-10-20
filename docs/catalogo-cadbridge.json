@@ -1,0 +1,59 @@
+{
+  "gerado_em": "2026-10-20T19:17:16-03:00",
+  "maquina": {
+    "usuario": "Correta Engenharia",
+    "appdata": "C:\\Users\\Correta Engenharia\\AppData\\Roaming"
+  },
+  "bundle": {
+    "caminho": "C:\\Users\\Correta Engenharia\\AppData\\Roaming\\Autodesk\\ApplicationPlugins\\CadMcpBridge.bundle",
+    "xml": {
+      "existe": true,
+      "caminho": "C:\\Users\\Correta Engenharia\\AppData\\Roaming\\Autodesk\\ApplicationPlugins\\CadMcpBridge.bundle\\PackageContents.xml",
+      "nome": "CadMcpBridge",
+      "versao_pacote": "1.0",
+      "autor": "mcp-cad-server",
+      "os": "Win64",
+      "series_min": "R25.0",
+      "series_max": "R25.9",
+      "plataforma": "AutoCAD*",
+      "modulo": "./Contents/Windows/CadMcpBridge.dll",
+      "versao_componente": "1.0",
+      "load_no_startup": "True",
+      "load_no_comando": "False"
+    },
+    "dll": "C:\\Users\\Correta Engenharia\\AppData\\Roaming\\Autodesk\\ApplicationPlugins\\CadMcpBridge.bundle\\Contents\\Windows\\CadMcpBridge.dll",
+    "dll_bytes": 45568,
+    "installed": true
+  },
+  "trustedpaths": {
+    "lido": true,
+    "presente": true,
+    "perfil": "<<Unnamed Profile>>",
+    "chave": "Software\\Autodesk\\AutoCAD\\R25.0\\Profiles\\<<Unnamed Profile>>\\Variables",
+    "valor": "C:\\Users\\Correta Engenharia\\AppData\\Roaming\\Autodesk\\ApplicationPlugins;C:\\Users\\Correta Engenharia\\AppData\\Roaming\\Autodesk\\ApplicationPlugins\\CadMcpBridge.bundle\\Contents\\Windows",
+    "cobre_bundle": true
+  },
+  "sessao": {
+    "com": {
+      "aberto": false,
+      "erro": "(-2147221021, 'Operação não disponível', None, None)"
+    },
+    "arquivo_ponte": "C:\\Users\\CORRET~1\\AppData\\Local\\Temp\\cad_mcp_bridge.json",
+    "log_ponte": "C:\\Users\\CORRET~1\\AppData\\Local\\Temp\\cad_mcp_bridge.log",
+    "log_ponte_existe": true
+  },
+  "ponte": {
+    "carregado": false,
+    "motivo": "arquivo da ponte ausente"
+  },
+  "oficial": {
+    "existe": false,
+    "caminho": "C:\\Program Files\\Autodesk\\ApplicationPlugins"
+  },
+  "veredito": [
+    "bundle instalado: CadMcpBridge (v1.0, series R25.0-R25.9, load no startup=True)",
+    "plugin NAO carregado nesta sessao (arquivo da ponte ausente)",
+    "MCP oficial da Autodesk: AUSENTE (AutoCAD 2027; esta maquina tem 2025)",
+    "o que isto NAO prova: se um comando enviado realmente alterou o desenho (o plugin nao confirma) e a cobertura do MCP oficial"
+  ]
+}

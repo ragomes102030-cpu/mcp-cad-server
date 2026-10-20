@@ -1,33 +1,25 @@
 # -*- coding: utf-8 -*-
-"""Sonda viva do AutoCAD: comandos e variaveis de sistema, com o valor de agora.
+"""Sonda o AutoCAD ABERTO e mapeia o que ele realmente tem: comandos e variaveis.
 
-Por que existe: o `mapear_com.py` le a type library e o `acad.pgp` sem abrir o
-AutoCAD, mas nao sabe o que esta carregado NESTA sessao nem quanto vale OSMODE,
-FILEDIA, MEASUREMENT... Isso so da para ler de dentro, com o desenho aberto.
+Le do proprio programa, nao da documentacao:
+    (atoms-family 1)  -> todos os simbolos;  C:XXX = comando;  XXX = variavel
+    (getvar "XXX")    -> valor atual (so leitura, nao altera nada)
 
-Onde cada lista vem (nada de achismo):
-    comandos em LISP   `(atoms-family 1)` -> nomes "C:XXX"
-    comandos de menu   macros do `acad.CUIX` (via mapear_com.ler_cui)
-    apelidos           `acad.pgp` (via mapear_com.ler_pgp)
-    sysvars            `MsiKeyFile_<NOME>.dll` na instalacao (603 nomes, um por
-                       variavel localizavel) + `$VARS` do DXF + uma lista curta
-                       das classicas que o MsiKeyFile nao lista
-    valor              `(getvar "NOME")` ao vivo; devolve nil = nao existe aqui
+O que sai:
+    docs/catalogo-autocad.json   -- dados brutos (comandos, variaveis, valores)
+    docs/MAPA-AUTOCAD.md         -- resumo legivel + listas de risco
 
-O AutoCAD NAO expoe uma API de enumeracao de sysvars (nem COM, nem .NET, nem
-LISP). Por isso a lista e de candidatos e o valor e que confirma: o que responde
-nil nao entra no mapa.
+Nada aqui abre dialogo, muda desenho ou salva arquivo. Toda leitura vai dentro de
+`vl-catch-all-apply`, entao simbolo que nao e variavel simplesmente nao responde.
 
-Uso (AutoCAD aberto, com um desenho):
-    python tools/sonda_autocad.py [--json]
-
-Escreve `docs/catalogo-autocad.json` e `docs/MAPA-AUTOCAD.md`.
+Uso:
+    python tools/sonda_autocad.py            # usa o AutoCAD ja aberto
+    python tools/sonda_autocad.py --json     # imprime o resumo em JSON
 """
 from __future__ import annotations
 
 import asyncio
 import json
-import re
 import sys
 import time
 from datetime import datetime
@@ -39,232 +31,178 @@ except Exception:
     pass
 
 RAIZ = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(RAIZ / "src"))
+
 DOCS = RAIZ / "docs"
-DOCS.mkdir(parents=True, exist_ok=True)
-AUTOCAD = Path(r"C:\Program Files\Autodesk\AutoCAD 2025")
-MSI = AUTOCAD / "MsiKeyFile"
-DXF = RAIZ / "saida" / "planta_3q.dxf"
+CHUNK = 150
 
-# As classicas que importam para desenhar por codigo e que o MsiKeyFile (feito
-# para localizacao) nao lista. Nao ha significado inventado aqui: so o nome.
-CURADOS = """
-OSMODE OSMISSING SNAPMODE SNAPUNIT SNAPBASE ORTHOMODE POLARMODE POLARADDANG
-POLARANG GRIDMODE GRIDUNIT LIMCHECK LIMMIN LIMMAX PICKBOX APERTURE GRIPS
-GRIPSIZE CMDECHO CMDDIA FILEDIA EXPERT INSUNITS INSUNITSDEFSOURCE
-INSUNITSDEFTARGET MEASUREMENT LUNITS LUPREC AUNITS AUPREC ANGBASE ANGDIR
-DIMASSOC DIMSCALE DIMTXT CLAYER CECOLOR CELTYPE LTSCALE PSLTSCALE MSLTSCALE
-CELWEIGHT LWDISPLAY TEXTSIZE TEXTSTYLE MIRRTEXT FILLMODE ATTREQ ATTDIA
-TRIMEXTENDMODE LEGACYCODESEARCH SECURELOAD TRUSTEDPATHS PEDITACCEPT
-PROXYGRAPHICS XREFCTL DWGNAME DWGPREFIX DWGTTDESTAMP ACADVER
-""".split()
+# comandos que historicamente abrem caixa de dialogo
+RISCO = (
+    "WBLOCK|LAYER|PLOT|INSERT|XREF|PURGE|SAVEAS|OPEN|IMAGE|DIMSTYLE|STYLE|UNITS|"
+    "OPTIONS|HATCH|BLOCK|GROUP|TABLE|FIELD|DATAEXTRACTION|ATTEXT|IMPORT|EXPORT|"
+    "PREVIEW|PUBLISH|SSM|SHEETSET|EATTEXT|QSELECT|FILTER|BATTMAN|SCALETEXT|"
+    "MLEDIT|SPLINEDIT|PEDIT|HATCHEDIT|REFEDIT|XATTACH|ATTACH|PDFATTACH|PLOTSTYLE"
+)
 
-
-def agora() -> str:
-    return datetime.now().astimezone().isoformat(timespec="seconds")
+# variaveis que decidem se a automacao trava ou nao
+CRITICAS = (
+    "FILEDIA", "CMDDIA", "ATTDIA", "EXPERT", "SECURELOAD", "TRUSTEDPATHS",
+    "CMDECHO", "OSMODE", "INSUNITS", "MEASUREMENT", "LUPREC", "LUNITS", "DIMZIN",
+    "QAFLAGS", "CMDACTIVE", "SDI", "LISPINIT", "ACADVER", "PRODUCT", "LOCALE",
+    "DWGPREFIX", "DWGNAME", "DWGTITLED", "PROXYSHOW", "XLOADCTL", "DEMANDLOAD",
+    "LEGACYCODESEARCH", "AUTOSNAP", "GRIDMODE", "UCSFOLLOW", "TARGET", "VIEWDIR",
+)
 
 
-def nomes_msi() -> list[str]:
-    """603 nomes declarados pela instalacao (MsiKeyFile_<NOME>.dll)."""
-    if not MSI.is_dir():
-        return []
-    saida = []
-    for f in MSI.glob("MsiKeyFile_*.dll"):
-        nome = f.stem[len("MsiKeyFile_"):]
-        if re.fullmatch(r"[A-Z0-9_]{2,40}", nome):
-            saida.append(nome)
-    return sorted(set(saida))
+def lisp_lista(valores: list[str]) -> str:
+    return "(" + " ".join('"%s"' % v.replace("\\", "/") for v in valores) + ")"
 
 
-def nomes_dxf() -> list[str]:
-    """Variaveis que o desenho salva (secao HEADER do DXF), lidas do exemplo."""
-    if not DXF.exists():
-        return []
-    try:
-        import ezdxf
-
-        doc = ezdxf.readfile(str(DXF))
-        return sorted({str(v).lstrip("$") for v in doc.header.varnames()})
-    except Exception as exc:  # noqa: BLE001 - arquivo velho nao pode derrubar a sonda
-        print(f"  (DXF ignorado: {exc})")
-        return []
-
-
-def fonte_comandos() -> dict[str, list[str]]:
-    sys.path.insert(0, str(RAIZ / "tools"))
-    try:
-        import mapear_com
-
-        apelidos = [cmd for _alias, cmd in mapear_com.ler_pgp()]
-        cui = dict(mapear_com.ler_cui())
-    except Exception as exc:  # noqa: BLE001
-        print(f"  (pgp/CUIX ignorados: {exc})")
-        apelidos, cui = [], {}
-    return {"pgp": sorted(set(apelidos)), "cuix": sorted(cui), "cuix_com_hifen": sorted(
-        c for c, hifen in cui.items() if hifen)}
-
-
-def classificar(valor) -> str:
-    if isinstance(valor, bool):
-        return "booleano"
-    if isinstance(valor, (list, tuple)):
-        return "ponto/lista"
-    if isinstance(valor, int):
-        return "inteiro"
-    if isinstance(valor, float):
-        return "real"
-    if valor is None:
-        return "nulo"
-    return "texto"
-
-
-def main() -> int:
+def main(argv: list[str]) -> int:
     from cad_mcp.com_backend import ComBackend
 
-    print("conectando ao AutoCAD...")
     b = ComBackend()
-    try:
-        asyncio.run(b.initialize())
-    except Exception as exc:  # noqa: BLE001
-        print(f"falhou: {exc}\nAbra o AutoCAD, com um desenho, e tente de novo.")
-        return 1
-
-    def av(expr: str, timeout: int = 60):
-        try:
-            return b._aval(expr, timeout=timeout)
-        except Exception as exc:  # noqa: BLE001
-            class _R:
-                ok = False
-                payload = None
-                error = str(exc)
-            return _R()
-
-    # ---- produto e desenho ----
-    info = {}
-    for chave, expr in (("acadver", '(getvar "ACADVER")'),
-                        ("desenho", '(getvar "DWGNAME")'),
-                        ("pasta", '(getvar "DWGPREFIX")')):
-        r = av(expr)
-        info[chave] = r.payload if r.ok else None
-    print(f"  {info['acadver']} / {info['desenho']}")
-
-    # ---- comandos ----
-    print("1) simbolos de comando (atoms-family)...")
-    r = av("(atoms-family 1)", timeout=120)
-    nomes = [str(x) for x in (r.payload or [])] if r.ok else []
-    c_simbolo = sorted({n[2:] for n in nomes if n.upper().startswith("C:") and len(n) > 2})
-    fontes = fonte_comandos()
-    todos_comandos = sorted(set(c_simbolo) | set(fontes["pgp"]) | set(fontes["cuix"]))
-    print(f"   {len(nomes)} simbolos, {len(c_simbolo)} comandos C:, "
-          f"{len(fontes['cuix'])} de menu, {len(fontes['pgp'])} apelidos")
-
-    # ---- variaveis candidatas ----
-    print("2) variaveis candidatas...")
-    candidatas = set(nomes_msi()) | set(nomes_dxf()) | set(CURADOS)
-    candidatas = sorted(c for c in candidatas if c and not c.startswith("$"))
-    print(f"   {len(candidatas)} candidatas (MsiKeyFile + DXF + classicas)")
-
-    print("3) lendo o valor de cada uma (getvar)...")
     t0 = time.perf_counter()
-    sysvars: dict[str, dict] = {}
-    ausentes: list[str] = []
-    for i, nome in enumerate(candidatas, 1):
-        r = av(f'(getvar "{nome}")', timeout=20)
-        if r.ok and r.payload is not None:
-            valor = r.payload
-            if isinstance(valor, tuple):
-                valor = list(valor)
-            sysvars[nome] = {"valor": valor, "tipo": classificar(valor)}
-        else:
-            ausentes.append(nome)
-        if i % 100 == 0:
-            print(f"   {i}/{len(candidatas)}...")
-    dur = round(time.perf_counter() - t0, 1)
-    print(f"   {len(sysvars)} vivas, {len(ausentes)} ausentes ({dur}s)")
+    r = asyncio.run(b.initialize())
+    if not r.ok:
+        print("SEM AUTOCAD: %s" % r.error)
+        return 2
+    inicial = r.payload
+    print("conectado: %s" % inicial)
 
-    # ---- grava ----
+    # ------------------------------------------------------------------ 1. simbolos
+    print("\n1) lendo (atoms-family 1)...")
+    t = time.perf_counter()
+    r = b._aval("(mapcar 'vl-symbol-name (atoms-family 1))", timeout=120)
+    if not r.ok:
+        print("falhou: %s" % r.error)
+        return 1
+    simbolos = [str(s) for s in (r.payload or [])]
+    comandos = sorted(s for s in simbolos if s.upper().startswith("C:"))
+    print("   %d simbolos, %d comandos (C:*), %.1f s"
+          % (len(simbolos), len(comandos), time.perf_counter() - t))
+
+    # ------------------------------------------------------------- 2. variaveis
+    print("\n2) testando quais simbolos respondem a (getvar)...")
+    t = time.perf_counter()
+    expr = (
+        "(vl-remove-if-not"
+        " '(lambda (s) (not (vl-catch-all-error-p (vl-catch-all-apply 'getvar (list s)))))"
+        " (mapcar 'vl-symbol-name (atoms-family 1)))"
+    )
+    r = b._aval(expr, timeout=120)
+    if not r.ok:
+        print("falhou: %s" % r.error)
+        return 1
+    variaveis = sorted(str(s) for s in (r.payload or []))
+    print("   %d variaveis, %.1f s" % (len(variaveis), time.perf_counter() - t))
+
+    print("\n3) lendo valores em blocos de %d..." % CHUNK)
+    valores: dict[str, str] = {}
+    for i in range(0, len(variaveis), CHUNK):
+        bloco = variaveis[i:i + CHUNK]
+        expr = (
+            "(mapcar '(lambda (s) (list s (vl-princ-to-string"
+            " (vl-catch-all-apply 'getvar (list s))))) %s)" % lisp_lista(bloco)
+        )
+        r = b._aval(expr, timeout=120)
+        if not r.ok:
+            print("   bloco %d falhou: %s" % (i // CHUNK, r.error))
+            continue
+        for par in r.payload or []:
+            if isinstance(par, (list, tuple)) and len(par) >= 2:
+                valores[str(par[0])] = str(par[1])
+        print("   %d/%d" % (min(i + CHUNK, len(variaveis)), len(variaveis)))
+
+    # ---------------------------------------------------------------- 4. relatorio
+    presentes = set(comandos)
+    com_variante = [c for c in comandos if ("-" + c) in presentes]
+    riscos = []
+    for c in comandos:
+        nome = c[2:]
+        if any(k in nome.upper() for k in RISCO.split("|")):
+            riscos.append({"comando": c, "variante": ("-" + c) in presentes})
+    criticas = {n: valores.get(n) for n in CRITICAS if n in valores}
+
     dados = {
-        "gerado_em": agora(),
-        "produto": info,
-        "comandos": {
-            "total_uniao": len(todos_comandos),
-            "c_simbolo": c_simbolo,
-            "cuix": fontes["cuix"],
-            "pgp": fontes["pgp"],
-            "cuix_com_hifen": fontes["cuix_com_hifen"],
-        },
-        "sysvars": sysvars,
-        "sysvars_ausentes": ausentes,
-        "fontes": {
-            "comandos_c": "(atoms-family 1) na sessao",
-            "comandos_menu": "acad.CUIX",
-            "apelidos": "acad.pgp",
-            "sysvars": f"MsiKeyFile ({len(nomes_msi())}) + $VARS do DXF + {len(CURADOS)} classicas",
-        },
+        "quando": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "acad": inicial,
+        "contagem": {"simbolos": len(simbolos), "comandos": len(comandos),
+                     "variaveis": len(variaveis)},
+        "comandos": comandos,
+        "com_variante_de_linha": com_variante,
+        "variaveis": valores,
+        "criticas": criticas,
     }
+    DOCS.mkdir(exist_ok=True)
     (DOCS / "catalogo-autocad.json").write_text(
-        json.dumps(dados, indent=2, ensure_ascii=False), encoding="utf-8")
+        json.dumps(dados, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    linhas = [
-        "# Mapa do AutoCAD — medido ao vivo",
-        "",
-        f"Gerado em **{agora()}** por `tools/sonda_autocad.py`, com o AutoCAD aberto.",
-        "",
-        f"- Produto: `{info['acadver']}`",
-        f"- Desenho: `{info['desenho']}` em `{info['pasta']}`",
-        "",
-        "## Comandos",
-        "",
-        "| fonte | quantos | o que prova |",
-        "|---|---|---|",
-        f"| `(atoms-family 1)` → `C:XXX` | {len(c_simbolo)} | comandos registrados em LISP nesta sessão |",
-        f"| macros do `acad.CUIX` | {len(fontes['cuix'])} | comandos que o menu chama |",
-        f"| `acad.pgp` | {len(fontes['pgp'])} | apelidos digitáveis |",
-        f"| **união** | **{len(todos_comandos)}** | nomes distintos |",
-        "",
-        f"Com variante sem diálogo (`-COMANDO`) no menu: **{len(fontes['cuix_com_hifen'])}** — "
-        + (", ".join(f"`-{c}`" for c in fontes["cuix_com_hifen"]) or "nenhuma"),
-        "",
-        "Um comando aparecer no menu **não** garante que exista nesta instalação "
-        "(pode ser de um módulo não carregado). A lista de comandos em LISP é a "
-        "que existe de fato.",
-        "",
-        "## Variáveis de sistema",
-        "",
-        f"**{len(sysvars)}** responderam a `(getvar)` e estão vivas; "
-        f"{len(ausentes)} candidatas responderam `nil` (não existem aqui).",
-        "",
-        "| variável | tipo | valor agora |",
-        "|---|---|---|",
-    ]
-    for nome in sorted(sysvars):
-        v = sysvars[nome]
-        texto = ", ".join(f"{x:g}" for x in v["valor"]) if isinstance(v["valor"], list) \
-            else str(v["valor"])
-        texto = texto.replace("|", "\\|")
-        linhas.append(f"| `{nome}` | {v['tipo']} | `{texto}` |")
+    _escrever_mapa(dados, riscos, presentes)
+    print("\ngerado: docs/MAPA-AUTOCAD.md e docs/catalogo-autocad.json")
 
-    if ausentes:
-        linhas += ["", "### Candidatas que não existem nesta instalação", "",
-                   ", ".join(f"`{n}`" for n in ausentes), ""]
-
-    linhas += [
-        "",
-        "## Como isto foi medido",
-        "",
-        "- As variáveis não são enumeráveis por API (nem COM, nem .NET, nem LISP): "
-        "os nomes vieram dos recursos da instalação (`MsiKeyFile_<NOME>.dll`), do "
-        "cabeçalho do DXF de exemplo e de uma lista curta das clássicas.",
-        "- O valor é o do momento da leitura. `FILEDIA`, `OSMODE` e companhia mudam "
-        "com o uso; o mapa diz o que estava valendo, não o que deveria valer.",
-        "- Ângulos em variável (`ANGBASE`, `POLARANG`) são **radianos** no `getvar` — "
-        "a mesma regra do `entmake`.",
-    ]
-    (DOCS / "MAPA-AUTOCAD.md").write_text("\n".join(linhas) + "\n", encoding="utf-8")
-
-    print(f"\nok: docs/MAPA-AUTOCAD.md e docs/catalogo-autocad.json")
-    print(f"   {len(todos_comandos)} comandos, {len(sysvars)} variaveis vivas")
+    sem_variante = [r_ for r_ in riscos if not r_["variante"]]
+    print("\nresumo: %d comandos, %d com variante '-', %d comandos de risco (%d sem variante)"
+          % (len(comandos), len(com_variante), len(riscos), len(sem_variante)))
+    print("variaveis: %d | criticas presentes: %d/%d" % (len(variaveis), len(criticas), len(CRITICAS)))
+    print("tempo total: %.1f s" % (time.perf_counter() - t0))
+    if "--json" in argv:
+        print(json.dumps({"contagem": dados["contagem"], "criticas": criticas},
+                         ensure_ascii=False, indent=2))
     return 0
 
 
+def _escrever_mapa(d: dict, riscos: list[dict], presentes: set[str]) -> None:
+    c = d["contagem"]
+    linhas = [
+        "# Mapa do AutoCAD (lido do programa, não da documentação)",
+        "",
+        "Fonte: `(atoms-family 1)` + `(getvar)` na sessão de %s. Gerado por "
+        "`tools/sonda_autocad.py`; não editar à mão." % d["quando"],
+        "",
+        "| | |",
+        "|---|---|",
+        "| símbolos | %d |" % c["simbolos"],
+        "| comandos (`C:*`) | %d |" % c["comandos"],
+        "| comandos com variante `-` | %d |" % len(d["com_variante_de_linha"]),
+        "| variáveis de sistema | %d |" % c["variaveis"],
+        "",
+        "## O que decide se a automação trava",
+        "",
+        "| variável | valor agora | por que importa |",
+        "|---|---|---|",
+    ]
+    notas = {
+        "FILEDIA": "1 = abre caixa de arquivo em SAVEAS/OPEN/WBLOCK. Automatizar com 1 é travar.",
+        "CMDDIA": "1 = diálogo em PLOT/LAYER. Igual acima.",
+        "ATTDIA": "1 = diálogo ao inserir bloco com atributos.",
+        "EXPERT": "5 suprime perguntas de rotina em alguns comandos.",
+        "SECURELOAD": "0 = aceita carregar código sem perguntar (cuidado).",
+        "INSUNITS": "6 = metro (é o nosso padrão).",
+        "MEASUREMENT": "1 = métrico (2 = polegadas).",
+        "QAFLAGS": "bits de eco/regeneracao de LISP; 2 costuma ajudar em script.",
+        "CMDACTIVE": "!= 0 significa comando em andamento: nunca chamar COM agora.",
+    }
+    for nome, valor in d["criticas"].items():
+        linhas.append("| `%s` | `%s` | %s |" % (nome, valor, notas.get(nome, "")))
+
+    linhas += ["", "## Comandos que historicamente abrem diálogo", "",
+               "`variante` = existe `C:<comando com hífen>` (a versão de linha de comando).",
+               "Sem variante, o caminho é `FILEDIA=0`/`CMDDIA=0` — ou não usar.", "",
+               "| comando | variante `-` | |", "|---|---|---|"]
+    for r_ in sorted(riscos, key=lambda x: (x["variante"], x["comando"])):
+        marca = "sim" if r_["variante"] else "**não**"
+        linhas.append("| `%s` | %s | |" % (r_["comando"], marca))
+
+    sem = [r_ for r_ in riscos if not r_["variante"]]
+    linhas += ["", "## Sinais de que dá para automatizar com segurança", "",
+               "- o comando tem `-`variante → use a variante;",
+               "- a variável crítica está no valor esperado (`FILEDIA=0`, `CMDDIA=0`);",
+               "- o comando aparece como `C:XXX` (é comando real, não alias de menu).", "",
+               "Comandos de risco sem variante: %d — esses exigem `FILEDIA=0` "
+               "ou caminho alternativo (entidade direta)." % len(sem)]
+    (DOCS / "MAPA-AUTOCAD.md").write_text("\n".join(linhas) + "\n", encoding="utf-8")
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))

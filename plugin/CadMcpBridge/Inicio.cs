@@ -17,6 +17,9 @@ namespace CadMcpBridge
         {
             try
             {
+                // a fila precisa ser inscrita ANTES do servidor: Initialize() roda na
+                // thread principal e e' daqui que sai o id da thread de marshalling.
+                Fila.Iniciar();
                 Servidor.Iniciar();
             }
             catch (System.Exception ex)

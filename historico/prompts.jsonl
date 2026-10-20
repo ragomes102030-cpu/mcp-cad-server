@@ -1,0 +1,10 @@
+{"quando": "2026-10-20T18:23:06-03:00", "comando": "LINE", "prompt_bruto": "Requires numeric distance, two points, or option keyword.", "prompt": "Requires numeric distance, two points, or option keyword.", "via": "ponte .NET (LASTPROMPT de dentro do processo)"}
+{"quando": "2026-10-20T18:23:27-03:00", "comando": "PLINE", "prompt_bruto": "Command: _.PLINE", "prompt": "Command: _.PLINE", "via": "ponte .NET (LASTPROMPT de dentro do processo)"}
+{"quando": "2026-10-20T18:23:48-03:00", "comando": "CIRCLE", "prompt_bruto": "Command: _.CIRCLE", "prompt": "Command: _.CIRCLE", "via": "ponte .NET (LASTPROMPT de dentro do processo)"}
+{"quando": "2026-10-20T18:24:09-03:00", "comando": "ARC", "prompt_bruto": "Command: _.ARC", "prompt": "Command: _.ARC", "via": "ponte .NET (LASTPROMPT de dentro do processo)"}
+{"quando": "2026-10-20T18:24:30-03:00", "comando": "RECTANG", "prompt_bruto": "Command: _.RECTANG", "prompt": "Command: _.RECTANG", "via": "ponte .NET (LASTPROMPT de dentro do processo)"}
+{"quando": "2026-10-20T18:24:51-03:00", "comando": "ELLIPSE", "prompt_bruto": "Command: _.ELLIPSE", "prompt": "Command: _.ELLIPSE", "via": "ponte .NET (LASTPROMPT de dentro do processo)"}
+{"quando": "2026-10-20T18:25:12-03:00", "comando": "SPLINE", "prompt_bruto": "Current settings: Method=Fit   Knots=Chord", "prompt": "Current settings: Method=Fit   Knots=Chord", "via": "ponte .NET (LASTPROMPT de dentro do processo)"}
+{"quando": "2026-10-20T18:25:33-03:00", "comando": "POINT", "prompt_bruto": "Current point modes:  PDMODE=0  PDSIZE=0.0000", "prompt": "Current point modes:  PDMODE=0  PDSIZE=0.0000", "via": "ponte .NET (LASTPROMPT de dentro do processo)"}
+{"quando": "2026-10-20T18:25:54-03:00", "comando": "XLINE", "prompt_bruto": "Command: _.XLINE", "prompt": "Command: _.XLINE", "via": "ponte .NET (LASTPROMPT de dentro do processo)"}
+{"quando": "2026-10-20T18:26:15-03:00", "comando": "HATCH", "prompt_bruto": "Command: _.HATCH", "prompt": "Command: _.HATCH", "via": "ponte .NET (LASTPROMPT de dentro do processo)"}
