@@ -8,7 +8,7 @@ dentro. Mapa velho não é mapa errado: é mapa de outro dia.
 | `MAPA-COM.md` | `tools/mapear_com.py` | não (lê `acax25enu.tlb`) | quais interfaces/métodos/propriedades o COM tem |
 | `com-acad-2025.json` | idem | não | a mesma coisa, cru |
 | `ALIASES.md` | idem (lê `acad.pgp`) | não | 411 apelidos → 321 comandos |
-| `COBERTURA.md` | `tools/importar_acmpro.py` | não (lê o vendor) | nossas 40 ferramentas × as 247 do acmpro |
+| `COBERTURA.md` | `tools/importar_acmpro.py` | não (lê o vendor) | nossas 48 ferramentas × as 247 do acmpro |
 | `catalogo-acmpro.json` | idem | não | as 247, com família |
 | `MAPA-AUTOCAD.md` | `tools/sonda_autocad.py` | **sim** | 863 comandos e 821 variáveis vivas, com o valor de agora |
 | `catalogo-autocad.json` | idem | **sim** | a mesma coisa, cru |

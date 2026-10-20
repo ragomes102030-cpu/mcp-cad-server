@@ -4,7 +4,7 @@ Gerado por `python tools/importar_acmpro.py`. Não editar à mão.
 
 | | deles | nossos | mesmo nome |
 |---|---|---|---|
-| total | 247 | 40 | 33 |
+| total | 247 | 76 | 65 |
 
 **Mesmo nome não é a mesma ferramenta.** `drawing_save` deles e o nosso fazem
 coisas diferentes nos detalhes. A comparação serve para achar **buraco**, não
@@ -15,18 +15,18 @@ para dizer que já temos.
 | família | deles | nossos | faltando |
 |---|---|---|---|
 | desenho | 31 | 8 | 23 |
-| plot/arquivo | 30 | 4 | 26 |
-| camada/estilo | 30 | 4 | 26 |
-| edicao | 29 | 4 | 25 |
-| consulta | 24 | 3 | 21 |
-| sistema | 23 | 2 | 21 |
+| plot/arquivo | 30 | 15 | 15 |
+| camada/estilo | 30 | 17 | 13 |
+| edicao | 29 | 11 | 18 |
+| consulta | 24 | 4 | 20 |
+| sistema | 23 | 3 | 20 |
 | arquitetura | 19 | 2 | 17 |
 | mecanica | 13 | 0 | 13 |
 | bloco | 11 | 4 | 7 |
 | cota/anotacao | 9 | 2 | 7 |
 | P&ID | 9 | 0 | 9 |
 | 3D/solido | 8 | 0 | 8 |
-| selecao | 5 | 1 | 4 |
+| selecao | 5 | 4 | 1 |
 | visualizacao | 3 | 2 | 1 |
 | outros | 2 | 3 | 0 |
 | texto | 1 | 1 | 0 |
@@ -36,6 +36,7 @@ para dizer que já temos.
 | nossa | exposta como | existe no deles | resumo deles |
 |---|---|---|---|
 | arch_room | `arch_room` | sim | Label a room with its name, number and measured area. |
+| batch_plot | `batch_plot` | sim | Plot every sheet (or the named ones) to PDF; each sheet size is read b |
 | block_get_attributes | `block_get_attributes` | sim | Read the tag/value pairs off a block reference. |
 | block_insert | `block_insert` | sim | Place a block, filling in its attribute values as you go. |
 | block_list | `block_list` | sim | List the block definitions the drawing already carries. |
@@ -43,16 +44,22 @@ para dizer que já temos.
 | cancel | `cancel` | **não** | só nossa |
 | dimension_aligned | `dimension_aligned` | sim | Dimension the true distance between two points, along a slope. |
 | dimension_linear | `dimension_linear` | sim | Dimension a horizontal or vertical size, with an ISO 129 tolerance or  |
+| dimstyle_list | `dimstyle_list` | sim | List dimension styles with their ISO-25/ANSI variables and the current |
 | drawing_apply_iso_layers | `drawing_apply_iso_layers` | sim | Set up a standard ISO layer set with the right colours and lineweights |
+| drawing_audit | `drawing_audit` | sim | Scan the drawing for structural errors and repair what it finds. |
 | drawing_export_dxf | `drawing_export_dxf` | sim | Write a DXF interchange copy of the drawing. |
 | drawing_export_pdf | `drawing_export_pdf` | sim | Plot the drawing, or one paper-space layout, to PDF. |
 | drawing_info | `drawing_info` | sim | Read the current drawing's name, path, extents and object counts. |
 | drawing_new | `drawing_new` | sim | Start a drawing: blank with the engineering layers, or from a bundled/ |
 | drawing_open | `drawing_open` | sim | Load an existing DXF from disk (DWG only on the live AutoCAD backend). |
+| drawing_purge | `drawing_purge` | sim | Strip unused layers, blocks, linetypes and styles out of the file. |
 | drawing_redo | `drawing_redo` | sim | Reapply the operation you just undid. |
 | drawing_save | `drawing_save` | sim | Write the drawing back to its file, or to a path you give. |
+| drawing_save_as | `drawing_save_as` | sim | Save a copy under a new name; the extension picks DXF, DWG or DWT. |
 | drawing_setup | `drawing_setup` | **não** | só nossa |
 | drawing_undo | `drawing_undo` | sim | Step back one operation. |
+| entity_copy | `entity_copy` | sim | Duplicate an entity and offset the copy. |
+| entity_copy_filter | `entity_copy_filter` | **não** | só nossa |
 | entity_create_arc | `entity_create_arc` | sim | Draw a circular arc from a centre, a radius and two angles. |
 | entity_create_circle | `entity_create_circle` | sim | Draw a circle: a hole, a bore, a pitch circle. |
 | entity_create_hatch | `entity_create_hatch` | sim | Fill a closed boundary with a section pattern such as ANSI31 or SOLID. |
@@ -63,15 +70,44 @@ para dizer que já temos.
 | entity_create_text | `entity_create_text` | sim | Place a single-line text label. |
 | entity_erase | `entity_erase` | **não** | só nossa |
 | entity_erase_filter | `entity_erase_filter` | **não** | só nossa |
+| entity_extend | `entity_extend` | sim | Lengthen a line until it meets a boundary line. |
+| entity_fillet | `entity_fillet` | sim | Round a corner between two lines with a tangent arc. |
 | entity_list | `entity_list` | sim | Browse the drawing's entities and their handles, filtered by type or l |
+| entity_mirror | `entity_mirror` | sim | Reflect an entity across a mirror line, keeping or dropping the origin |
+| entity_mirror_filter | `entity_mirror_filter` | **não** | só nossa |
 | entity_move | `entity_move` | sim | Shift an entity by a displacement vector. |
+| entity_offset | `entity_offset` | sim | Make a parallel copy of a line, circle or polyline at a set distance. |
+| entity_rotate | `entity_rotate` | sim | Turn an entity about a base point by an angle in degrees. |
+| entity_rotate_filter | `entity_rotate_filter` | **não** | só nossa |
+| entity_trim | `entity_trim` | sim | Cut a line back to where another crosses it, keeping the side you poin |
 | layer_create | `layer_create` | sim | Add a layer with a colour, linetype and lineweight. |
+| layer_delete | `layer_delete` | sim | Remove an empty layer from the drawing. |
+| layer_freeze | `layer_freeze` | sim | Freeze a layer so it stops drawing and regenerating. |
+| layer_hide | `layer_hide` | sim | Turn a layer off so its entities stop showing. |
+| layer_isolate | `layer_isolate` | sim | Hide every layer except one, to work on it alone. |
+| layer_linetype_load | `layer_linetype_load` | **não** | só nossa |
 | layer_list | `layer_list` | sim | List every layer with its colour, linetype and visibility state. |
+| layer_lock | `layer_lock` | sim | Lock a layer so its entities can be seen but not edited. |
+| layer_modify | `layer_modify` | sim | Change an existing layer's colour, linetype or lineweight. |
 | layer_set_current | `layer_set_current` | sim | Choose the layer that new geometry lands on. |
+| layer_show | `layer_show` | sim | Turn a layer that was switched off back on. |
+| layer_thaw | `layer_thaw` | sim | Bring a frozen layer back into view. |
+| layer_unlock | `layer_unlock` | sim | Unlock a layer so its entities can be edited again. |
+| layout_copy | `layout_copy` | sim | Duplicate a sheet with its page setup and geometry. |
+| layout_create | `layout_create` | sim | Add a new paper-space sheet tab to the drawing. |
+| layout_delete | `layout_delete` | sim | Delete a sheet tab and everything drawn on it. |
+| layout_list | `layout_list` | sim | List the sheet tabs: Model plus every paper-space layout. |
+| layout_rename | `layout_rename` | sim | Rename a sheet tab, keeping its geometry and handles. |
+| layout_set_current | `layout_set_current` | sim | Switch to a sheet tab, or back to model space. |
+| linetype_list | `linetype_list` | sim | List the dash patterns currently loaded in the drawing. |
+| page_setup_apply | `page_setup_apply` | sim | Set a sheet's paper, orientation, ctb, plot scale and device (PAGESETU |
+| page_setup_list | `page_setup_list` | sim | Read each sheet's page setup: paper, orientation, ctb, scale, device. |
+| plot_style_list | `plot_style_list` | sim | List the plot style tables (ctb): the AutoCAD catalogue, plus what is  |
 | quantitativo | `quantitativo` | **não** | só nossa |
 | script | `script` | **não** | só nossa |
 | system_run_command | `system_run_command` | sim | Send a raw command string to the AutoCAD command line (COM only). |
 | system_status | `system_status` | sim | Check the connection: which engine is live and what document is open. |
+| textstyle_list | `textstyle_list` | sim | List text styles: font file, height, width factor, oblique angle. |
 | view_render_png | `view_render_png` | **não** | só nossa |
 | view_screenshot | `view_screenshot` | sim | Capture a PNG picture of the drawing as it currently looks. |
 | view_zoom_extents | `view_zoom_extents` | sim | Zoom out until every entity fits on screen. |
@@ -105,26 +141,15 @@ para dizer que já temos.
 - `sheet_frame` — Draw an ISO 5457 sheet frame with the zone grid and centring marks.
 - `drawing_topology_check` — Find dangling ends, near misses and unjoined crossings in a pipe or cable network.
 
-### plot/arquivo (26)
+### plot/arquivo (15)
 
-- `drawing_save_as` — Save a copy under a new name; the extension picks DXF, DWG or DWT.
-- `drawing_purge` — Strip unused layers, blocks, linetypes and styles out of the file.
 - `drawing_close` — Close the drawing, saving first unless you say otherwise.
 - `titleblock_apply_iso_a3` — Stamp an ISO 7200 title block and sheet frame onto an A3 drawing.
-- `layout_list` — List the sheet tabs: Model plus every paper-space layout.
-- `layout_create` — Add a new paper-space sheet tab to the drawing.
-- `layout_set_current` — Switch to a sheet tab, or back to model space.
 - `viewport_create` — Put a scaled window onto model space on a sheet, at 1:1, 1:2 and so on.
-- `layout_delete` — Delete a sheet tab and everything drawn on it.
-- `layout_rename` — Rename a sheet tab, keeping its geometry and handles.
-- `layout_copy` — Duplicate a sheet with its page setup and geometry.
 - `viewport_list` — List the viewports on a sheet with their scales and locks.
 - `viewport_set_scale` — Set a viewport's scale, e.g. 1:2 or 1:50.
 - `viewport_lock` — Lock a viewport so its scale cannot be zoomed away.
 - `viewport_delete` — Remove a viewport from a sheet.
-- `page_setup_list` — Read each sheet's page setup: paper, orientation, ctb, scale, device.
-- `page_setup_apply` — Set a sheet's paper, orientation, ctb, plot scale and device (PAGESETUP).
-- `plot_style_list` — List the plot style tables (ctb): the AutoCAD catalogue, plus what is installed.
 - `drawing_template_save` — Save the current drawing as a template: .dwt on live AutoCAD, .dxf headlessly.
 - `layer_state_save` — Save the layer table (on/frozen/locked/colour/linetype/lineweight/plot + current) under a name, 
 - `view_named_save` — Save a named view: a centre and height (and width) to come back to.
@@ -134,27 +159,15 @@ para dizer que já temos.
 - `image_attach` — Attach a raster image (PNG/JPG) as an underlay.
 - `drawing_export_dwg` — Write the drawing as a real DWG at a chosen AutoCAD version.
 
-### camada/estilo (26)
+### camada/estilo (14)
 
-- `layer_delete` — Remove an empty layer from the drawing.
-- `layer_modify` — Change an existing layer's colour, linetype or lineweight.
-- `layer_freeze` — Freeze a layer so it stops drawing and regenerating.
-- `layer_thaw` — Bring a frozen layer back into view.
-- `layer_lock` — Lock a layer so its entities can be seen but not edited.
-- `layer_unlock` — Unlock a layer so its entities can be edited again.
-- `layer_hide` — Turn a layer off so its entities stop showing.
-- `layer_show` — Turn a layer that was switched off back on.
-- `layer_isolate` — Hide every layer except one, to work on it alone.
-- `linetype_list` — List the dash patterns currently loaded in the drawing.
 - `linetype_load` — Load a linetype such as CENTER or HIDDEN, without the FILEDIA dialog trap.
 - `analysis_select_by_layer` — Grab the handles of everything sitting on one layer.
 - `analysis_layer_stats` — Report how many entities, and which types, sit on each layer.
 - `template_apply_layers` — Create a standard layer set: architectural, mechanical, electrical or piping.
-- `dimstyle_list` — List dimension styles with their ISO-25/ANSI variables and the current one.
 - `dimstyle_create` — Create a dimension style from the ISO-25 or ANSI preset, with per-variable overrides.
 - `dimstyle_modify` — Change DIM* variables on an existing dimension style; reports only what moved.
 - `dimstyle_set_current` — Make a dimension style current so new dimensions use it.
-- `textstyle_list` — List text styles: font file, height, width factor, oblique angle.
 - `textstyle_create` — Create a text style from a bundled font (isocp, isocpeur, arial, romans) or any file.
 - `textstyle_set_current` — Make a text style current so new text uses it.
 - `mleaderstyle_list` — List multileader styles: arrow size, landing gap, text style and height.
@@ -163,18 +176,11 @@ para dizer que já temos.
 - `layer_state_list` — List the layer states saved in this drawing.
 - `layer_state_delete` — Delete one saved layer state from the drawing.
 
-### edicao (26)
+### edicao (19)
 
 - `hatch_set_gradient` — Replace a hatch's fill with a two-colour gradient.
 - `hatch_edit` — Change a hatch's pattern, scale, angle, colour or island style.
-- `entity_copy` — Duplicate an entity and offset the copy.
-- `entity_rotate` — Turn an entity about a base point by an angle in degrees.
 - `entity_scale` — Resize an entity uniformly about a base point.
-- `entity_mirror` — Reflect an entity across a mirror line, keeping or dropping the original.
-- `entity_offset` — Make a parallel copy of a line, circle or polyline at a set distance.
-- `entity_trim` — Cut a line back to where another crosses it, keeping the side you point at.
-- `entity_extend` — Lengthen a line until it meets a boundary line.
-- `entity_fillet` — Round a corner between two lines with a tangent arc.
 - `entity_chamfer` — Bevel a corner between two lines by two setback distances.
 - `entity_delete` — Erase one entity by handle.
 - `entity_array_rectangular` — Repeat an entity in a grid of rows and columns.
@@ -192,9 +198,8 @@ para dizer que já temos.
 - `entity_change_space` — Move entities between model space and a sheet through a viewport.
 - `drawing_scale_check` — Is this drawing to scale against a reference? Tag distances, ratios, a verdict.
 
-### consulta (21)
+### consulta (20)
 
-- `drawing_audit` — Scan the drawing for structural errors and repair what it finds.
 - `hatch_add_boundary` — Add a boundary path to a hatch, arcs and ellipses included.
 - `entity_get` — Inspect one entity by handle: type, layer, colour and geometry.
 - `selection_get` — Read what the user already picked in the AutoCAD viewport (COM backend).
@@ -216,7 +221,7 @@ para dizer que já temos.
 - `drawing_understand` — Read a foreign drawing: units, extents, clusters, layers, tags, rooms, languages.
 - `drawing_diff` — Compare two revisions of a drawing: what moved, changed, was added or removed.
 
-### sistema (21)
+### sistema (20)
 
 - `cad_batch` — Run an ordered list of tool calls in one round trip, binding results between steps.
 - `entity_batch_create` — Draw many entities in one call instead of one round trip each.
@@ -226,7 +231,6 @@ para dizer que já temos.
 - `system_set_variable` — Set one AutoCAD system variable by name.
 - `system_run_lisp` — Evaluate an AutoLISP expression inside AutoCAD (COM only).
 - `system_about` — See what this server can do: version, tool groups and active profile.
-- `batch_plot` — Plot every sheet (or the named ones) to PDF; each sheet size is read back from its PDF.
 - `document_list` — List the open documents: which is active, which have unsaved changes.
 - `document_activate` — Switch which open document every later tool call targets.
 - `document_close` — Close one open document by name; never drops unsaved work unless told to.
