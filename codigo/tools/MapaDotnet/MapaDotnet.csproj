@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Ferramenta de build: le a metadata das DLLs gerenciadas do AutoCAD e
+       despeja o catalogo em JSON. Nao roda dentro do AutoCAD e nao precisa
+       dele aberto. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>MapaDotnet</AssemblyName>
+    <RootNamespace>MapaDotnet</RootNamespace>
+  </PropertyGroup>
+
+</Project>

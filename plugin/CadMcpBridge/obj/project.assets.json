@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Correta Engenharia\\mcp-cad-server\\plugin\\CadMcpBridge\\CadMcpBridge.csproj",
+      "projectUniqueName": "C:\\Users\\Correta Engenharia\\Desktop\\mapeamento AutoCAD\\plugin\\CadMcpBridge\\CadMcpBridge.csproj",
       "projectName": "CadMcpBridge",
-      "projectPath": "C:\\Users\\Correta Engenharia\\mcp-cad-server\\plugin\\CadMcpBridge\\CadMcpBridge.csproj",
+      "projectPath": "C:\\Users\\Correta Engenharia\\Desktop\\mapeamento AutoCAD\\plugin\\CadMcpBridge\\CadMcpBridge.csproj",
       "packagesPath": "C:\\Users\\Correta Engenharia\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Correta Engenharia\\mcp-cad-server\\plugin\\CadMcpBridge\\obj\\",
+      "outputPath": "C:\\Users\\Correta Engenharia\\Desktop\\mapeamento AutoCAD\\plugin\\CadMcpBridge\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Correta Engenharia\\AppData\\Roaming\\NuGet\\NuGet.Config"

@@ -1,5 +1,5 @@
 {
-  "gerado_em": "2026-10-20T19:17:16-03:00",
+  "gerado_em": "2026-10-20T19:48:04-03:00",
   "maquina": {
     "usuario": "Correta Engenharia",
     "appdata": "C:\\Users\\Correta Engenharia\\AppData\\Roaming"
@@ -35,16 +35,55 @@
   },
   "sessao": {
     "com": {
-      "aberto": false,
-      "erro": "(-2147221021, 'Operação não disponível', None, None)"
+      "aberto": true,
+      "versao": "25.0s (LMS Tech)",
+      "desenho": "Drawing1.dwg",
+      "caminho": "",
+      "acadver": "25.0s (LMS Tech)",
+      "entidades": 0
     },
     "arquivo_ponte": "C:\\Users\\CORRET~1\\AppData\\Local\\Temp\\cad_mcp_bridge.json",
     "log_ponte": "C:\\Users\\CORRET~1\\AppData\\Local\\Temp\\cad_mcp_bridge.log",
     "log_ponte_existe": true
   },
   "ponte": {
-    "carregado": false,
-    "motivo": "arquivo da ponte ausente"
+    "carregado": true,
+    "bruto": {
+      "ping": {
+        "ok": true,
+        "produto": "CadMcpBridge",
+        "versao": "1.0",
+        "acad": "25.0.0.0",
+        "desenho": "Drawing1.dwg",
+        "insunits": 4,
+        "filedia": 0,
+        "cmddia": 0
+      },
+      "ping_ms": 424.6,
+      "info": {
+        "ok": true,
+        "produto": "CadMcpBridge",
+        "versao": "1.0",
+        "acad": "25.0.0.0",
+        "desenho": "Drawing1.dwg",
+        "insunits": 4,
+        "filedia": 0,
+        "cmddia": 0
+      },
+      "info_ms": 677.8,
+      "exec": {
+        "ok": true,
+        "ms": 414.6,
+        "erro": null
+      },
+      "exec_nao_confirma": "o plugin devolve ok=True quando o comando foi ENVIADO; nao diz se ele cortou/apagou/desenhou"
+    },
+    "info": {
+      "porta": 8765,
+      "pid": 13872,
+      "quando": "2026-10-20T19:43:22.7931136-03:00",
+      "versao": "1.0"
+    }
   },
   "oficial": {
     "existe": false,
@@ -52,8 +91,9 @@
   },
   "veredito": [
     "bundle instalado: CadMcpBridge (v1.0, series R25.0-R25.9, load no startup=True)",
-    "plugin NAO carregado nesta sessao (arquivo da ponte ausente)",
-    "MCP oficial da Autodesk: AUSENTE (AutoCAD 2027; esta maquina tem 2025)",
+    "plugin CARREGADO nesta sessao: ping em 424.6 ms, info em 677.8 ms",
+    "superficie exposta: ping / info / exec / transaction (JSON-RPC, 127.0.0.1, 1 linha por requisicao)",
+    "MCP oficial da Autodesk: AUSENTE (AutoCAD 2027; esta maquina tem 25.0s (LMS Tech))",
     "o que isto NAO prova: se um comando enviado realmente alterou o desenho (o plugin nao confirma) e a cobertura do MCP oficial"
   ]
 }

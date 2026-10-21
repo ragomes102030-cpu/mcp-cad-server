@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>CadMcpBridge</AssemblyName>
+    <RootNamespace>CadMcpBridge</RootNamespace>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <NoWarn>CS0618</NoWarn>
+    <AutoCadDir>C:\Program Files\Autodesk\AutoCAD 2025</AutoCadDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="acdbmgd">
+      <HintPath>$(AutoCadDir)\acdbmgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="acmgd">
+      <HintPath>$(AutoCadDir)\acmgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- accoremgd carrega junto com o AutoCAD e tem ApplicationServices.Core
+         (ExecuteInApplicationContext). Sem ela o acmgd nem compila. -->
+    <Reference Include="accoremgd">
+      <HintPath>$(AutoCadDir)\accoremgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

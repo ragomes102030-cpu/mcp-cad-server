@@ -1,6 +1,6 @@
 # Mapa do CadMcpBridge — o plugin proprio, medido ao vivo
 
-Gerado em **2026-10-20T19:17:16-03:00** por `tools/sonda_cadbridge.py`.
+Gerado em **2026-10-20T19:48:04-03:00** por `tools/sonda_cadbridge.py`.
 É o par do `sonda_autocad.py`: aquele mede o AutoCAD, este mede a **superfície**
 que o projeto expõe dentro dele.
 
@@ -21,23 +21,31 @@ que o projeto expõe dentro dele.
 
 ## 2. Sessão
 
-- AutoCAD aberto: **não**
-- desenho ativo: `—`
-- arquivo da ponte: `C:\Users\CORRET~1\AppData\Local\Temp\cad_mcp_bridge.json` — **ausente**
-- plugin carregado nesta sessão: **não**
+- AutoCAD aberto: **sim** (versão 25.0s (LMS Tech))
+- desenho ativo: `Drawing1.dwg`
+- arquivo da ponte: `C:\Users\CORRET~1\AppData\Local\Temp\cad_mcp_bridge.json` — presente
+- plugin carregado nesta sessão: **sim**
 
 ## 3. Superfície medida
 
-Nada medido: o plugin não estava carregado nesta sessão.
+| método | resposta | latência |
+|---|---|---|
+| `ping` | `{"ok": true, "produto": "CadMcpBridge", "versao": "1.0", "acad": "25.0.0.0", "desenho": "Drawing1.dwg", "insunits": 4, "` | 424.6 ms |
+| `info` | `{"ok": true, "produto": "CadMcpBridge", "versao": "1.0", "acad": "25.0.0.0", "desenho": "Drawing1.dwg", "insunits": 4, "filedia": 0, "cmddia": 0}` | 677.8 ms |
+| `exec _.ZOOM _E` | `ok=True` | 414.6 ms |
 
-O `%TEMP%\cad_mcp_bridge.json` só existe depois que o Autoloader carrega o
-`.bundle` no início de uma sessão do AutoCAD — e o arquivo de uma sessão
-antiga não responde na porta. **Ausência medida, não presumida.**
+Protocolo: **uma linha JSON por requisição** em `127.0.0.1`, resposta em uma
+linha. Porta e token em `%TEMP%\cad_mcp_bridge.json`, escritos pelo plugin a
+cada carga. Métodos: `ping`, `info`, `exec`, `transaction`.
+
+> **`exec` não confirma resultado.** `ok: true` diz que o comando foi
+> *enviado*; não diz se cortou, apagou ou desenhou. Para decidir, meça a
+> geometria depois (contagem de entidades, `GetBoundingBox`).
 
 ## 4. O que isto não cobre
 
 - **As 7 tools do MCP oficial da Autodesk** não podem ser medidas aqui:
-  `C:\Program Files\Autodesk\ApplicationPlugins` não existe e a máquina tem AutoCAD 2025 (o MCP oficial é do 2027). Ver
+  `C:\Program Files\Autodesk\ApplicationPlugins` não existe e a máquina tem 25.0s (LMS Tech) (o MCP oficial é do 2027). Ver
   `MAPA-OFICIAL-MCP.md`.
 - **Se um comando enviado alterou o desenho** — o plugin não confirma.
 - **Cobertura do `.bundle` em outras versões** — o `PackageContents.xml` declara

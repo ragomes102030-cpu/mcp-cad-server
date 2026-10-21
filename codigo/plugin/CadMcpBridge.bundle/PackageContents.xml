@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage SchemaVersion="1.0"
+                    AppVersion="1.0"
+                    ProductCode="{7A3F1C42-9B2E-4D51-8C77-2E6D9A4F1B03}"
+                    Name="CadMcpBridge"
+                    Description="Ponte JSON-RPC local para o mcp-cad-server (exec/transaction sem dialogo)"
+                    Author="mcp-cad-server">
+  <CompanyDetails Name="mcp-cad-server"
+                  Url=""
+                  Email="" />
+  <Components Description="AutoCAD 2025">
+    <RuntimeRequirements OS="Win64" Platform="AutoCAD*" SeriesMin="R25.0" SeriesMax="R25.9" />
+    <ComponentEntry AppName="CadMcpBridge"
+                    Version="1.0"
+                    ModuleName="./Contents/Windows/CadMcpBridge.dll"
+                    AppDescription="Ponte JSON-RPC (127.0.0.1) para comandos e transacoes"
+                    LoadOnAutoCADStartup="True"
+                    LoadOnCommandInvocation="False" />
+  </Components>
+</ApplicationPackage>

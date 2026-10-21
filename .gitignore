@@ -13,3 +13,10 @@ _avast_/
 venv/
 .idea/
 .vscode/
+
+# Artefato de entrega (gerado, nao eh fonte)
+mcp-cad-server-entrega.zip
+codigo/mcp-cad-server-entrega.zip
+
+# Temporarios do AutoCAD/MCP (area de trabalho)
+codigo/saida/

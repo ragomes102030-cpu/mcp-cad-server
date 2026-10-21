@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "cad": {
+      "command": "cad-mcp",
+      "args": [],
+      "env": {
+        "MCP_CAD_TEMP": "C:/temp/mcp_cad_com"
+      }
+    }
+  }
+}
