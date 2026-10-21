@@ -23,7 +23,7 @@ import os
 import sys
 from pathlib import Path
 
-PROJETO = Path(os.environ.get("MCP_CAD_SERVER", r"C:\Users\Correta Engenharia\mcp-cad-server"))
+PROJETO = Path(os.environ.get("MCP_CAD_SERVER", r"C:\Users\Correta Engenharia\Desktop\Mapeamento AutoCad"))
 SRC = PROJETO / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))

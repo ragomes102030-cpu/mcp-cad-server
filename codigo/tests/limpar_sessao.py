@@ -16,7 +16,7 @@ try:
 except Exception:
     pass
 
-sys.path.insert(0, r"C:\Users\Correta Engenharia\mcp-cad-server\src")
+sys.path.insert(0, r"C:\Users\Correta Engenharia\Desktop\Mapeamento AutoCad\codigo\src")
 
 from cad_mcp.com_backend import ComBackend  # noqa: E402
 

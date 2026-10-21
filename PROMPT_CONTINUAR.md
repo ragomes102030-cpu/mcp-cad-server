@@ -16,7 +16,7 @@ trabalho, regras e entregáveis.
 | local | o que é |
 |---|---|
 | `C:\Users\Correta Engenharia\Desktop\Mapeamento AutoCad\` | **pacote de entrega** (novo). Tem `codigo/`, `instalacao/`, `exemplos/`, `ferramentas/`, `historico/`, `plugin/`, `skill/`, `docs/` |
-| `C:\Users\Correta Engenharia\mcp-cad-server\` | fonte do projeto (mais antigo) |
+| `C:\Users\Correta Engenharia\Desktop\Mapeamento AutoCad\` | fonte do projeto (mais antigo) |
 
 Os mapas de `docs\` são **byte a byte iguais** entre os dois, **exceto `COBERTURA.md`**:
 o da Desktop é de **20/10 15:11** (novo), o do server é de **19/10 10:06** (velho).
@@ -165,7 +165,7 @@ registradas em `codigo/src/cad_mcp/server.py` (54 linhas). Motores disponíveis:
 1. **Confirme de onde a skill `cad-planta-autocad` é carregada.** Ela existe em
    `Desktop\Mapeamento AutoCad\skill\` e em `mcp-cad-server\skill\` — mas **não** está
    em `config/skills` do Arquimedes nem em `hermes/skills`. Aponte o agente para
-   `C:\Users\Correta Engenharia\mcp-cad-server\skill\cad-planta-autocad`, senão o
+   `C:\Users\Correta Engenharia\Desktop\Mapeamento AutoCad\skill\cad-planta-autocad`, senão o
    `references/api-oficial-mcp.md` novo não chega a ele.
 2. **Prove a instalação antes de afirmar:** `instalacao\verificar_instalacao.py` deve
    devolver `RESULTADO: OK` com 48 ferramentas.

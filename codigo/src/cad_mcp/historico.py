@@ -38,8 +38,10 @@ __all__ = [
     "limpar", "formatar_tabela",
 ]
 
+# O historico vive na raiz do projeto (docs/ e historico/ sao os diretorios de
+# entrega), nao dentro de codigo/ -- senao o git versiona duas copias.
 DIR = Path(os.environ.get("MCP_CAD_SERVER",
-                          str(Path(__file__).resolve().parents[2]))) / "historico"
+                          str(Path(__file__).resolve().parents[3]))) / "historico"
 ARQUIVO = DIR / "ocorrencias.jsonl"
 
 MAX_EXEMPLOS = 3          # modelos guardados por sintoma (o resto vira contagem)

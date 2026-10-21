@@ -25,7 +25,7 @@ from cad_mcp.com_backend import ComBackend  # noqa: E402
 from cad_mcp.layers import LAYER_STANDARD  # noqa: E402
 
 TMP = Path(r"C:/temp/mcp_cad_com")
-ENTREGA = Path(r"C:\Users\Correta Engenharia\mcp-cad-server\saida")
+ENTREGA = Path(r"C:\Users\Correta Engenharia\Desktop\Mapeamento AutoCad\saida")
 ENTREGA.mkdir(parents=True, exist_ok=True)
 
 # --------------------------------------------------------------- geometria (m)

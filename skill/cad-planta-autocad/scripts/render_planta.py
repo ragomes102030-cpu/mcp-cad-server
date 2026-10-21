@@ -32,7 +32,7 @@ except Exception:
     pass
 
 # ------------------------------------------------------------------ localização
-PROJETO = Path(os.environ.get("MCP_CAD_SERVER", r"C:\Users\Correta Engenharia\mcp-cad-server"))
+PROJETO = Path(os.environ.get("MCP_CAD_SERVER", r"C:\Users\Correta Engenharia\Desktop\Mapeamento AutoCad"))
 if not (PROJETO / "src" / "cad_mcp" / "planta.py").exists():
     raise SystemExit("mcp-cad-server nao encontrado em %s (defina MCP_CAD_SERVER)" % PROJETO)
 sys.path.insert(0, str(PROJETO / "src"))

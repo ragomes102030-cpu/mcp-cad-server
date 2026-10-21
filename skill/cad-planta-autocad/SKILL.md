@@ -13,7 +13,7 @@ description: Cria e entrega plantas baixas no AutoCAD de verdade (arquitetura, l
 
 | | |
 |---|---|
-| Projeto do MCP | `C:\Users\Correta Engenharia\mcp-cad-server` (env `MCP_CAD_SERVER`) |
+| Projeto do MCP | `C:\Users\Correta Engenharia\Desktop\Mapeamento AutoCad` (env `MCP_CAD_SERVER`) |
 | Motor | `src/cad_mcp/com_backend.py` — COM/ActiveX no AutoCAD **aberto** (não rouba foco) |
 | Renderizador | `src/cad_mcp/planta.py` — `desenhar_modelo(backend, modelo)` |
 | MCP no AionUi | `mcp-cad-server` (stdio, 118 tools), id `mcp_01a1472d-f66b-7350-a159-a3d5cdea6ef7` |

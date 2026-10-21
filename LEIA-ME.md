@@ -4,7 +4,7 @@ Tudo o que foi levantado para dirigir o AutoCAD **de verdade** — o COM da Auto
 o .NET por dentro, os campos de cada entidade, o plugin que cobre o que o COM não
 faz, o MCP que usa isso e a skill que ensina a usar.
 
-Origem: `C:\Users\Correta Engenharia\mcp-cad-server`
+Origem: `C:\Users\Correta Engenharia\Desktop\Mapeamento AutoCad`
 Atualizada em 19/10/2026.
 
 ## Para usar em outra máquina

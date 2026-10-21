@@ -13,7 +13,7 @@ except Exception:
     pass
 
 PY = r"C:\Users\Correta Engenharia\AppData\Local\Programs\Python\Python310\python.exe"
-SRV = r"C:\Users\Correta Engenharia\mcp-cad-server\src\cad_mcp\server.py"
+SRV = r"C:\Users\Correta Engenharia\Desktop\Mapeamento AutoCad\codigo\src\cad_mcp\server.py"
 
 
 def ler_uma(proc, timeout=25.0):
