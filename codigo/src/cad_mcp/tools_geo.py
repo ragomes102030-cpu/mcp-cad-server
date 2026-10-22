@@ -128,7 +128,8 @@ async def entity_create_revcloud(points: list[list[float]], segment_length: floa
         a1 = math.degrees(math.atan2(y2 - my, x2 - mx))
         r = await b.create_arc(mx, my, raio, a0, a1, layer=layer)
         if r.ok:
-            arcos.append((r.payload or {}).get("handle"))
+            _pl = r.payload
+            arcos.append(_pl if isinstance(_pl, str) else ((_pl or {}).get("handle") if isinstance(_pl, dict) else None))
         else:
             falhas += 1
     return {"ok": falhas == 0, "arcos": len(arcos), "handles": arcos,

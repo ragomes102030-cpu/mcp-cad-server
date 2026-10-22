@@ -94,7 +94,7 @@ Cheque, nesta ordem:
 Só depois disso copie os arquivos para a pasta da conversa e o Desktop, e diga
 claramente o que foi entregue e onde.
 
-## Ferramentas do MCP (45, nomes no padrão `autocad-mcp-pro`)
+## Ferramentas do MCP (118, nomes no padrão `autocad-mcp-pro`)
 
 Vocabulário adotado do `autocad-mcp-pro` 1.6.0 para que prompt escrito para ele
 funcione aqui sem tradução (`entity_*`, `drawing_*`, `view_*`, `dimension_*`).
@@ -134,10 +134,41 @@ quando ela está carregada — é o caminho para `TRIM`, `EXTEND`, `FILLET`, `CH
 Sem a ponte, cai para o modo headless e comandos de edição não funcionam.
 Conferir: `python -m cad_mcp.bridge ping`.
 
-Mapa completo (nossas 48 × as 247 deles, por família): `docs/COBERTURA.md` no projeto,
-gerado por `python tools/importar_acmpro.py`.
+Mapa completo (nossas 118 × as 247 deles, por família): `docs/COBERTURA.md` no projeto,
+gerado por `python tools/importar_acmpro.py`. **Confira o frescor** antes de citar
+número do mapa — ver `references/mapa-autocad.md` → *Frescor: o mapa envelhece em
+silêncio*.
 
 ## Pendências conhecidas (não silencie)
+
+### Armadilhas de sessão do MCP (descobertas em uso real — checar antes de culpar o desenho)
+
+1. **`script` (LISP) e `system_run_command` mentem.** Devolvem `ok:true` e não executam.
+   Um `-SCRIPT <arquivo>` com caminho que não resolve deixa um diálogo modal aberto e
+   **a partir daí todo `entity_create_*` devolve handle sem criar nada**. Sintoma: handles
+   sequenciais bonitos, `entity_list` vazio. Recuperação: `drawing_new` (novo documento).
+   Regra: **nunca usar `-SCRIPT`**; LISP simples (`setvar`, `vlax-put`) funciona.
+2. **Chamadas enviadas na mesma rodada rodam em paralelo.** Operações dependentes
+   (apagar-e-recriar, criar-e-arrayar) disputam e perdem entidade. Cadeie em rodadas
+   separadas quando a segunda depende do handle da primeira.
+3. **As leituras vão para um documento defasado.** Depois de `drawing_save(path)` (SAVEAS)
+   ou `drawing_open`, `entity_list`/`drawing_info`/`quantitativo` subnotificam entidades
+   que **existem**. Verifique com `view_render_png` + olho e com **grep no DXF**
+   (`AcDbRotatedDimension`, `AcDbLine`...) — o DXF exportado reflete o estado real.
+4. **`entity_erase_filter` e `entity_set_properties` devolvem ok e não aplicam.**
+   Apagar: use `entity_erase` por handle (funciona). Mudar camada de cota: ponha a camada
+   correta em `CLAYER` (`layer_set_current`) **antes** de criar.
+5. **`dimension_linear` cria na camada corrente**, não em COTAS. E a unidade da cota segue
+   `INSUNITS`/`DIMLFAC`: com INSUNITS=6 a cota sai em metros ("4,00"); para milímetros
+   `(setvar "DIMLFAC" 1000)` + `(setvar "DIMDEC" 0)` **antes** de criar.
+6. **`drawing_export_pdf`/`batch_plot` são imprestáveis** nesta versão: a área de plot é
+   calculada pelas extensões do papel (~784×538) e a escala pedida sai errada (1:50 vira
+   ~1:20), com "não cabe em A1". Entregue a verificação em PNG (`view_render_png`).
+7. **`vlax-put` em `ViewCenter`/`ViewHeight` do viewport não fez efeito** — o viewport fica
+   com a vista que tinha ao ser criado (e essa costuma ser a extensão do modelo, não a região
+   da prancha). Sem LISP confiável, o jeito é `zoom_window` no Model e recriar o viewport.
+
+### Conhecido (código)
 
 - `dim_linear` **vertical** devolve 0,0 no backend **ezdxf** (o COM está certo).
 - `entity_move` usa `(command "_.MOVE" ...)`, o caminho síncrono do COM: já travou o
@@ -148,6 +179,11 @@ gerado por `python tools/importar_acmpro.py`.
   fixar). PDF com texto vetorizado é limitação do plotter DWG To PDF.
 - Módulo de **orçamento/custo** (importador SEINFRA) ainda não existe — só desenho e
   quantitativo. Se o pedido for orçamento, diga que essa parte não está pronta.
+
+## Cruzamento
+
+Para **laje de concreto armado** (planta de forma + armação, quadro de
+ferros, ancoragem NBR 6118): `skill/laje-concreto-armado`.
 
 ## Referências
 

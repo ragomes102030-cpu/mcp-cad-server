@@ -78,3 +78,65 @@ versão. Ao trocar de AutoCAD, rode de novo antes de confiar no número.
   `CMDDIA` estavam `0` e `OSMODE` `0`. Nao assumir: ler antes.
 - Comando que espera selecao **nao pode** ser chamado por `Editor.Command`
   sincrono: ele trava o AutoCAD inteiro. Usar `SendStringToExecute`.
+
+## Frescor: o mapa envelhece em silêncio
+
+`MAPA-*.md`, `COBERTURA.md` e `catalogo-*.json` sao **artefatos gerados**. O codigo
+muda mais rapido que eles e **nao existe checagem automatica** — o mapa envelhece sem
+ninguem perceber. Antes de citar um numero do mapa, compare o `mtime`:
+
+| papel | arquivo |
+|---|---|
+| fonte da verdade | `codigo/src/cad_mcp/com_backend.py`, `tools_geo.py`, `tools*.py` |
+| derivado (pode estar velho) | `docs/MAPA-COM.md`, `docs/COBERTURA.md`, `docs/catalogo-*.json` |
+
+Derivado mais velho que a fonte => **o numero esta velho**, regenere antes de usar.
+O `MAPA-COM.md` que diz "`chamfer` nao tem metodo COM" e correto e enganoso ao
+mesmo tempo: e' verdade que nao ha metodo, mas o codigo implementa por **geometria
+propria** (`entmod`). O mapa nao reflete o mecanismo real.
+
+Quando o pedido for "a pasta esta atualizada?", a resposta se mede em tres passos:
+(1) `git status` do repo, (2) `mtime` dos derivados contra a fonte, (3) contagem de
+ferramentas lida do fonte.
+
+### Contar ferramentas do fonte (nao confie no numero escrito)
+
+```bash
+cd <repo>/codigo && PYTHONPATH=src python -c "from cad_mcp import tools; print(len(tools.TOOLS), len(tools._publicos))"
+```
+
+`TOOLS` e a lista declarada em `tools.py` + `tools_ext.py` + `tools_plot.py` +
+`tools_geo.py`; `_publicos` aplica `NOMES` (o vocabulario `autocad-mcp-pro`). Os dois
+devem ser iguais e sem duplicados — se diferirem, ha nome publico colidindo.
+
+### Auditar cobertura de backend
+
+```bash
+PYTHONPATH=src python tools/auditar_cobertura_real.py   # grava auditoria_backend.json
+```
+
+`ModuleNotFoundError: No module named 'ezdxf'` = voce esta no python errado. Ache o
+interpretador que o servidor MCP **usa de fato** no processo em execucao:
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name like '%python%'" |
+  Where-Object { $_.CommandLine -like '*cad_mcp*' } | Select CommandLine
+```
+
+O `CommandLine` traz o `sys.path` injetado pelo launcher — use aquele python, nao o
+`python` do PATH (que nao tem as dependencias do servidor).
+
+### A auditoria e estatica e subnotifica
+
+`auditar_cobertura_real.py` le o codigo, nao executa. Ferramentas implementadas
+**pela ponte .NET** (`entity_trim`, `entity_extend`, `entity_fillet`) aparecem como
+"sem backend" mesmo funcionando — o caminho sai do `com_backend.py` e vai para
+`Ponte()`. O mesmo vale para qualquer implementacao que delegue. Trate `sem_backend`
+como **suspeita**, nao como lacuna provada: confirme ao vivo antes de registrar.
+
+### Lacuna real se confirma por grep no backend
+
+Antes de dar uma ferramenta por existente, procure o nome da funcao no
+`com_backend.py`. `layer_modify`, `plot_style_list` e `arch_rooms_detect` (este usa
+`_area_fechada`, so no ezdxf) nao tem implementacao COM. Registre a lacuna no mapa
+**e** no `historico/ocorrencias.jsonl` — sem os dois o mapa volta a mentir.

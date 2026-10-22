@@ -19,12 +19,25 @@ LAYER_STANDARD: dict[str, tuple[int, str]] = {
 
 
 async def ensure_standard_layers(backend) -> dict:
-    """Cria (idempotente) o conjunto padrão de camadas e devolve o que foi feito."""
+    """Cria (idempotente) o conjunto padrão de camadas e devolve o que foi feito.
+
+    Carrega os LTYPEs nao-CONTINUOUS antes: `layer_create` recusa a camada se o
+    tipo de linha nao existe na tabela, e o desenho sai sem linha de centro.
+    """
     criadas, existentes, erros = [], [], []
+    for _nome, (_cor, lt) in LAYER_STANDARD.items():
+        if lt and lt.upper() != "CONTINUOUS":
+            try:
+                rl = await backend.layer_linetype_load(lt)
+                if not rl.ok:
+                    erros.append({"camada": _nome, "erro": "linetype %s: %s" % (lt, rl.error)})
+            except Exception as exc:  # noqa: BLE001 - segue; layer_create reporta de novo
+                erros.append({"camada": _nome, "erro": "linetype %s: %s" % (lt, exc)})
     for nome, (cor, lt) in LAYER_STANDARD.items():
         try:
             r = await backend.layer_create(nome, color=cor, linetype=lt)
-            (criadas if r.ok and not (r.payload or {}).get("existed") else existentes).append(nome)
+            _ex = (r.payload or {}).get("existed") if isinstance(r.payload, dict) else False
+            (criadas if r.ok and not _ex else existentes).append(nome)
         except Exception as exc:  # pragma: no cover
             erros.append({"camada": nome, "erro": str(exc)})
     return {"criadas": criadas, "ja_existiam": existentes, "erros": erros,

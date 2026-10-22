@@ -20,3 +20,9 @@ codigo/mcp-cad-server-entrega.zip
 
 # Temporarios do AutoCAD/MCP (area de trabalho)
 codigo/saida/
+
+# AutoCAD: lock e temporarios de desenho
+*.dwl
+*.dwl2
+save*.tmp
+codigo/*.dwg

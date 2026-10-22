@@ -16,6 +16,7 @@ from pathlib import Path
 from .backend_manager import MANAGER
 from .layers import ensure_standard_layers as _ensure_layers
 from .quantitativo import analisar
+from .bridge import Ponte, PonteIndisponivel as _PonteIndisponivel
 
 
 def _r(res) -> dict:
@@ -449,7 +450,8 @@ async def desenhar_ambiente(
              "contorno": cont.payload, "hachura": None, "texto": None}
 
     if com_hachura:
-        handle = (cont.payload or {}).get("handle")
+        _pl = cont.payload
+        handle = _pl if isinstance(_pl, str) else ((_pl or {}).get("handle") if isinstance(_pl, dict) else None)
         if handle:
             h = await b.create_hatch(handle, pattern=padrao_hachura)
             saida["hachura"] = _r(h)

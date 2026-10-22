@@ -214,6 +214,17 @@ async def desenhar_modelo(b, modelo: dict, log=None,
     d = Desenho(b, log=diga)
     t = float(modelo.get("espessura_parede", 0.15))
 
+    diga("linetypes...")
+    # O LTYPE tem de existir ANTES de criar a camada: `layer_create` recusa a
+    # camada se o tipo de linha nao esta na tabela, e o desenho sai sem linha
+    # de centro/tracejada (medido em 21/10/2026: EIXOS e PROJECAO falharam por
+    # CENTER e DASHED nao estarem carregados).
+    for _nome, (_cor, lt) in LAYER_STANDARD.items():
+        if lt and lt.upper() != "CONTINUOUS":
+            rl = await b.layer_linetype_load(lt)
+            if not rl.ok:
+                diga("  linetype %s: %s" % (lt, rl.error))
+
     diga("camadas padrao...")
     for nome, (cor, lt) in LAYER_STANDARD.items():
         r = await b.layer_create(nome, cor, lt)

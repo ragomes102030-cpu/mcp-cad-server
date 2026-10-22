@@ -1051,6 +1051,29 @@ class ComBackend(AutoCADBackend):
         )
         return self._aval(self._handle(corpo))
 
+
+    # --- lacunas do COM fechadas em 21/10/2026 (docs/AUDITORIA-AO-VIVO.md) ---
+
+    async def create_ellipse(self, cx: float, cy: float, major_x: float, major_y: float,
+                             ratio: float, layer: str | None = None) -> CommandResult:
+        """Elipse (ELLIPSE do DXF): grupo 11 = eixo maior relativo ao centro.
+
+        O COM nao tinha `create_ellipse` (so' o ezdxf tinha), mas a entidade e'
+        simples de montar com `entmakex`: grupo 40 = razao menor/maior e
+        41/42 = parametro inicial/final (radianos, 0..2pi = elipse inteira).
+        """
+        if not 0.0 < ratio <= 1.0:
+            return CommandResult(ok=False, error="ratio deve estar em (0, 1]")
+        lay = _q(layer or "0")
+        corpo = (
+            '(list (cons 0 "ELLIPSE") (cons 100 "AcDbEntity") (cons 8 "%s")'
+            ' (cons 100 "AcDbEllipse") (cons 10 (list %s %s 0.0))'
+            ' (cons 11 (list %s %s 0.0)) (cons 40 %s)'
+            ' (cons 41 0.0) (cons 42 6.283185307179586))'
+            % (lay, cx, cy, major_x, major_y, ratio)
+        )
+        return self._aval(self._handle(corpo))
+
     async def create_text(self, x: float, y: float, text: str, height: float = 2.5, rotation: float = 0.0, layer: str | None = None) -> CommandResult:
         lay = _q(layer or "0")
         corpo = (
@@ -1111,7 +1134,10 @@ class ComBackend(AutoCADBackend):
                 p = linha.split("|")
                 if len(p) >= 4 and p[0]:
                     itens.append({"handle": p[0], "tipo": p[3], "objeto": p[1], "camada": p[2]})
-        return CommandResult(ok=True, payload=itens)
+        # Mesmo shape do backend ezdxf ({"entities": [...], "count": N}). Antes
+        # devolvia a lista crua, e qualquer consumidor escrito contra o ezdxf
+        # estourava no motor COM -- medido em 21/10/2026.
+        return CommandResult(ok=True, payload={"entities": itens, "count": len(itens)})
 
     async def entity_erase_filter(self, layer: str | None = None, tipo: str | None = None,
                                   texto: str | None = None, confirmar: bool = False) -> CommandResult:
@@ -1385,13 +1411,148 @@ class ComBackend(AutoCADBackend):
 
     # ---------------------------------------------------------------- blocos
     async def block_insert(self, name: str, x: float, y: float, scale: float = 1.0, rotation: float = 0.0, block_id: str | None = None) -> CommandResult:
+        """Insere um bloco. `ATTDIA`/`ATTREQ` em 0 para nao travar o AutoCAD.
+
+        Um bloco com ATTDEF pede o valor de cada atributo; sem ATTDIA=0 o
+        AutoCAD abre dialogo modal e sem ATTREQ=0 ele para no prompt de linha de
+        comando — nos dois casos a sessao inteira trava (medido em 21/10/2026).
+        """
         expr = (
-            '(progn (entmakex (list (cons 0 "INSERT") (cons 100 "AcDbEntity") (cons 8 "0")'
+            '(progn (setvar "ATTDIA" 0) (setvar "ATTREQ" 0)'
+            ' (entmakex (list (cons 0 "INSERT") (cons 100 "AcDbEntity") (cons 8 "0")'
             ' (cons 100 "AcDbBlockReference") (cons 2 "%s") (cons 10 (list %s %s 0.0))'
             ' (cons 41 %s) (cons 42 %s) (cons 43 %s) (cons 50 (angtof "%s"))))'
             ' (cdr (assoc 5 (entget (entlast)))))' % (_q(name), x, y, scale, scale, scale, rotation)
         )
         return self._aval(expr)
+
+
+    async def block_define(self, name: str, entities: list[dict]) -> CommandResult:
+        """Define um bloco a partir de primitivas (LINE/CIRCLE/ATTDEF/TEXT).
+
+        Usa Blocks.Add + AddLine/AddCircle/AddAttribute/AddText, que existem no
+        COM — nao precisa do comando BLOCK (que abre dialogo).
+        """
+        partes = []
+        for e in entities:
+            tipo = e.get("type", "LINE")
+            if tipo == "LINE":
+                partes.append(
+                    '(vla-AddLine __b (vlax-3d-point (list %s %s 0.0))'
+                    ' (vlax-3d-point (list %s %s 0.0)))'
+                    % (e.get("x1", 0), e.get("y1", 0), e.get("x2", 0), e.get("y2", 0)))
+            elif tipo == "CIRCLE":
+                partes.append(
+                    '(vla-AddCircle __b (vlax-3d-point (list %s %s 0.0)) %s)'
+                    % (e.get("cx", 0), e.get("cy", 0), e.get("radius", 1)))
+            elif tipo == "ATTDEF":
+                partes.append(
+                    '(vla-AddAttribute __b %s 0 "%s" (vlax-3d-point (list %s %s 0.0))'
+                    ' "%s" "%s")'
+                    % (e.get("height", 2.5), _q(e.get("prompt", "")),
+                       e.get("x", 0), e.get("y", 0), _q(e.get("tag", "TAG")),
+                       _q(e.get("value", ""))))
+            elif tipo == "TEXT":
+                partes.append(
+                    '(vla-AddText __b "%s" (vlax-3d-point (list %s %s 0.0)) %s)'
+                    % (_q(e.get("text", "")), e.get("x", 0), e.get("y", 0),
+                       e.get("height", 2.5)))
+            else:
+                return CommandResult(
+                    ok=False,
+                    error="tipo desconhecido: %r (use LINE/CIRCLE/ATTDEF/TEXT)" % tipo)
+        corpo = (
+            '(progn (vl-load-com) (setq __d (vla-get-ActiveDocument (vlax-get-acad-object)))'
+            ' (if (tblsearch "BLOCK" "%s") "MCPERRO:bloco %s ja existe"'
+            '  (progn (setq __b (vla-Add (vla-get-Blocks __d)'
+            '   (vlax-3d-point (list 0.0 0.0 0.0)) "%s"))'
+            '   %s'
+            '   (vla-get-Name __b))))'
+            % (_q(name), _q(name), _q(name), " ".join(partes) if partes else "T")
+        )
+        return self._aval(corpo)
+
+    @staticmethod
+    def _bloco_de(entity_id: str) -> str:
+        """LISP que resolve o NOME do bloco dono da entidade (INSERT ou ATTDEF).
+
+        Ler os atributos de um INSERT exige `vla-GetAttributes`, que devolve um
+        safearray em variant cujo limite e' -1 quando o INSERT nao materializou
+        atributos (medido em 21/10/2026) — e iterar esse array em LISP da
+        "bad argument type: VLA-object collection". A definicao do bloco nao tem
+        esse problema: os ATTDEF estao la como entidades comuns, lidos por
+        `entget`. E' de la que sai o template (tag/prompt/valor/altura).
+        """
+        return (
+            '(progn (vl-load-com) (setq __e (handent "%s"))'
+            ' (if (null __e) "MCPERRO:handle nao existe"'
+            '  (progn (setq __o (vlax-ename->vla-object __e))'
+            '   (setq __tipo (vla-get-ObjectName __o))'
+            '   (if (= __tipo "AcDbBlockReference")'
+            '    (vla-get-Name __o)'
+            '    (if (= __tipo "AcDbAttributeDefinition")'
+            '     (progn (setq __achou "")'
+            '      (vlax-for __b (vla-get-Blocks (vla-get-ActiveDocument (vlax-get-acad-object)))'
+            '       (if (null __achou)'
+            '        (vlax-for __x __b'
+            '         (if (= (vlax-vla-object->ename __x) __e) (setq __achou (vla-get-Name __b))))))'
+            '      (if (= __achou "") "MCPERRO:ATTDEF nao pertence a nenhum bloco" __achou))'
+            '     "MCPERRO:entidade nao e INSERT nem ATTDEF")))))'
+            % _q(entity_id)
+        )
+
+    async def block_get_attributes(self, entity_id: str) -> CommandResult:
+        """Template de atributos do bloco (tag=valor, prompt, altura).
+
+        Resolve o bloco dono da entidade e le os ATTDEF da definicao. Para um
+        INSERT, o valor devolvido e' o default do ATTDEF; o valor efetivo de um
+        INSERT so' existe quando ele foi inserido respondendo aos prompts.
+        """
+        expr = (
+            '(progn (vl-load-com) (setq __nome %s)'
+            ' (if (and (null __nome) (not (is-list __nome))) "MCPERRO:bloco nao resolvido"'
+            '  (progn (setq __d (vla-get-ActiveDocument (vlax-get-acad-object)))'
+            '   (if (null (tblsearch "BLOCK" __nome))'
+            '    (strcat "MCPERRO:bloco " __nome " nao existe no desenho")'
+            '    (progn (setq __out "")'
+            '     (vlax-for __x (vla-item (vla-get-Blocks __d) __nome)'
+            '      (if (= (cdr (assoc 0 (entget (vlax-vla-object->ename __x)))) "ATTDEF")'
+            '       (progn (setq __e (entget (vlax-vla-object->ename __x)))'
+            '        (setq __out (strcat __out (cdr (assoc 2 __e)) "=" (cdr (assoc 1 __e))'
+            '         "|" (cdr (assoc 3 __e)) "|" (rtos (cdr (assoc 40 __e))) "\n")))))'
+            '     (if (= __out "") "MCPERRO:bloco sem ATTDEF" __out))))))'
+            % self._bloco_de(entity_id)
+        )
+        r = self._aval(expr)
+        if r.ok and isinstance(r.payload, str) and not str(r.payload).startswith("MCPERRO:"):
+            pares = {}
+            for linha in str(r.payload).split("\n"):
+                if "=" in linha:
+                    tag, resto = linha.split("=", 1)
+                    valor, prompt, altura = (resto.split("|") + ["", ""])[:3]
+                    pares[tag] = {"valor": valor, "prompt": prompt, "altura": altura}
+            r.payload = pares
+        return r
+
+    async def block_update_attribute(self, entity_id: str, tag: str, value: str) -> CommandResult:
+        """Altera o valor default do ATTDEF `tag` na definicao do bloco."""
+        expr = (
+            '(progn (vl-load-com) (setq __nome %s)'
+            ' (if (and (null __nome) (not (is-list __nome))) "MCPERRO:bloco nao resolvido"'
+            '  (progn (setq __d (vla-get-ActiveDocument (vlax-get-acad-object)))'
+            '   (if (null (tblsearch "BLOCK" __nome))'
+            '    (strcat "MCPERRO:bloco " __nome " nao existe no desenho")'
+            '    (progn (setq __ok nil)'
+            '     (vlax-for __x (vla-item (vla-get-Blocks __d) __nome)'
+            '      (if (= (cdr (assoc 0 (entget (vlax-vla-object->ename __x)))) "ATTDEF")'
+            '       (progn (setq __e (entget (vlax-vla-object->ename __x)))'
+            '        (if (= (strcase (cdr (assoc 2 __e))) (strcase "%s"))'
+            '         (progn (entmod (subst (cons 1 "%s") (assoc 1 __e) __e)) (setq __ok T))))))'
+            '     (if __ok T "MCPERRO:atributo %s nao existe no bloco"))))))'
+            % (self._bloco_de(entity_id), _q(tag), _q(value), _q(tag))
+        )
+        return self._aval(expr)
+
 
     # ------------------------------------------------------------ cotas/texto
     async def create_dimension_linear(self, x1: float, y1: float, x2: float, y2: float, dim_x: float, dim_y: float) -> CommandResult:
@@ -1415,6 +1576,57 @@ class ComBackend(AutoCADBackend):
         )
         return self._aval(expr)
 
+    async def create_dimension_angular(self, cx: float, cy: float, x1: float, y1: float,
+                                       x2: float, y2: float) -> CommandResult:
+        """Cota angular do vertice (cx,cy) entre (x1,y1) e (x2,y2).
+
+        Vai pela API (`IAcadBlock.AddDimAngular`), nao pelo comando DIMANGULAR:
+        o comando com `_non` nos quatro pontos deixa o AutoCAD esperando selecao
+        e trava a sessao (medido em 21/10/2026).
+        """
+        import math
+
+        a1 = math.atan2(y1 - cy, x1 - cx)
+        a2 = math.atan2(y2 - cy, x2 - cx)
+        d = a2 - a1
+        while d > math.pi:
+            d -= 2.0 * math.pi
+        while d < -math.pi:
+            d += 2.0 * math.pi
+        r = max(math.hypot(x1 - cx, y1 - cy), math.hypot(x2 - cx, y2 - cy), 1e-9)
+        amid = a1 + d / 2.0
+        lx, ly = cx + r * 1.5 * math.cos(amid), cy + r * 1.5 * math.sin(amid)
+        expr = (
+            '(progn (vl-load-com) (setq __d (vla-get-ActiveDocument (vlax-get-acad-object)))'
+            ' (setq __m (vla-get-ModelSpace __d))'
+            ' (vlax-invoke-method __m "AddDimAngular"'
+            '  (vlax-3d-point (list %s %s 0.0)) (vlax-3d-point (list %s %s 0.0))'
+            '  (vlax-3d-point (list %s %s 0.0)) (vlax-3d-point (list %s %s 0.0)))'
+            ' (if (entlast) (cdr (assoc 5 (entget (entlast)))) nil))'
+            % (cx, cy, x1, y1, x2, y2, lx, ly)
+        )
+        return self._aval(expr)
+
+    async def create_dimension_radius(self, cx: float, cy: float, radius: float,
+                                      angle: float = 0.0) -> CommandResult:
+        """Cota de raio do circulo de centro (cx,cy) — `IAcadBlock.AddDimRadial`.
+
+        Pela API nao precisa procurar a circunferencia: o centro e um ponto
+        sobre ela (a `angle`) bastam, e `LeaderLength` = raio fica legivel.
+        """
+        import math
+
+        a = math.radians(angle)
+        px, py = cx + radius * math.cos(a), cy + radius * math.sin(a)
+        expr = (
+            '(progn (vl-load-com) (setq __d (vla-get-ActiveDocument (vlax-get-acad-object)))'
+            ' (setq __m (vla-get-ModelSpace __d))'
+            ' (vlax-invoke-method __m "AddDimRadial"'
+            '  (vlax-3d-point (list %s %s 0.0)) (vlax-3d-point (list %s %s 0.0)) %s)'
+            ' (if (entlast) (cdr (assoc 5 (entget (entlast)))) nil))'
+            % (cx, cy, px, py, radius)
+        )
+        return self._aval(expr)
     # ----------------------------------------------------------- screenshot
     async def get_screenshot(self) -> CommandResult:
         try:
@@ -1479,6 +1691,122 @@ class ComBackend(AutoCADBackend):
             r.payload = {"criadas": count - 1, "total": count, "handle_base": entity_id}
         return r
 
+
+    async def entity_scale(self, entity_id: str, cx: float, cy: float,
+                           factor: float) -> CommandResult:
+        """Escala uniforme em torno de (cx,cy) — IAcadEntity.ScaleEntity."""
+        if factor == 0:
+            return CommandResult(ok=False, error="factor 0 apagaria a entidade; use um valor != 0")
+        expr = (
+            '(progn (vl-load-com) (setq __e (handent "%s"))'
+            ' (if (null __e) "MCPERRO:handle nao existe"'
+            '  (progn (vla-ScaleEntity (vlax-ename->vla-object __e)'
+            '   (vlax-3d-point (list %s %s 0.0)) %s)'
+            '  (vla-get-Handle (vlax-ename->vla-object __e)))))'
+            % (_q(entity_id), cx, cy, factor)
+        )
+        return self._aval(expr)
+
+    async def entity_chamfer(self, entity_id1: str, entity_id2: str, dist1: float,
+                             dist2: float) -> CommandResult:
+        """Bisela o canto entre duas retas, por geometria propria (sem comando).
+
+        O comando `CHAMFER` nao aceita as duas retas por argumento e a
+        pre-selecao com `sssetfirst` nao e' consumida por ele — medido em
+        21/10/2026, as duas retas ficam intactas. Entao o canto e' calculado:
+        interseccao das retas, `dist1`/`dist2` ao longo de cada uma, as pontas
+        sao reescritas com `entmod` e a reta do bisel e' criada.
+        """
+        if dist1 <= 0 or dist2 <= 0:
+            return CommandResult(ok=False, error="dist1 e dist2 precisam ser > 0")
+        expr = (
+            '(progn (vl-load-com)'
+            ' (setq __e1 (handent "%s")) (setq __e2 (handent "%s"))'
+            ' (if (or (null __e1) (null __e2)) "MCPERRO:os dois handles precisam existir"'
+            '  (progn (setq __d1 (entget __e1)) (setq __d2 (entget __e2))'
+            '   (list (cdr (assoc 0 __d1)) (cdr (assoc 10 __d1)) (cdr (assoc 11 __d1))'
+            '    (cdr (assoc 0 __d2)) (cdr (assoc 10 __d2)) (cdr (assoc 11 __d2))))))'
+            % (_q(entity_id1), _q(entity_id2))
+        )
+        r = self._aval(expr)
+        if not r.ok:
+            return r
+        dados = r.payload
+        if not isinstance(dados, list) or len(dados) < 6:
+            return CommandResult(ok=False, error="entity_chamfer precisa de duas entidades LINE")
+        if dados[0] != "LINE" or dados[3] != "LINE":
+            return CommandResult(ok=False, error="entity_chamfer so' opera entre duas LINE")
+        p1, p2 = list(dados[1])[:2], list(dados[2])[:2]
+        p3, p4 = list(dados[4])[:2], list(dados[5])[:2]
+
+        def dist(a, b):
+            return ((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2) ** 0.5
+
+        # interseccao das duas retas (2D)
+        x1, y1 = p1
+        x2, y2 = p2
+        x3, y3 = p3
+        x4, y4 = p4
+        den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+        if abs(den) < 1e-12:
+            return CommandResult(ok=False, error="as retas sao paralelas: nao ha canto para biselar")
+        ix = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / den
+        iy = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / den
+        canto = (ix, iy)
+
+        def passo(de, limite, d):
+            """Ponto a `d` de `de` na direcao de `limite`."""
+            comp = dist(de, limite)
+            if comp < 1e-12:
+                return de
+            t = min(d / comp, 1.0)
+            return (de[0] + (limite[0] - de[0]) * t, de[1] + (limite[1] - de[1]) * t)
+
+        # em cada reta, o extremo mais longe do canto e' o que leva a chanfro
+        a_far = p2 if dist(canto, p2) >= dist(canto, p1) else p1
+        b_far = p4 if dist(canto, p4) >= dist(canto, p3) else p3
+        q1 = passo(canto, a_far, dist1)
+        q2 = passo(canto, b_far, dist2)
+
+        corpo = (
+            '(progn (vl-load-com)'
+            ' (setq __d1 (subst (cons 11 (list %s %s 0.0)) (assoc 11 __d1) __d1))'
+            ' (entmod __d1)'
+            ' (setq __d2 (subst (cons 10 (list %s %s 0.0)) (assoc 10 __d2) __d2))'
+            ' (entmod __d2)'
+            ' (entmakex (list (cons 0 "LINE") (cons 100 "AcDbEntity") (cons 8 "0")'
+            '  (cons 100 "AcDbLine") (cons 10 (list %s %s 0.0)) (cons 11 (list %s %s 0.0))))'
+            ' (cdr (assoc 5 (entget (entlast)))))'
+            % (q1[0], q1[1], q2[0], q2[1], q1[0], q1[1], q2[0], q2[1])
+        )
+        r = self._aval(corpo)
+        if r.ok:
+            r.payload = {"handle_bisel": r.payload, "canto": [ix, iy],
+                         "dist1": dist1, "dist2": dist2}
+        return r
+    async def entity_array(self, entity_id: str, rows: int, cols: int,
+                           row_dist: float, col_dist: float) -> CommandResult:
+        """Repete uma entidade numa grade rows x cols (IAcadEntity.ArrayRectangular).
+
+        ARRAYRECT e' interativo (pede linhas/colunas por dynamic input); a API
+        faz a grade de uma vez. O numero de copias e' medido pela contagem de
+        entidades do ModelSpace antes/depois — o retorno do metodo e' um vetor
+        variant, que nao tem tamanho estavel em LISP.
+        """
+        expr = (
+            '(progn (vl-load-com) (setq __d (vla-get-ActiveDocument (vlax-get-acad-object)))'
+            ' (setq __n0 (vla-get-Count (vla-get-ModelSpace __d)))'
+            ' (setq __e (handent "%s"))'
+            ' (if (null __e) "MCPERRO:handle nao existe"'
+            '  (progn (vlax-invoke-method (vlax-ename->vla-object __e) "ArrayRectangular"'
+            '   %d %d 1 %s %s 0.0)'
+            '   (- (vla-get-Count (vla-get-ModelSpace __d)) __n0))))'
+            % (_q(entity_id), rows, cols, row_dist, col_dist)
+        )
+        r = self._aval(expr)
+        if r.ok and isinstance(r.payload, int) and not str(r.payload).startswith("MCPERRO:"):
+            r.payload = {"criadas": r.payload, "rows": rows, "cols": cols, "handle_base": entity_id}
+        return r
     async def entity_set_properties(self, entity_id: str, layer: str | None = None,
                                     color: int | str | None = None,
                                     linetype: str | None = None,
@@ -1617,4 +1945,15 @@ class ComBackend(AutoCADBackend):
             '    (cons (quote tipo) (cdr (assoc 0 __d)))))))'
             % _q(entity_id)
         )
-        return self._aval(expr)
+        r = self._aval(expr)
+        # O LISP devolve uma lista de pares ((tipo . "LINE") (camada . "PAREDES"));
+        # o backend ezdxf devolve dict. Normaliza para o MESMO shape -- senao
+        # entity_get / point_from_snap / point_tangent / hatch_material /
+        # selection_window estouram no motor COM (medido em 21/10/2026).
+        if r.ok and isinstance(r.payload, list):
+            itens: dict = {}
+            for par in r.payload:
+                if isinstance(par, (list, tuple)) and len(par) >= 2:
+                    itens[str(par[0])] = par[1]
+            r.payload = itens
+        return r
