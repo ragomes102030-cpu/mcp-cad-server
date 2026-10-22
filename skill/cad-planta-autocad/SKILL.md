@@ -1,6 +1,12 @@
 ---
-name: cad-planta-autocad
+name: cad-planta-autocad.rollback-broken
+version: "1.0.0"
+author: Rafael Gomes
+license: MIT
 description: Cria e entrega plantas baixas no AutoCAD de verdade (arquitetura, layout, quantitativos) usando o mcp-cad-server via COM/ActiveX, e valida o resultado antes de entregar DWG/DXF/PDF. Use quando o usuário pedir planta baixa, planta de casa/apartamento/sobrado, layout arquitetônico, "cria uma planta de X quartos com Y m²", redesenhar/alterar planta existente, extrair quantitativo de paredes/portas/janelas, ou gerar PDF/DWG/DXF de um desenho. Cobre também os erros silenciosos do AutoCAD (arcos girados, texto estourando a folha, DXF desatualizado) que fazem um desenho parecer certo estando errado.
+hermes:
+  tags: ["floor plan", "autocad", "mcp"]
+  related_skills: ["cad-planta-autocad"]
 ---
 
 # Plantas baixas no AutoCAD real (mcp-cad-server)
@@ -39,6 +45,31 @@ devolve exit code 0/1 e imprime o relatório.
 Partida rápida: copie `assets/modelo-3-quartos.json` (119,56 m², 3 quartos, 10 portas,
 8 janelas) e mexa nos números.
 
+### Desenho manual no AutoCAD via MCP
+
+Para desenhar a planta passo a passo usando os comandos MCP (quando o JSON não for suficiente), siga esta ordem:
+
+1. **Preparar o desenho**: `drawing_new` (se necessário) e `drawing_setup(unidades=6, escala_cota=0.1, ltscale=0.2)`.
+
+2. **Criar as camadas**: `layer_create` para cada uma das 7 camadas (PAREDE_EXT, PAREDE_INT, PORTA, JANELA, MOBILIA, COTA, TEXTO) com as cores determinadas. Confirme com `layer_list`.
+
+3. **Limpar camadas antigas**: antes de desenhar, remova entidades que possam existir. Use `entity_erase_filter` com `layer` e `tipo` adequados, ex.: `entity_erase_filter(layer="PAREDE_INT", tipo="LWPOLYLINE", confirmar=True)`. Repita para `PAREDE_EXT`, `PORTA`, `JANELA`, `MOBILIA`, `COTA`, `TEXTO`. Depois, consulte `entity_list` para garantir que está limpo.
+
+4. **Paredes externas**: desenhe 4 retângulos de 0,20 m de espessura, nas bordas: (0,0)-(10,0,2), (0,7,8)-(10,8), (0,0)-(0,2,8), (9,8-10,8). Use `entity_create_rectangle` com `layer="PAREDE_EXT"`.
+
+5. **Paredes internas**: para cada separação de ambientes, desenhe retângulos de 0,10 m de espessura, dividindo o espaço conforme o spec. Cada vão de porta ou janela é um corte que deve ser respeitado, desenhando os retângulos do entorno do vão nas partes acima e abaixo (ou esquerda e direita) do vão, não preenchendo o vão. Exemplo: parede entre Sala e Cozinha no eixo x=5,25, com vão de porta y=0,80-1,60 => desenhe dois retângulos: (5,20,0,20)-(5,30,0,80) e (5,20,1,60)-(5,30,4,20). Use `layer="PAREDE_INT"`.
+
+6. **Portas**: para cada porta, desenhe um arco de 90° de raio 0,05 m no ponto de dobradiça, e uma linha (folha) que sai do canto do vão. Use `entity_create_arc` e `entity_create_line` com `layer="PORTA"`.
+
+7. **Janelas**: desenhe duas linhas paralelas à parede a ±0,025 m do eixo do vão. Use `entity_create_line` com `layer="JANELA"`.
+
+8. **Mobília**: desenhe retângulos simples sem espessura com `layer="MOBILIA"`. Use as dimensões do spec (Sofá, mesa, bancada, cama, etc.).
+
+9. **Cotas e rótulos**: `dimension_linear` para cotas horizontais e verticais; `entity_create_text` para títulos e nomes dos ambientes e "ESC 1:50".
+
+10. **Finalização**: `view_zoom_extents` para ver todo o desenho. `entity_list` para contagem de entidades por camada. `drawing_save` para salvar.
+
+**Armadilhas:** `entity_erase_filter` só apaga se você passar `layer` e `tipo`; retornar `ok` não significa que apagou. Use `entity_erase` por handle para apagar. `zoom_extents` não existe; use `view_zoom_extents`. Os nomes dos comandos MCP são `mcp__cad__entity_create_*`, etc.
 ### Antes de desenhar: valide o modelo (1 ms, sem AutoCAD)
 
 ```bash

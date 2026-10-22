@@ -1,0 +1,122 @@
+new
+layer.new {"name": "TERRENO", "color": 6, "linetype": "CONTINUOUS", "current": true}
+rectang {"p1": [-2.5, -2.5], "p2": [15.5, 12.5]}
+layer.new {"name": "PAREDES", "color": 4, "linetype": "CONTINUOUS", "current": true}
+rectang {"p1": [-0.15, -0.075], "p2": [8.674999999999999, 0.075]}
+rectang {"p1": [9.425, -0.075], "p2": [13.149999999999999, 0.075]}
+rectang {"p1": [12.925, -0.15], "p2": [13.075, 8.674999999999999]}
+rectang {"p1": [12.925, 9.425], "p2": [13.075, 10.149999999999999]}
+rectang {"p1": [13.0, 9.925], "p2": [0.0, 10.075]}
+rectang {"p1": [-0.075, 10.0], "p2": [0.075, 0.0]}
+rectang {"p1": [6.925, -0.075], "p2": [7.075, 5.25]}
+rectang {"p1": [6.925, 6.05], "p2": [7.075, 10.075]}
+rectang {"p1": [-0.075, 5.0249999999999995], "p2": [2.375, 5.175]}
+rectang {"p1": [3.025, 5.0249999999999995], "p2": [7.075, 5.175]}
+rectang {"p1": [-0.075, 6.125], "p2": [2.6750000000000003, 6.275]}
+rectang {"p1": [3.3249999999999997, 6.125], "p2": [4.175, 6.275]}
+rectang {"p1": [4.825, 6.125], "p2": [7.075, 6.275]}
+rectang {"p1": [3.425, 6.05], "p2": [3.575, 10.075]}
+rectang {"p1": [4.225, -0.075], "p2": [4.375, 1.275]}
+rectang {"p1": [4.225, 1.925], "p2": [4.375, 3.6750000000000003]}
+rectang {"p1": [4.225, 4.225], "p2": [4.375, 5.25]}
+rectang {"p1": [4.225, 2.7249999999999996], "p2": [7.075, 2.875]}
+rectang {"p1": [6.925, 6.125], "p2": [8.375, 6.275]}
+rectang {"p1": [9.025, 6.125], "p2": [11.274999999999999, 6.275]}
+rectang {"p1": [11.825000000000001, 6.125], "p2": [13.075, 6.275]}
+rectang {"p1": [10.225000000000001, 6.05], "p2": [10.375, 8.674999999999999]}
+rectang {"p1": [10.225000000000001, 9.225000000000001], "p2": [10.375, 10.075]}
+rectang {"p1": [10.225000000000001, 8.225000000000001], "p2": [13.075, 8.375]}
+layer.new {"name": "PORTAS", "color": 3, "linetype": "CONTINUOUS", "current": true}
+arc {"center": [8.6, 0.075], "radius": 0.9, "start": 90.0, "end": 180.0}
+line {"points": [[8.6, 0.075], [8.6, 0.975]]}
+arc {"center": [8.3, 6.275], "radius": 0.8, "start": 90.0, "end": 180.0}
+line {"points": [[8.3, 6.275], [8.3, 7.075]]}
+arc {"center": [11.2, 6.275], "radius": 0.7, "start": 90.0, "end": 180.0}
+line {"points": [[11.2, 6.275], [11.2, 6.9750000000000005]]}
+arc {"center": [3.4, 6.275], "radius": 0.8, "start": 90.0, "end": 180.0}
+line {"points": [[3.4, 6.275], [3.4, 7.075]]}
+arc {"center": [4.9, 6.275], "radius": 0.8, "start": 90.0, "end": 180.0}
+line {"points": [[4.9, 6.275], [4.9, 7.075]]}
+arc {"center": [3.1, 5.025], "radius": 0.8, "start": 180.0, "end": 270.0}
+line {"points": [[3.1, 5.025], [2.3, 5.025]]}
+arc {"center": [4.375, 3.6], "radius": 0.7, "start": 0.0, "end": 90.0}
+line {"points": [[4.375, 3.6], [5.075, 3.6]]}
+arc {"center": [4.375, 1.2], "radius": 0.8, "start": 0.0, "end": 90.0}
+line {"points": [[4.375, 1.2], [5.175, 1.2]]}
+arc {"center": [10.375, 8.6], "radius": 0.7, "start": 0.0, "end": 90.0}
+line {"points": [[10.375, 8.6], [11.075, 8.6]]}
+arc {"center": [12.925, 9.5], "radius": 0.8, "start": 180.0, "end": 270.0}
+line {"points": [[12.925, 9.5], [12.125, 9.5]]}
+layer.new {"name": "JANELAS", "color": 5, "linetype": "CONTINUOUS", "current": true}
+line {"points": [[1.2, -0.0375], [2.8, -0.0375]]}
+line {"points": [[1.2, 0.0375], [2.8, 0.0375]]}
+line {"points": [[-0.0375, 2.2], [-0.0375, 3.8]]}
+line {"points": [[0.0375, 2.2], [0.0375, 3.8]]}
+line {"points": [[10.0, -0.0375], [12.4, -0.0375]]}
+line {"points": [[10.0, 0.0375], [12.4, 0.0375]]}
+line {"points": [[1.0, 9.9625], [2.6, 9.9625]]}
+line {"points": [[1.0, 10.0375], [2.6, 10.0375]]}
+line {"points": [[-0.0375, 7.0], [-0.0375, 8.6]]}
+line {"points": [[0.0375, 7.0], [0.0375, 8.6]]}
+line {"points": [[4.5, 9.9625], [6.1, 9.9625]]}
+line {"points": [[4.5, 10.0375], [6.1, 10.0375]]}
+line {"points": [[7.6, 9.9625], [9.6, 9.9625]]}
+line {"points": [[7.6, 10.0375], [9.6, 10.0375]]}
+line {"points": [[12.9625, 6.9], [12.9625, 7.7]]}
+line {"points": [[13.0375, 6.9], [13.0375, 7.7]]}
+layer.new {"name": "MOBILIARIO", "color": 9, "linetype": "CONTINUOUS", "current": true}
+rectang {"p1": [0.45, 0.45], "p2": [2.05, 2.35]}
+rectang {"p1": [2.3, 0.45], "p2": [4.1, 0.85]}
+rectang {"p1": [0.6, 7.1], "p2": [1.5, 9.0]}
+rectang {"p1": [1.9, 9.2], "p2": [3.25, 9.8]}
+rectang {"p1": [4.1, 7.1], "p2": [5.0, 9.0]}
+rectang {"p1": [5.4, 9.2], "p2": [6.7, 9.8]}
+rectang {"p1": [7.4, 1.2], "p2": [9.9, 2.1]}
+rectang {"p1": [8.2, 3.4], "p2": [9.8, 4.6]}
+rectang {"p1": [11.9, 1.2], "p2": [12.8, 3.0]}
+rectang {"p1": [7.2, 9.2], "p2": [9.8, 9.85]}
+rectang {"p1": [10.55, 6.45], "p2": [11.15, 7.05]}
+rectang {"p1": [12.25, 6.45], "p2": [12.85, 7.05]}
+rectang {"p1": [4.55, 4.3], "p2": [5.15, 4.9]}
+rectang {"p1": [6.15, 4.3], "p2": [6.85, 4.9]}
+rectang {"p1": [4.6, 0.35], "p2": [6.7, 0.95]}
+rectang {"p1": [10.55, 9.25], "p2": [11.35, 9.85]}
+layer.new {"name": "COTAS", "color": 1, "linetype": "CONTINUOUS", "current": true}
+dimlinear {"p1": [0.0, 0.0], "p2": [4.3, 0.0], "at": [2.15, -0.8]}
+dimlinear {"p1": [4.3, 0.0], "p2": [7.0, 0.0], "at": [5.65, -0.8]}
+dimlinear {"p1": [7.0, 0.0], "p2": [13.0, 0.0], "at": [10.0, -0.8]}
+dimlinear {"p1": [0.0, 0.0], "p2": [13.0, 0.0], "at": [6.5, -1.6]}
+dimaligned {"p1": [0.0, 0.0], "p2": [0.0, 5.1], "at": [-0.8, 2.55]}
+dimaligned {"p1": [0.0, 5.1], "p2": [0.0, 10.0], "at": [-0.8, 7.55]}
+dimaligned {"p1": [0.0, 0.0], "p2": [0.0, 10.0], "at": [-1.6, 5.0]}
+layer.new {"name": "TEXTOS", "color": 7, "linetype": "CONTINUOUS", "current": true}
+text {"at": [1.75, 8.260000000000002], "text": "QUARTO 1", "height": 0.26}
+text {"at": [1.75, 7.840000000000002], "text": "12.23 m2", "height": 0.1872}
+text {"at": [5.25, 8.260000000000002], "text": "QUARTO 2", "height": 0.26}
+text {"at": [5.25, 7.840000000000002], "text": "12.23 m2", "height": 0.1872}
+text {"at": [3.5, 5.8100000000000005], "text": "CIRCULACAO", "height": 0.18}
+text {"at": [3.5, 5.390000000000001], "text": "6.51 m2", "height": 0.1296}
+text {"at": [2.15, 2.7100000000000004], "text": "SUITE", "height": 0.26}
+text {"at": [2.15, 2.29], "text": "20.54 m2", "height": 0.1872}
+text {"at": [5.65, 4.11], "text": "BANHEIRO SUITE", "height": 0.15}
+text {"at": [5.65, 3.6900000000000004], "text": "5.48 m2", "height": 0.108}
+text {"at": [5.65, 1.56], "text": "CLOSET", "height": 0.17}
+text {"at": [5.65, 1.1400000000000001], "text": "6.76 m2", "height": 0.12240000000000001}
+text {"at": [10.0, 3.2600000000000002], "text": "SALA DE ESTAR/JANTAR", "height": 0.24}
+text {"at": [10.0, 2.84], "text": "35.39 m2", "height": 0.17279999999999998}
+text {"at": [8.65, 8.260000000000002], "text": "COZINHA", "height": 0.26}
+text {"at": [8.65, 7.840000000000002], "text": "11.5 m2", "height": 0.1872}
+text {"at": [11.65, 7.41], "text": "BANHEIRO SOCIAL", "height": 0.15}
+text {"at": [11.65, 6.99], "text": "4.97 m2", "height": 0.108}
+text {"at": [11.65, 9.31], "text": "AREA DE SERVICO", "height": 0.15}
+text {"at": [11.65, 8.89], "text": "3.95 m2", "height": 0.108}
+text {"at": [0.0, -3.3], "text": "PLANTA BAIXA - RESIDENCIA UNIFAMILIAR", "height": 0.22}
+text {"at": [0.0, -3.78], "text": "3 QUARTOS (1 SUITE) - AREA UTIL 119,56 m2 - EIXOS 13,00 x 10,00 m", "height": 0.2}
+text {"at": [0.0, -4.22], "text": "SUITE 20,54 | BANH. SUITE 5,48 | CLOSET 6,76 | QUARTO 1 12,23 | QUARTO 2 12,23", "height": 0.17}
+text {"at": [0.0, -4.58], "text": "CIRCULACAO 6,51 | SALA DE ESTAR/JANTAR 35,39 | COZINHA 11,50 | BANH. SOCIAL 4,97", "height": 0.17}
+text {"at": [0.0, -4.94], "text": "AREA DE SERVICO 3,95 | AREA CONSTRUIDA 130,00 m2", "height": 0.17}
+text {"at": [0.0, -5.3], "text": "TERRENO 18,00 x 15,00 m (270,00 m2) | RECUOS 2,50 m | PAREDES 0,15 m | PE-DIREITO 2,80 m", "height": 0.17}
+text {"at": [0.0, -5.66], "text": "COTAS EM METROS - 10 PORTAS - 8 JANELAS", "height": 0.17}
+text {"at": [0.0, -6.02], "text": "GERADO POR mcp-cad-server (AutoCAD 2025 via COM) - 16/10/2026", "height": 0.16}
+zoom {"mode": "extents"}
+regen {}
