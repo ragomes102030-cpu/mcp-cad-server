@@ -98,7 +98,7 @@ def main() -> int:
     caso("selo maior que o terreno",
          lambda x: x["selo"].append((0.0, -7.0, "X" * 120, 0.22)), "selo-transborda")
     caso("linhas do selo colidindo",
-         lambda x: x["selo"][1].__setitem__(1, x["selo"][0][1] - 0.24), "selo-linhas-colidem")
+         lambda x: x.__setitem__("selo", [x["selo"][0], (x["selo"][1][0], x["selo"][0][1] - 0.24, x["selo"][1][2], x["selo"][1][3])]), "selo-linhas-colidem")
 
     print("\n3) selo antigo (o que estourou o A3 na pratica: 130 chars a 0,22 m)")
     m2 = modelo_base()

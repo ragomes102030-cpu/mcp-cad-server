@@ -18,8 +18,10 @@ venv/
 mcp-cad-server-entrega.zip
 codigo/mcp-cad-server-entrega.zip
 
-# Temporarios do AutoCAD/MCP (area de trabalho)
-codigo/saida/
+# Artefatos de teste (gerados por smoke_headless.py / verificar_instalacao.py)
+codigo/data/smoke/*.dxf
+codigo/data/smoke/*.json
+codigo/data/smoke/
 
 # AutoCAD: lock e temporarios de desenho
 *.dwl

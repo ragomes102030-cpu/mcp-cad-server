@@ -2,7 +2,7 @@
 
 Uso:
     python verificar_instalacao.py            # checagem completa (nao abre AutoCAD)
-    python verificar_instalacao.py --esperado 48
+    python verificar_instalacao.py --esperado 76
 
 Sai com codigo 0 se tudo passou, 1 se algo falhou.
 Feito para ser rodado por um agente: cada linha comeca com [OK] ou [FALHA].
@@ -110,7 +110,7 @@ def listar_tools(timeout=45):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--esperado", type=int, default=48)
+    ap.add_argument("--esperado", type=int, default=76)
     a = ap.parse_args()
 
     print("== Python")
