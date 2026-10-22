@@ -45,3 +45,14 @@
   "evidencia": "geracao manual exit=0, 4 mapas novas em 2026-10-22; git master sem commit"
  }
 }
+{
+ "quando": "2026-10-22T14:54:15-03:00",
+ "chave": "registro-mapeamento-leitura",
+ "sintoma": "Pergunta do usuario: todas as skills e mapeamentos estao na pasta do Desktop?",
+ "sugestao": "Verificar via git ls-tree -r; confirmar 387 arquivos, skills em link vs pasta real; commit master.",
+ "acadver": "cad_planta_autocad",
+ "contexto": {
+  "evidencia": "git ls-tree: 387 arquivos; skill/laje-concreto-armado e skill/cad-planta-autocad; lajes = symlink no Skills, pasta real em AppData",
+  "corrigido_em": "README.md na raiz + commit master"
+ }
+}
