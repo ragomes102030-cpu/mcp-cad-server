@@ -727,7 +727,8 @@ async def arch_stair(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
                      degraus: int = 10, piso: float = 0.28,
                      altura_total: float | None = 1.80, angulo: float = 0.0,
                      seta: bool = True, rotulo: str | None = "SUBA",
-                     camada: str = "ESCADAS", lang: str = "pt") -> dict:
+                     camada: str = "ESCADAS", lang: str = "pt",
+                     tipo: str = "reta") -> dict:
     """Draw a straight-run staircase in plan; reports its Blondel step rule.
 
     Implementacao baseada no modulo arch.py (`escada_reta`). Desenha um tramo
@@ -751,7 +752,7 @@ async def arch_stair(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
     Retorna dict com os handles das entidades criadas e o resumo da escada
     (comprimento, riser, corrida e a regra de Blondel).
     """
-    from .arch import escada_reta
+    from .arch import escada
 
     if rotulo is None:
         label = None
@@ -761,9 +762,9 @@ async def arch_stair(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
         label = "UP" if lang == "en" else "SUBA"
 
     try:
-        geo = escada_reta(x=x, y=y, largura=largura, degraus=degraus, piso=piso,
-                          altura_total=altura_total, angulo=angulo, seta=seta,
-                          rotulo=label, camada=camada)
+        geo = escada(tipo=tipo, x=x, y=y, largura=largura, degraus=degraus, piso=piso,
+                     altura_total=altura_total, angulo=angulo, seta=seta,
+                     rotulo=label, camada=camada)
     except ValueError as e:
         return {"ok": False, "erro": str(e)}
 
@@ -776,17 +777,23 @@ async def arch_stair(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
         if r.ok:
             handles.append(r.payload)
 
-    # seta de subida: tronco (linha) + ponta (polilinea de 3 pontos)
+    # seta de subida: reta -> tronco+ponta; L/U -> polyline
     if seta and geo.get("seta"):
         s = geo["seta"]
-        t = s["tronco"]
-        r = await b.create_line(t[0], t[1], t[2], t[3], layer=camada)
-        if r.ok:
-            handles.append(r.payload)
-        r = await b.create_polyline([[pt[0], pt[1]] for pt in s["ponta"]],
-                                    closed=False, layer=camada)
-        if r.ok:
-            handles.append(r.payload)
+        if "poly" in s:
+            r = await b.create_polyline([[pt[0], pt[1]] for pt in s["poly"]],
+                                        closed=False, layer=camada)
+            if r.ok:
+                handles.append(r.payload)
+        else:
+            t = s["tronco"]
+            r = await b.create_line(t[0], t[1], t[2], t[3], layer=camada)
+            if r.ok:
+                handles.append(r.payload)
+            r = await b.create_polyline([[pt[0], pt[1]] for pt in s["ponta"]],
+                                        closed=False, layer=camada)
+            if r.ok:
+                handles.append(r.payload)
 
     # rotulo de subida
     if geo.get("rotulo"):
@@ -801,9 +808,43 @@ async def arch_stair(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
     return {"ok": True, "payload": geo}
 
 
+async def prumada(x: float, y: float, nome: str = "PRUMADA", nivel: str | None = None,
+                  diametro: float = 0.40, camada: str = "PRUMADAS") -> dict:
+    """Desenha uma prumada (eixo vertical de instalacao) em planta.
+
+    Simbodo: circulo com cruz (X) no centro + texto 'nome / nivel' acima.
+    Usado para marcar shafts que se repetem em varios pavimentos no mesmo (x, y).
+
+    Argumentos:
+        x, y       -- centro do simbodo (metros)
+        nome       -- identificador (default "PRUMADA")
+        nivel      -- texto de nivel (ex. "+0.00", "+3.00"); None omite
+        diametro   -- diametro do circodo (default 0.40 m)
+        camada     -- camada (default "PRUMADAS")
+    """
+    b = await _b()
+    handles = []
+    r = await b.create_circle(x, y, diametro / 2.0, layer=camada)
+    if r.ok:
+        handles.append(r.payload)
+    d = diametro / 2.0 * 0.7
+    r = await b.create_line(x - d, y - d, x + d, y + d, layer=camada)
+    if r.ok:
+        handles.append(r.payload)
+    r = await b.create_line(x - d, y + d, x + d, y - d, layer=camada)
+    if r.ok:
+        handles.append(r.payload)
+    txt = nome if (nivel is None or str(nivel).strip() == "") else "%s  %s" % (nome, nivel)
+    r = await b.create_text(x, y + diametro / 2.0 + 0.15, txt, height=0.12, rotation=0.0, layer=camada)
+    if r.ok:
+        handles.append(r.payload)
+    return {"ok": True, "payload": {"handles": handles, "count": len(handles),
+                                    "x": x, "y": y, "nome": nome, "nivel": nivel}}
+
+
 async def place_symbol(symbol: str, x: float, y: float, rotation: float = 0.0,
                        scale: float = 1.0, layer: str | None = None) -> dict:
-    """Coloca um simbolo do catalogo num ponto livre (rotacao em GRAUS).
+    """Coloca um simbodo num ponto livre (rotacao em GRAUS).
 
     Simbolos: tomada_baixa, tomada_media, interruptor, luminaria_teto, quadro,
     ponto_teto (eletrica) / bacia, lavatorio, chuveiro, ralo, registro (hidraulica).
@@ -1072,6 +1113,7 @@ TOOLS = [
     trim_entity, extend_entity, fillet_entity,
     arch_opening,
     arch_stair,
+    prumada,
     place_symbol,
     place_symbol_on_wall,
     service_run,
@@ -1141,6 +1183,7 @@ NOMES = {
     "arch_wall": "arch_wall",
     "arch_opening": "arch_opening",
     "arch_stair": "arch_stair",
+    "prumada": "prumada",
     "place_symbol": "place_symbol",
     "place_symbol_on_wall": "place_symbol_on_wall",
     "service_run": "service_run",

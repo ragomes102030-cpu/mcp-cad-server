@@ -23,7 +23,7 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "src"))
 
 from cad_mcp.arch import (Abertura, Parede, comprimento, expandir,  # noqa: E402
-                          escada_reta, primitivas, trechos, validar)
+                          escada, escada_reta, primitivas, trechos, validar)
 from cad_mcp.validar_modelo import validar as validar_modelo  # noqa: E402
 
 falhas = []

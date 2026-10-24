@@ -31,7 +31,7 @@ from dataclasses import dataclass, field
 
 __all__ = [
     "Pt", "Parede", "Abertura", "segmentos_eixo", "comprimento",
-    "ponto_no_eixo", "validar", "trechos", "primitivas", "escada_reta", "expandir",
+    "ponto_no_eixo", "validar", "trechos", "primitivas", "escada_reta", "escada", "expandir",
 ]
 
 Pt = tuple[float, float]
@@ -370,6 +370,89 @@ def escada_reta(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
         "blondel_conforme": blondel_conforme,
         "linhas": linhas, "seta": seta_out, "rotulo": rotulo_out,
     }
+
+
+def escada(tipo: str = "reta", x: float = 0.0, y: float = 0.0, largura: float = 1.10,
+           degraus: int = 10, piso: float = 0.28, altura_total: float | None = None,
+           angulo: float = 0.0, seta: bool = True, rotulo: str | None = "SUBA",
+           camada: str = "ESCADAS", n1: int | None = None) -> dict:
+    """Escada RETA, L (90 graus) ou U (180 graus) em planta. Somente 2D.
+
+    reta -> delega a `escada_reta`. L/U constroem outline + pisadas + seta (poly).
+    n1 = degraus do primeiro lance (default: metade). Devolve o mesmo schema de
+    `escada_reta`; no L/U a `seta` vem como {"poly": [(x,y), ...]}.
+    """
+    t = str(tipo).lower()
+    if t in ("reta", "ret", "straight", ""):
+        return escada_reta(x=x, y=y, largura=largura, degraus=degraus, piso=piso,
+                           altura_total=altura_total, angulo=angulo, seta=seta,
+                           rotulo=rotulo, camada=camada)
+    if t not in ("l", "u"):
+        raise ValueError("tipo deve ser reta|L|U")
+    if largura <= 0 or piso <= 0:
+        raise ValueError("largura e piso devem ser > 0")
+    N = int(degraus)
+    if N < 2:
+        raise ValueError("degraus deve ser >= 2 para L/U")
+    if n1 is None:
+        n1 = N // 2
+    n1 = int(n1)
+    if not (1 <= n1 <= N - 1):
+        raise ValueError("n1 deve estar entre 1 e degraus-1")
+    n2 = N - n1
+    W = float(largura)
+    p = float(piso)
+    L1 = n1 * p
+    L2 = n2 * p
+    linhas_loc = []
+    if t == "l":
+        pts = [(0.0, 0.0), (L1, 0.0), (L1 + W, 0.0), (L1 + W, W + L2),
+               (L1, W + L2), (L1, W), (0.0, W), (0.0, 0.0)]
+        linhas_loc += list(zip(pts, pts[1:]))
+        for k in range(1, n1):
+            linhas_loc.append(((k * p, 0.0), (k * p, W)))
+        for k in range(1, n2):
+            linhas_loc.append(((L1, W + k * p), (L1 + W, W + k * p)))
+        seta_loc = [(0.0, W / 2), (L1 + W / 2, W / 2), (L1 + W / 2, W + L2 - W / 2)]
+        comp = L1 + L2
+    else:  # u
+        Lmax = max(L1, L2)
+        pts = [(0.0, 0.0), (Lmax + W, 0.0), (Lmax + W, 2 * W), (0.0, 2 * W), (0.0, 0.0)]
+        linhas_loc += list(zip(pts, pts[1:]))
+        for k in range(1, n1):
+            linhas_loc.append(((k * p, 0.0), (k * p, W)))
+        for k in range(1, n2):
+            linhas_loc.append(((k * p, W), (k * p, 2 * W)))
+        seta_loc = [(0.0, W / 2), (Lmax + W / 2, W / 2), (Lmax + W / 2, 1.5 * W), (0.0, 1.5 * W)]
+        comp = 2.0 * Lmax
+
+    a = math.radians(angulo)
+    ca, sa = math.cos(a), math.sin(a)
+
+    def _tr(pt):
+        lx, ly = pt
+        return (x + lx * ca - ly * sa, y + lx * sa + ly * ca)
+
+    linhas = [[_tr(q0), _tr(q1)] for q0, q1 in linhas_loc]
+    seta_out = None
+    if seta:
+        seta_out = {"poly": [_tr(q) for q in seta_loc]}
+    rotulo_out = None
+    if rotulo:
+        g = max(0.3, W * 0.25)
+        lp = _tr((0.0, -g))
+        rotulo_out = {"x": lp[0], "y": lp[1], "texto": str(rotulo),
+                      "altura": max(0.2, W * 0.12), "rotacao": 0.0}
+    riser = (altura_total / N) if altura_total is not None else None
+    blondel = (2.0 * riser + p) if riser is not None else None
+    return {"layer": camada, "tipo": t, "x": float(x), "y": float(y), "angulo": float(angulo),
+            "largura": W, "degraus": N, "n1": n1, "n2": n2, "piso": p,
+            "comprimento": round(comp, 4),
+            "altura_total": (float(altura_total) if altura_total is not None else None),
+            "riser": (round(riser, 4) if riser is not None else None), "corrida": p,
+            "blondel": (round(blondel, 4) if blondel is not None else None),
+            "blondel_conforme": (0.62 <= blondel <= 0.66) if blondel is not None else None,
+            "linhas": linhas, "seta": seta_out, "rotulo": rotulo_out}
 
 
 # ------------------------------------------------------------------- ponte
