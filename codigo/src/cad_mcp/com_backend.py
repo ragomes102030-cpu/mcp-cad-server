@@ -2092,7 +2092,7 @@ class ComBackend(AutoCADBackend):
             '(list (cons 0 "TABLE") (cons 100 "AcDbEntity") (cons 8 "%s")'
             ' (cons 100 "AcDbTable") (cons 10 (list %s %s 0.0))'
             ' (cons 90 %d) (cons 70 %d) (cons 71 1) (cons 72 1)'  # flags
-            ' (cons 170 0) (cons 171 0) (cons 280 "%s")%s)'  # title, column defs
-            % (lay, x, y, num_rows, num_cols, title or "", col_defs)
+            ' (cons 170 0) (cons 171 0) (cons 280 0)%s)'  # flags, column defs
+                        % (lay, x, y, num_rows, num_cols, col_defs)
         )
         return self._aval(self._handle(body))
