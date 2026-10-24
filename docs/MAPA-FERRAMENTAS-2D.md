@@ -1,12 +1,13 @@
-# Mapa das ferramentas CAD (2D) — 123 tools
+# Mapa das ferramentas CAD (2D) — 125 tools
 
-Fonte: `codigo/src/cad_mcp` @ HEAD `beaed85`. **Somente 2D** (nenhuma ferramenta 3D).
+Fonte: `codigo/src/cad_mcp` @ HEAD `0ee4cd6`. **Somente 2D** (nenhuma ferramenta 3D).
 
 | categoria | tools |
 |---|---|
 | Desenho | 15 |
 | Edicao | 22 |
 | Consulta | 5 |
+| Simbolos | 2 |
 | Camada/estilo | 16 |
 | Bloco | 5 |
 | Cota/anotacao | 6 |
@@ -17,7 +18,7 @@ Fonte: `codigo/src/cad_mcp` @ HEAD `beaed85`. **Somente 2D** (nenhuma ferramenta
 | Visualizacao | 4 |
 | Sistema | 5 |
 | Quantitativo | 1 |
-| **TOTAL** | **123** |
+| **TOTAL** | **125** |
 
 ## Desenho (15)
 
@@ -75,6 +76,13 @@ Fonte: `codigo/src/cad_mcp` @ HEAD `beaed85`. **Somente 2D** (nenhuma ferramenta
 | `point_from_snap` | Ponto exato de uma entidade: endpoint, midpoint, center, quadrant ou perpendicular. | handle, snap, ref_x, ref_y |
 | `point_tangent` | Ponto de tangencia de uma reta que sai de um ponto externo ate' um circulo/arco. | circle_handle, from_x, from_y, ref_x, ref_y |
 | `selection_window` | Lista o que cai dentro (ou cruza) uma janela retangular. Nao seleciona de fato. | x1, y1, x2, y2, modo, entity_type, layer |
+
+## Simbolos (2)
+
+| ferramenta | o que faz | parametros |
+|---|---|---|
+| `place_symbol` | Coloca um simbolo do catalogo num ponto livre (rotacao em GRAUS). | symbol, x, y, rotation, scale, layer |
+| `place_symbol_on_wall` | Coloca um simbolo NA PAREDE: a `offset` do inicio do eixo, deslocado `side` | wall, offset, symbol, side, distance, rot_offset, scale, layer |
 
 ## Camada/estilo (16)
 
@@ -209,4 +217,4 @@ Fonte: `codigo/src/cad_mcp` @ HEAD `beaed85`. **Somente 2D** (nenhuma ferramenta
 
 ## Lacunas para disciplinas (eletrica / hidraulica)
 
-Nao existem hoje: catalogo de simbolos por disciplina, colocacao de simbolo na parede por offset, roteamento de servico (fiacao/tubo com diametro e quantitativo), modelo de pavimentos. Base atual: `entity_create_*`, `block_*`, `hatch_*`, `arch_*`, `quantitativo`.
+P1 IMPLEMENTADO: catalogo (`catalogue.py`, 11 simbolos) + `place_symbol` + `place_symbol_on_wall` + layers por disciplina (E-TOMADA/E-ILUM/E-QUADRO/H-*). Falta: P2 roteamento de servico (`service_run`), P3 legenda/quadro de cargas, P4 multi-pavimento.

@@ -799,6 +799,86 @@ async def arch_stair(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
     return {"ok": True, "payload": geo}
 
 
+async def place_symbol(symbol: str, x: float, y: float, rotation: float = 0.0,
+                       scale: float = 1.0, layer: str | None = None) -> dict:
+    """Coloca um simbolo do catalogo num ponto livre (rotacao em GRAUS).
+
+    Simbolos: tomada_baixa, tomada_media, interruptor, luminaria_teto, quadro,
+    ponto_teto (eletrica) / bacia, lavatorio, chuveiro, ralo, registro (hidraulica).
+    A camada vem do catalogo (E-TOMADA, E-ILUM, H-AGUA-FRIA...) salvo `layer`.
+    """
+    from .catalogue import transformar
+
+    try:
+        geo = transformar(symbol, x, y, rotation=rotation, scale=scale)
+    except ValueError as e:
+        return {"ok": False, "erro": str(e)}
+
+    b = await _b()
+    lay = layer or geo["camada"]
+    handles = []
+    for prim in geo["primitivas"]:
+        kind = prim[0]
+        if kind == "line":
+            r = await b.create_line(prim[1], prim[2], prim[3], prim[4], layer=lay)
+        elif kind == "circle":
+            r = await b.create_circle(prim[1], prim[2], prim[3], layer=lay)
+        elif kind == "arc":
+            r = await b.create_arc(prim[1], prim[2], prim[3], prim[4], prim[5], layer=lay)
+        elif kind == "poly":
+            r = await b.create_polyline([[p[0], p[1]] for p in prim[1]],
+                                        closed=prim[2], layer=lay)
+        else:
+            continue
+        if r.ok:
+            handles.append(r.payload)
+    return {"ok": True, "payload": {"symbol": symbol, "camada": lay,
+                                    "handles": handles, "count": len(handles)}}
+
+
+async def place_symbol_on_wall(wall: str, offset: float, symbol: str, side: int = 1,
+                               distance: float | None = None, rot_offset: float = 0.0,
+                               scale: float = 1.0, layer: str | None = None) -> dict:
+    """Coloca um simbolo NA PAREDE: a `offset` do inicio do eixo, deslocado `side`
+    (+1/-1) por `distance` (default: meia espessura + 0,05). Alinha com a parede.
+
+    Reusa a leitura de vertices do `arch_opening`. Bom para tomada/interruptor
+    em parede e para registro/ralo em parede.
+    """
+    import math as _m
+    import re as _re
+    from .arch import Parede, ponto_no_eixo
+    from .com_backend import _q
+
+    b = await _b()
+    ok, linhas, erro = b._eval_lines('(entget (handent "%s"))' % _q(wall))
+    if not ok or not linhas:
+        return {"ok": False, "erro": "nao consegui ler a parede: %s" % (erro or "sem dados")}
+    text = linhas[0]
+    verts = [(float(m.group(1)), float(m.group(2)))
+             for m in _re.finditer(r'\(10\s+([\d.-]+)\s+([\d.-]+)\)', text)]
+    if not verts:
+        c10 = _re.findall(r'\(10\s+([\d.-]+)\)', text)
+        c20 = _re.findall(r'\(20\s+([\d.-]+)\)', text)
+        verts = list(zip(map(float, c10), map(float, c20)))
+    if not verts:
+        return {"ok": False, "erro": "parede sem vertices"}
+
+    p = Parede(id="w", eixo=tuple(verts), espessura=0.15)
+    pt, u, _ = ponto_no_eixo(p, offset)
+    n = (-u[1], u[0])
+    dist = distance if distance is not None else (p.espessura / 2.0 + 0.05)
+    px, py = pt[0] + n[0] * side * dist, pt[1] + n[1] * side * dist
+    rot = _m.degrees(_m.atan2(u[1], u[0])) + rot_offset
+
+    res = await place_symbol(symbol, px, py, rotation=rot, scale=scale, layer=layer)
+    if res.get("ok"):
+        res["payload"]["wall"] = wall
+        res["payload"]["offset"] = offset
+        res["payload"]["ponto"] = [px, py]
+    return res
+
+
 # --- novas ops por geometria (ponte .NET ou COM) -----------------------------
 async def _pontes_trim(alvo: str, corte: str, keep: list[float]) -> dict:
     """Encurta a reta `alvo` ate' a `corte`, mantendo o lado de `keep`."""
@@ -882,6 +962,8 @@ TOOLS = [
     trim_entity, extend_entity, fillet_entity,
     arch_opening,
     arch_stair,
+    place_symbol,
+    place_symbol_on_wall,
 ]
 
 # --------------------------------------------------------------- vocabulario
@@ -945,6 +1027,8 @@ NOMES = {
     "arch_wall": "arch_wall",
     "arch_opening": "arch_opening",
     "arch_stair": "arch_stair",
+    "place_symbol": "place_symbol",
+    "place_symbol_on_wall": "place_symbol_on_wall",
 }
 
 
