@@ -839,3 +839,93 @@ NOMES = {
     "leader_create_mleader": "leader_create_mleader",
     "block_define": "block_define",
 }
+import asyncio
+
+async def north_arrow(x, y, size=1.0):
+    b = await _b()
+    handles = []
+    r = await b.create_line(x, y, x, y + size, layer="A-TEXTO")
+    if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    r = await b.create_polyline([[x, y + size], [x - size*0.25, y + size*0.7],
+                                 [x + size*0.25, y + size*0.7], [x, y + size]],
+                                closed=True, layer="A-TEXTO")
+    if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    r = await b.create_text(x - size*0.15, y + size*0.35, "N", height=size*0.35, rotation=0.0, layer="A-TEXTO")
+    if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    return {"ok": True, "payload": {"handles": handles, "count": len(handles)}}
+
+async def scale_bar(x, y, length=5.0, escala="1:50"):
+    b = await _b()
+    handles = []
+    r = await b.create_line(x, y, x + length, y, layer="A-COTAS")
+    if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    for i in range(int(length) + 1):
+        r = await b.create_line(x + i, y, x + i, y + 0.15, layer="A-COTAS")
+        if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    r = await b.create_text(x, y - 0.3, "0", height=0.18, rotation=0.0, layer="A-COTAS")
+    if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    r = await b.create_text(x + length, y - 0.3, str(int(length)) + "m", height=0.18, rotation=0.0, layer="A-COTAS")
+    if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    r = await b.create_text(x + length/2, y - 0.6, "ESCALA " + escala, height=0.20, rotation=0.0, layer="A-COTAS")
+    if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    return {"ok": True, "payload": {"handles": handles, "count": len(handles)}}
+
+async def section_line(x1, y1, x2, y2, label="A"):
+    b = await _b()
+    handles = []
+    r = await b.create_line(x1, y1, x2, y2, layer="A-COTAS")
+    if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    dx, dy = x2 - x1, y2 - y1
+    L = (dx*dx + dy*dy) ** 0.5
+    if L > 0:
+        nx, ny = -dy/L, dx/L
+        s = 0.3
+        r = await b.create_polyline([[x1, y1], [x1 + nx*s + dx/L*s, y1 + ny*s + dy/L*s],
+                                     [x1 - nx*s + dx/L*s, y1 - ny*s + dy/L*s], [x1, y1]],
+                                    closed=True, layer="A-COTAS")
+        if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+        r = await b.create_polyline([[x2, y2], [x2 - nx*s - dx/L*s, y2 - ny*s - dy/L*s],
+                                     [x2 + nx*s - dx/L*s, y2 + ny*s - dy/L*s], [x2, y2]],
+                                    closed=True, layer="A-COTAS")
+        if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    r = await b.create_text(x1 - 0.4, y1, label, height=0.25, rotation=0.0, layer="A-COTAS")
+    if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    r = await b.create_text(x2 + 0.4, y2, label, height=0.25, rotation=0.0, layer="A-COTAS")
+    if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    return {"ok": True, "payload": {"handles": handles, "count": len(handles)}}
+
+async def title_block(x, y, width=8.0, height=5.0, projeto="PROJETO", cliente="CLIENTE",
+                      escala="1:50", data="24/10/2026", responsavel="ENG. CIVIL",
+                      crea="CREA 000000", folha="01/01", revisao="A"):
+    b = await _b()
+    handles = []
+    r = await b.create_polyline([[x, y], [x+width, y], [x+width, y+height], [x, y+height], [x, y]],
+                                closed=True, layer="A-TEXTO")
+    if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    for i in range(1, 5):
+        yy = y + i * (height/5)
+        r = await b.create_line(x, yy, x+width, yy, layer="A-TEXTO")
+        if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    r = await b.create_line(x+width/2, y, x+width/2, y+height, layer="A-TEXTO")
+    if r.ok: handles.append(r.payload if isinstance(r.payload, str) else r.payload.get("handle"))
+    h = 0.18
+    await b.create_text(x+0.2, y+height-0.3, "PROJETO: " + projeto, height=h, rotation=0.0, layer="A-TEXTO")
+    await b.create_text(x+0.2, y+height*0.8-0.3, "CLIENTE: " + cliente, height=h, rotation=0.0, layer="A-TEXTO")
+    await b.create_text(x+0.2, y+height*0.6-0.3, "ESCALA: " + escala, height=h, rotation=0.0, layer="A-TEXTO")
+    await b.create_text(x+0.2, y+height*0.4-0.3, "DATA: " + data, height=h, rotation=0.0, layer="A-TEXTO")
+    await b.create_text(x+0.2, y+height*0.2-0.3, "FOLHA: " + folha, height=h, rotation=0.0, layer="A-TEXTO")
+    await b.create_text(x+width/2+0.2, y+height-0.3, "RESP: " + responsavel, height=h, rotation=0.0, layer="A-TEXTO")
+    await b.create_text(x+width/2+0.2, y+height*0.8-0.3, crea, height=h, rotation=0.0, layer="A-TEXTO")
+    await b.create_text(x+width/2+0.2, y+height*0.6-0.3, "REVISAO: " + revisao, height=h, rotation=0.0, layer="A-TEXTO")
+    await b.create_text(x+width/2+0.2, y+height*0.4-0.3, "NBR 6492", height=h, rotation=0.0, layer="A-TEXTO")
+    return {"ok": True, "payload": {"handles": handles, "count": len(handles)}}
+
+
+# --- anotacoes de apresentacao (adicionadas na rodada de refinamento) ---
+TOOLS.extend([north_arrow, scale_bar, section_line, title_block])
+NOMES.update({
+    "north_arrow": "north_arrow",
+    "scale_bar": "scale_bar",
+    "section_line": "section_line",
+    "title_block": "title_block",
+})
