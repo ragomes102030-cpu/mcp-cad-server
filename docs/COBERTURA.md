@@ -4,7 +4,7 @@ Gerado por `python tools/importar_acmpro.py`. Não editar à mão.
 
 | | deles | nossos | mesmo nome |
 |---|---|---|---|
-| total | 247 | 119 | 108 |
+| total | 247 | 120 | 109 |
 
 **Mesmo nome não é a mesma ferramenta.** `drawing_save` deles e o nosso fazem
 coisas diferentes nos detalhes. A comparação serve para achar **buraco**, não
@@ -17,7 +17,7 @@ para dizer que já temos.
 | desenho | 31 | 19 | 12 |
 | plot/arquivo | 30 | 24 | 6 |
 | camada/estilo | 30 | 17 | 13 |
-| edicao | 29 | 19 | 10 |
+| edicao | 29 | 20 | 9 |
 | consulta | 24 | 6 | 18 |
 | sistema | 23 | 4 | 19 |
 | arquitetura | 19 | 9 | 10 |
@@ -90,6 +90,7 @@ para dizer que já temos.
 | entity_create_spline | `entity_create_spline` | sim | Draw a smooth NURBS curve through fit points. |
 | entity_create_table | `entity_create_table` | sim | Place a parts list, BOM or schedule as a table with headers and rows. |
 | entity_create_text | `entity_create_text` | sim | Place a single-line text label. |
+| entity_delete | `entity_delete` | sim | Erase one entity by handle. |
 | entity_delete_many | `entity_delete_many` | sim | Erase a whole list of entities in one call. |
 | entity_edit_text | `entity_edit_text` | sim | Reword a label, or change its height or rotation, keeping its handle. |
 | entity_erase | `entity_erase` | **não** | só nossa |
@@ -199,10 +200,9 @@ para dizer que já temos.
 - `layer_state_list` — List the layer states saved in this drawing.
 - `layer_state_delete` — Delete one saved layer state from the drawing.
 
-### edicao (11)
+### edicao (10)
 
 - `hatch_set_gradient` — Replace a hatch's fill with a two-colour gradient.
-- `entity_delete` — Erase one entity by handle.
 - `text_set_background` — Put an opaque background box behind an MTEXT.
 - `entity_edit_geometry` — Change a circle's radius, a line's endpoints or an arc's angles in place.
 - `entity_set_xdata` — Attach or replace extended data (XDATA) on an entity.

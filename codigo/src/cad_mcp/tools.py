@@ -75,6 +75,11 @@ async def erase(entity_id: str) -> dict:
     return _r(await (await _b()).entity_erase(entity_id))
 
 
+async def entity_delete(entity_id: str) -> dict:
+    """Apaga UMA entidade pelo handle (alias para entity_erase)."""
+    return await erase(entity_id)
+
+
 async def erase_filter(layer: str | None = None, tipo: str | None = None,
                        texto: str | None = None, confirmar: bool = False) -> dict:
     """Apaga em bloco por camada / tipo DXF / conteudo exato de texto.
@@ -624,7 +629,7 @@ async def fillet_entity(h1: str, h2: str, raio: float, trim: bool = True,
 
 TOOLS = [
     cad_status,
-    inspect_drawing, query_entities, erase, erase_filter, move_entity,
+    inspect_drawing, query_entities, erase, entity_delete, erase_filter, move_entity,
     copy_entity, copy_filter, mirror_filter, rotate_filter,
     rotate_entity, mirror_entity, offset_entity,
     layer_list, linetype_load, block_list, quantitativo,
@@ -696,6 +701,7 @@ NOMES = {
     "trim_entity": "entity_trim",
     "extend_entity": "entity_extend",
     "fillet_entity": "entity_fillet",
+    "entity_delete": "entity_delete",
 }
 
 
