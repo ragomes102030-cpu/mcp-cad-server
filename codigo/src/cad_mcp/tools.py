@@ -590,6 +590,137 @@ async def arch_wall(walls: list[list[list[float]]], poche: bool = False) -> dict
     return {"ok": True, "payload": {"handles": handles, "count": len(handles)}}
 
 
+async def arch_opening(wall: str, offset: float, width: float,
+                      kind: str = "door", swing: str = "left",
+                      hand: str = "start", sill: float = 0.0,
+                      height: float = 2.10, tag: str | None = None,
+                      opening_id: str | None = None, lang: str = "pt",
+                      poche: bool = False) -> dict:
+    """Host a door or a window in a drawn wall by distance along it; the wall is cut.
+    
+    Implementacao baseada no modulo arch.py. A parede deve ja' existir no desenho.
+    
+    Argumentos:
+        wall: handle da parede (polyline na camada PAREDES)
+        offset: distancia do inicio da parede ate o inicio da abertura
+        width: largura da abertura
+        kind: tipo - "door", "window" ou "void"
+        swing: direcao de abertura - "left" (esquerda) ou "right" (direita)
+        hand: lado da dobradica - "start" (inicio) ou "end" (fim)
+        sill: peitoril (altura do piso ate o inicio da janela)
+        height: altura total da abertura
+        tag: etiqueta opcional
+        opening_id: ID unico da abertura
+        lang: idioma para etiquetas
+        poche: preencher com material poché
+    
+    Retorna dict com handles das entidades criadas.
+    """
+    from .arch import Parede, Abertura, primitivas, validar, trechos
+    from .com_backend import _q  # para escapar strings no LISP
+    
+    b = await _b()
+    
+    # Obter os vertices da polyline usando LISP direto
+    # Chamar _eval_lines para obter o texto bruto
+    lisp_code = '(entget (handent "%s"))' % _q(wall)
+    ok, linhas, erro = b._eval_lines(lisp_code)
+    if not ok:
+        return {"ok": False, "erro": "nao conseguiu ler vertices da parede: %s" % erro}
+    
+    if not linhas:
+        return {"ok": False, "erro": "entget nao retornou dados"}
+    
+    # Parsear manualmente a lista DXF para extrair vertices (códigos 10 e 20)
+    # A string está no formato: ((-1 . <Entity...) (0 . "LWPOLYLINE") (10 x y) (10 x2 y2) ...)
+    # Precisamos extrair todos os pares (10 x y) ou (10 x 20 y)
+    import re
+    text = linhas[0]
+    
+    # Extrair todos os padrões: (10 número número) ou (10 número) (20 número)
+    # O formato pode ser: (10 x y) ou (10 x) (20 y)
+    vertices = []
+    
+    # Encontrar todos os (10 x y) onde x e y são números
+    pattern1 = r'\(10\s+([\d.-]+)\s+([\d.-]+)\)'
+    for m in re.finditer(pattern1, text):
+        vertices.append((float(m.group(1)), float(m.group(2))))
+    
+    # Se não encontrou, tentar padrão (10 x) (20 y)
+    if not vertices:
+        coords_10 = re.findall(r'\(10\s+([\d.-]+)\)', text)
+        coords_20 = re.findall(r'\(20\s+([\d.-]+)\)', text)
+        vertices = list(zip(map(float, coords_10), map(float, coords_20)))
+    
+    if not vertices:
+        return {"ok": False, "erro": "parede sem vertices na entidade"}
+    
+    eixo = tuple(vertices)
+    
+    # Criar objetos Parede e Abertura
+    p = Parede(id="temp_wall", eixo=eixo, espessura=0.15, altura=2.70)
+    
+    # Mapear parâmetros
+    tipo_map = {"door": "porta", "window": "janela", "void": "vao"}
+    gira_map = {"left": "esquerda", "right": "direita"}
+    dob_map = {"start": "inicio", "end": "fim"}
+    
+    ab = Abertura(
+        id=opening_id or "A1",
+        parede="temp_wall",
+        tipo=tipo_map.get(kind, "porta"),
+        offset=offset,
+        largura=width,
+        altura=height,
+        peitoril=sill,
+        dobradica=dob_map.get(hand, "inicio"),
+        gira=gira_map.get(swing, "esquerda")
+    )
+    
+    # Validar
+    try:
+        validar([p], [ab])
+    except ValueError as e:
+        return {"ok": False, "erro": str(e)}
+    
+    # Obter primitivas para desenhar
+    prim = primitivas(p, ab)
+    
+    # Desenhar de acordo com o tipo
+    handles = []
+    layer = "PAREDES"
+    
+    if ab.tipo == "porta" and "arco" in prim:
+        # Desenhar arco da porta
+        cx, cy, r, a1, a2 = prim["arco"]
+        result = await b.create_arc(cx, cy, r, a1, a2, layer=layer)
+        if result.ok:
+            handles.append(result.payload)
+    elif ab.tipo == "janela" and "linhas" in prim:
+        # Desenhar linhas da janela
+        for (x1, y1), (x2, y2) in prim["linhas"]:
+            result = await b.create_line(x1, y1, x2, y2, layer=layer)
+            if result.ok:
+                handles.append(result.payload)
+    
+    # Cortar o trecho da parede onde fica a abertura
+    if ab.tipo in ("porta", "janela", "vao"):
+        # Obter os trechos da parede sem a abertura
+        trechos_parede = trechos(p, [ab])
+        
+        # Apagar a parede original
+        await b.entity_erase(wall)
+        
+        # Redesenhar a parede com os trechos como polylines
+        # Converter trechos para polylines (cada trecho é uma polyline de 2 pontos)
+        for (x1, y1), (x2, y2) in trechos_parede:
+            result = await b.create_polyline([[x1, y1], [x2, y2]], closed=False, layer="PAREDES")
+            if result.ok:
+                handles.append(result.payload)
+    
+    return {"ok": True, "payload": {"handles": handles, "opening_id": ab.id}}
+
+
 # --- novas ops por geometria (ponte .NET ou COM) -----------------------------
 async def _pontes_trim(alvo: str, corte: str, keep: list[float]) -> dict:
     """Encurta a reta `alvo` ate' a `corte`, mantendo o lado de `keep`."""
@@ -671,6 +802,7 @@ TOOLS = [
     block_insert, block_attributes, block_set_attribute,
     desenhar_ambiente, arch_wall,
     trim_entity, extend_entity, fillet_entity,
+    arch_opening,
 ]
 
 # --------------------------------------------------------------- vocabulario
@@ -732,6 +864,7 @@ NOMES = {
     "fillet_entity": "entity_fillet",
     "entity_delete": "entity_delete",
     "arch_wall": "arch_wall",
+    "arch_opening": "arch_opening",
 }
 
 
