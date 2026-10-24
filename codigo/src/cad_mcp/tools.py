@@ -563,32 +563,50 @@ async def quantitativo(layer: str | None = None) -> dict:
     return dados
 
 
-async def arch_wall(walls: list[list[list[float]]], poche: bool = False) -> dict:
-    """Desenha paredes de uma planta baixa.
+async def arch_wall(walls: list[list[list[float]]], poche: bool = False,
+                    espessura: float = 0.15) -> dict:
+    """Desenha paredes de uma planta baixa como MUROS (retangulo fechado com
+    hachura solida preta), espessura em metros (default 0.15).
 
     Argumentos:
-        walls: lista de paredes, cada parede é uma lista de pontos [[x1, y1], [x2, y2], ...]
-               que definem a polilinha da parede
-        poche: se True, preenche com material poché (hachura)
+        walls: lista de paredes, cada parede e uma lista de pontos [[x1,y1],...]
+        poche: se True, hachura solida (SOLID) no interior do muro
+        espessura: espessura do muro em metros (default 0.15)
 
     Retorna lista de handles das paredes criadas.
     """
+    import math
     b = await _b()
     handles = []
-    
+
     for wall_points in walls:
         if len(wall_points) < 2:
             continue
-        result = await b.create_polyline(wall_points, closed=False, layer="PAREDES")
-        if result.ok:
-            handle = result.payload if isinstance(result.payload, str) else (
-                result.payload.get("handle") if isinstance(result.payload, dict) else None
-            )
-            if handle:
-                handles.append(handle)
-                if poche:
-                    await b.create_hatch(handle, pattern="ANSI31")
-    
+        for i in range(len(wall_points) - 1):
+            p0 = wall_points[i]
+            p1 = wall_points[i + 1]
+            dx = p1[0] - p0[0]
+            dy = p1[1] - p0[1]
+            L = math.hypot(dx, dy)
+            if L < 1e-9:
+                continue
+            nx, ny = -dy / L, dx / L
+            h = espessura / 2.0
+            a = (p0[0] + nx * h, p0[1] + ny * h)
+            bb = (p1[0] + nx * h, p1[1] + ny * h)
+            c = (p1[0] - nx * h, p1[1] - ny * h)
+            d = (p0[0] - nx * h, p0[1] - ny * h)
+            rect = [list(a), list(bb), list(c), list(d), list(a)]
+            r = await b.create_polyline(rect, closed=True, layer="PAREDES")
+            if r.ok:
+                handle = r.payload if isinstance(r.payload, str) else (
+                    r.payload.get("handle") if isinstance(r.payload, dict) else None
+                )
+                if handle:
+                    handles.append(handle)
+                    if poche:
+                        await b.create_hatch(handle, pattern="SOLID")
+
     return {"ok": True, "payload": {"handles": handles, "count": len(handles)}}
 
 
