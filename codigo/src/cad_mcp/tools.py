@@ -561,6 +561,35 @@ async def quantitativo(layer: str | None = None) -> dict:
     return dados
 
 
+async def arch_wall(walls: list[list[list[float]]], poche: bool = False) -> dict:
+    """Desenha paredes de uma planta baixa.
+
+    Argumentos:
+        walls: lista de paredes, cada parede é uma lista de pontos [[x1, y1], [x2, y2], ...]
+               que definem a polilinha da parede
+        poche: se True, preenche com material poché (hachura)
+
+    Retorna lista de handles das paredes criadas.
+    """
+    b = await _b()
+    handles = []
+    
+    for wall_points in walls:
+        if len(wall_points) < 2:
+            continue
+        result = await b.create_polyline(wall_points, closed=False, layer="PAREDES")
+        if result.ok:
+            handle = result.payload if isinstance(result.payload, str) else (
+                result.payload.get("handle") if isinstance(result.payload, dict) else None
+            )
+            if handle:
+                handles.append(handle)
+                if poche:
+                    await b.create_hatch(handle, pattern="ANSI31")
+    
+    return {"ok": True, "payload": {"handles": handles, "count": len(handles)}}
+
+
 # --- novas ops por geometria (ponte .NET ou COM) -----------------------------
 async def _pontes_trim(alvo: str, corte: str, keep: list[float]) -> dict:
     """Encurta a reta `alvo` ate' a `corte`, mantendo o lado de `keep`."""
@@ -640,7 +669,7 @@ TOOLS = [
     draw_text, draw_mtext, draw_hatch, entity_create_table, dim_linear, dim_aligned,
     layer_create, layer_set_current, ensure_standard_layers,
     block_insert, block_attributes, block_set_attribute,
-    desenhar_ambiente,
+    desenhar_ambiente, arch_wall,
     trim_entity, extend_entity, fillet_entity,
 ]
 
@@ -702,6 +731,7 @@ NOMES = {
     "extend_entity": "entity_extend",
     "fillet_entity": "entity_fillet",
     "entity_delete": "entity_delete",
+    "arch_wall": "arch_wall",
 }
 
 

@@ -4,7 +4,7 @@ Gerado por `python tools/importar_acmpro.py`. Não editar à mão.
 
 | | deles | nossos | mesmo nome |
 |---|---|---|---|
-| total | 247 | 120 | 109 |
+| total | 247 | 121 | 110 |
 
 **Mesmo nome não é a mesma ferramenta.** `drawing_save` deles e o nosso fazem
 coisas diferentes nos detalhes. A comparação serve para achar **buraco**, não
@@ -20,7 +20,7 @@ para dizer que já temos.
 | edicao | 29 | 20 | 9 |
 | consulta | 24 | 6 | 18 |
 | sistema | 23 | 4 | 19 |
-| arquitetura | 19 | 9 | 10 |
+| arquitetura | 19 | 10 | 9 |
 | mecanica | 13 | 0 | 13 |
 | bloco | 11 | 6 | 5 |
 | cota/anotacao | 9 | 5 | 4 |
@@ -40,6 +40,7 @@ para dizer que já temos.
 | arch_room | `arch_room` | sim | Label a room with its name, number and measured area. |
 | arch_rooms_detect | `arch_rooms_detect` | sim | Find the rooms of any plan and measure them; never modifies it. |
 | arch_symbol | `arch_symbol` | sim | Draw a plan symbol: north arrow, section mark, level mark or elevation |
+| arch_wall | `arch_wall` | sim | Add walls to the plan: clean L/T/X junctions, cut openings, material p |
 | batch_plot | `batch_plot` | sim | Plot every sheet (or the named ones) to PDF; each sheet size is read b |
 | block_define | `block_define` | sim | Define a block from typed primitives and attribute definitions, on bot |
 | block_get_attributes | `block_get_attributes` | sim | Read the tag/value pairs off a block reference. |
@@ -256,11 +257,10 @@ para dizer que já temos.
 - `system_variable_describe` — Explain a system variable: type, range, default, where it is saved, which engine honours it.
 - `data_extract` — Write the bill of materials to a CSV file, or to XLSX when openpyxl is present.
 
-### arquitetura (11)
+### arquitetura (10)
 
 - `bom_extract` — Read the bill of materials out of the drawing's block references.
 - `bom_table` — Draw the parts list as a real TABLE above the title block.
-- `arch_wall` — Add walls to the plan: clean L/T/X junctions, cut openings, material poché.
 - `arch_opening` — Host a door or a window in a drawn wall by distance along it; the wall is cut.
 - `arch_stair` — Draw a straight, L or U stair in plan and report its Blondel step rule.
 - `arch_schedule` — Draw a door, window or room schedule from the plan records.

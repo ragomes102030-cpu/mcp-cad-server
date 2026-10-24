@@ -1,7 +1,7 @@
 # Mapa do COM do AutoCAD 2025 (type library oficial)
 
 Fonte: `acax25enu.tlb` (lida com `comtypes`; o AutoCAD não precisa estar aberto).
-Gerado por `tools/mapear_com.py` em 2026-10-23T22:21:19-03:00. Não editar à mão.
+Gerado por `tools/mapear_com.py` em 2026-10-23T22:23:42-03:00. Não editar à mão.
 
 | | |
 |---|---|
