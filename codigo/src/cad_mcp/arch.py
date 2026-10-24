@@ -277,7 +277,7 @@ def primitivas(p: Parede, ab: Abertura) -> dict:
 
 # -------------------------------------------------------------- escada reta (planta)
 def escada_reta(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
-                degraus: int = 11, piso: float = 0.28,
+                degraus: int = 10, piso: float = 0.28,
                 altura_total: float | None = None, angulo: float = 0.0,
                 seta: bool = True, rotulo: str | None = "SUBA",
                 camada: str = "ESCADAS") -> dict:

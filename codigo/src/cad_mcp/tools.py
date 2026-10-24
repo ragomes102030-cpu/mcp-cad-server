@@ -722,7 +722,7 @@ async def arch_opening(wall: str, offset: float, width: float,
 
 
 async def arch_stair(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
-                     degraus: int = 11, piso: float = 0.28,
+                     degraus: int = 10, piso: float = 0.28,
                      altura_total: float | None = 1.80, angulo: float = 0.0,
                      seta: bool = True, rotulo: str | None = "SUBA",
                      camada: str = "ESCADAS", lang: str = "pt") -> dict:
@@ -731,6 +731,8 @@ async def arch_stair(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
     Implementacao baseada no modulo arch.py (`escada_reta`). Desenha um tramo
     reto: duas talaias, (degraus-1) pisadas, uma seta de subida e um rotulo.
     A escada NAO precisa de nada ja' desenhado -- e geometria nova no modelo.
+    Os defaults (1,10 m / 10 degraus / 0,28 m / subida 1,80 m) dao Blondel
+    0,64 m -- dentro da faixa de conforto 0,62..0,66.
 
     Argumentos:
         x, y          -- canto de partida da escada (metros, no modelspace)

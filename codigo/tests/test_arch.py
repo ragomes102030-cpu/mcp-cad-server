@@ -184,6 +184,10 @@ def main() -> int:
            es["seta"] is not None and len(es["seta"]["ponta"]) == 3, es["seta"])
     checar("rotulo SUBA no inicio", es["rotulo"] and es["rotulo"]["texto"] == "SUBA", es["rotulo"])
 
+    es_def = escada_reta()   # defaults puros (altura_total None -> sem Blondel)
+    checar("default degraus = 10 -> comprimento 2,80",
+           es_def["degraus"] == 10 and perto(es_def["comprimento"], 2.80), es_def["degraus"])
+
     es90 = escada_reta(x=0.0, y=0.0, largura=1.0, degraus=4, piso=0.3, angulo=90.0)
     checar("talaias giradas 90 ficam verticais",
            perto(es90["linhas"][0][1][0], 0.0) and perto(es90["linhas"][0][1][1], 1.2),

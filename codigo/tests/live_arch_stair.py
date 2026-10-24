@@ -91,27 +91,27 @@ async def _run(app):
 
     # 4) tool REAL arch_stair via MANAGER/COM
     await MANAGER.reset()
-    res = await arch_stair(x=0.0, y=0.0, largura=1.10, degraus=11, piso=0.28,
+    res = await arch_stair(x=0.0, y=0.0, largura=1.10, degraus=10, piso=0.28,
                            altura_total=1.80, angulo=0.0, seta=True, rotulo="SUBA",
                            camada="ESCADAS", lang="pt")
     checar("arch_stair ok", bool(res.get("ok")), res)
     p = res.get("payload", {}) if res.get("ok") else {}
-    checar("15 entidades (12 linhas + seta(2) + rotulo)", p.get("count") == 15, p.get("count"))
-    checar("15 handles", len(p.get("handles", [])) == 15, len(p.get("handles", [])))
-    checar("comprimento = 11 x 0,28 = 3,08", perto(p.get("comprimento"), 3.08), p.get("comprimento"))
-    checar("blondel = 2*(1,80/11)+0,28 = 0,6073", perto(p.get("blondel"), 0.6073, 1e-3),
-           p.get("blondel"))
+    checar("14 entidades (11 linhas + seta(2) + rotulo)", p.get("count") == 14, p.get("count"))
+    checar("14 handles", len(p.get("handles", [])) == 14, len(p.get("handles", [])))
+    checar("comprimento = 10 x 0,28 = 2,80", perto(p.get("comprimento"), 2.80), p.get("comprimento"))
+    checar("blondel default = 0,64 (conforme)",
+           perto(p.get("blondel"), 0.64) and p.get("blondel_conforme") is True, p.get("blondel"))
 
     # 5) contagem final no doc
     mgr = await MANAGER.get()
     ec2 = await mgr.entity_count()
     n1 = ec2.payload.get("count", 0) if isinstance(ec2.payload, dict) else 0
-    checar("delta de entidades no doc == 15", (n1 - n0) == 15, n1 - n0)
+    checar("delta de entidades no doc == 14", (n1 - n0) == 14, n1 - n0)
 
     # 6) tipos na camada ESCADAS
     ent = (await mgr.entity_list(layer="ESCADAS")).payload.get("entities", [])
     tipos = Counter(e["tipo"] for e in ent)
-    checar("ESCADAS: 13 LINE", tipos.get("LINE") == 13, dict(tipos))
+    checar("ESCADAS: 12 LINE", tipos.get("LINE") == 12, dict(tipos))
     checar("ESCADAS: 1 LWPOLYLINE (seta)", tipos.get("LWPOLYLINE") == 1, dict(tipos))
     checar("ESCADAS: 1 TEXT (rotulo)", tipos.get("TEXT") == 1, dict(tipos))
 
