@@ -17,6 +17,8 @@ from .backend_manager import MANAGER
 from .layers import ensure_standard_layers as _ensure_layers
 from .quantitativo import analisar
 from .bridge import Ponte, PonteIndisponivel as _PonteIndisponivel
+from collections import Counter as _Counter
+_PLACED = _Counter()  # simbolos colocados na sessao (contagem p/ schedule)
 
 
 def _r(res) -> dict:
@@ -832,6 +834,7 @@ async def place_symbol(symbol: str, x: float, y: float, rotation: float = 0.0,
             continue
         if r.ok:
             handles.append(r.payload)
+    _PLACED[symbol] += 1
     return {"ok": True, "payload": {"symbol": symbol, "camada": lay,
                                     "handles": handles, "count": len(handles)}}
 
@@ -915,6 +918,75 @@ async def service_run(points: list[list[float]], service: str = "eletrica",
     comp = comprimento(points, closed=closed)
     return {"ok": True, "payload": {"service": service, "camada": lay,
                                     "handles": handles, "comprimento": round(comp, 3)}}
+
+
+async def _draw_geo(b, geo, layer: str | None = None) -> list:
+    """Desenha as primitivas de um geo SEM registrar em _PLACED (uso: legenda)."""
+    lay = layer or geo["camada"]
+    handles = []
+    for prim in geo["primitivas"]:
+        kind = prim[0]
+        if kind == "line":
+            r = await b.create_line(prim[1], prim[2], prim[3], prim[4], layer=lay)
+        elif kind == "circle":
+            r = await b.create_circle(prim[1], prim[2], prim[3], layer=lay)
+        elif kind == "arc":
+            r = await b.create_arc(prim[1], prim[2], prim[3], prim[4], prim[5], layer=lay)
+        elif kind == "poly":
+            r = await b.create_polyline([[p[0], p[1]] for p in prim[1]],
+                                        closed=prim[2], layer=lay)
+        else:
+            continue
+        if r.ok:
+            handles.append(r.payload)
+    return handles
+
+
+def symbol_counts() -> dict:
+    """Contagem dos simbolos colocados na sessao (relatorio/quantitativo)."""
+    from .catalogue import SIMBOLOS
+    itens = [{"simbolo": s, "nome": SIMBOLOS[s]["nome"], "qtd": n}
+             for s, n in sorted(_PLACED.items()) if s in SIMBOLOS]
+    return {"ok": True, "payload": {"itens": itens, "total": sum(i["qtd"] for i in itens)}}
+
+
+async def symbol_legend(x: float, y: float, discipline: str | None = None,
+                        scale: float = 0.8, passo: float = 0.7) -> dict:
+    """Legenda de simbolos (amostra + nome), opcional por disciplina.
+
+    Desenha cada simbolo do catalogo a partir de (x, y), descendo `passo` por item.
+    """
+    from .catalogue import SIMBOLOS, transformar
+    b = await _b()
+    itens = [(sid, s) for sid, s in sorted(SIMBOLOS.items())
+             if discipline is None or s["disciplina"] == discipline]
+    yy = y
+    for sid, s in itens:
+        geo = transformar(sid, x + 0.35, yy, 0.0, scale)
+        await _draw_geo(b, geo)
+        await b.create_text(x + 0.95, yy - 0.06, s["nome"], height=0.16, layer=geo["camada"])
+        yy -= passo
+    return {"ok": True, "payload": {"itens": [sid for sid, _ in itens], "count": len(itens)}}
+
+
+async def symbol_schedule(x: float, y: float, layer: str = "QUADRO") -> dict:
+    """Quadro de quantitativos: contagem por tipo dos simbolos colocados."""
+    from .catalogue import SIMBOLOS
+    b = await _b()
+    await b.layer_create(layer, color=7, linetype="CONTINUOUS")
+    rows = [(sid, SIMBOLOS[sid]["nome"], n) for sid, n in sorted(_PLACED.items())
+            if sid in SIMBOLOS]
+    h = 0.28
+    await b.create_text(x, y, "QUADRO DE SIMBOLOS", height=h * 1.1, layer=layer)
+    yy = y - h * 1.7
+    total = 0
+    for sid, nome, n in rows:
+        await b.create_text(x, yy, "%s - %s: %d" % (sid, nome, n), height=h * 0.8, layer=layer)
+        yy -= h
+        total += n
+    await b.create_text(x, yy - h * 0.4, "TOTAL: %d" % total, height=h * 0.95, layer=layer)
+    return {"ok": True, "payload": {"itens": [{"simbolo": s, "nome": nm, "qtd": n}
+                                              for s, nm, n in rows], "total": total}}
 
 
 # --- novas ops por geometria (ponte .NET ou COM) -----------------------------
@@ -1003,6 +1075,9 @@ TOOLS = [
     place_symbol,
     place_symbol_on_wall,
     service_run,
+    symbol_legend,
+    symbol_schedule,
+    symbol_counts,
 ]
 
 # --------------------------------------------------------------- vocabulario
@@ -1069,6 +1144,9 @@ NOMES = {
     "place_symbol": "place_symbol",
     "place_symbol_on_wall": "place_symbol_on_wall",
     "service_run": "service_run",
+    "symbol_legend": "symbol_legend",
+    "symbol_schedule": "symbol_schedule",
+    "symbol_counts": "symbol_counts",
 }
 
 

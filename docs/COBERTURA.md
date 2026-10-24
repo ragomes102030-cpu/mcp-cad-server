@@ -21,7 +21,7 @@ para dizer que já temos.
 | consulta | 24 | 6 | 18 |
 | sistema | 23 | 4 | 19 |
 | arquitetura | 19 | 12 | 7 |
-| simbolos | 0 | 2 | 0 |
+| simbolos | 0 | 5 | 0 |
 | servicos | 0 | 1 | 0 |
 | mecanica | 13 | 0 | 13 |
 | bloco | 11 | 6 | 5 |
@@ -48,6 +48,9 @@ para dizer que já temos.
 | place_symbol | `place_symbol` | não | só nossa: símbolo do catálogo em ponto livre (elétrica/hidráulica) |
 | place_symbol_on_wall | `place_symbol_on_wall` | não | só nossa: símbolo na parede por offset |
 | service_run | `service_run` | não | só nossa: roteamento de serviço (fiação/tubo) + comprimento |
+| symbol_legend | `symbol_legend` | não | só nossa: legenda de símbolos (amostra + nome) |
+| symbol_schedule | `symbol_schedule` | não | só nossa: quadro de quantitativos por tipo |
+| symbol_counts | `symbol_counts` | não | só nossa: contagem de símbolos (JSON) |
 | batch_plot | `batch_plot` | sim | Plot every sheet (or the named ones) to PDF; each sheet size is read b |
 | block_define | `block_define` | sim | Define a block from typed primitives and attribute definitions, on bot |
 | block_get_attributes | `block_get_attributes` | sim | Read the tag/value pairs off a block reference. |

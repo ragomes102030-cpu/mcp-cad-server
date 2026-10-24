@@ -1,13 +1,13 @@
-# Mapa das ferramentas CAD (2D) — 126 tools
+# Mapa das ferramentas CAD (2D) — 129 tools
 
-Fonte: `codigo/src/cad_mcp` @ HEAD `ea99572`. **Somente 2D** (nenhuma ferramenta 3D).
+Fonte: `codigo/src/cad_mcp` @ HEAD `7cfbf39`. **Somente 2D** (nenhuma ferramenta 3D).
 
 | categoria | tools |
 |---|---|
 | Desenho | 15 |
 | Edicao | 22 |
 | Consulta | 5 |
-| Simbolos | 2 |
+| Simbolos | 5 |
 | Servicos | 1 |
 | Camada/estilo | 16 |
 | Bloco | 5 |
@@ -19,7 +19,7 @@ Fonte: `codigo/src/cad_mcp` @ HEAD `ea99572`. **Somente 2D** (nenhuma ferramenta
 | Visualizacao | 4 |
 | Sistema | 5 |
 | Quantitativo | 1 |
-| **TOTAL** | **126** |
+| **TOTAL** | **129** |
 
 ## Desenho (15)
 
@@ -78,12 +78,15 @@ Fonte: `codigo/src/cad_mcp` @ HEAD `ea99572`. **Somente 2D** (nenhuma ferramenta
 | `point_tangent` | Ponto de tangencia de uma reta que sai de um ponto externo ate' um circulo/arco. | circle_handle, from_x, from_y, ref_x, ref_y |
 | `selection_window` | Lista o que cai dentro (ou cruza) uma janela retangular. Nao seleciona de fato. | x1, y1, x2, y2, modo, entity_type, layer |
 
-## Simbolos (2)
+## Simbolos (5)
 
 | ferramenta | o que faz | parametros |
 |---|---|---|
 | `place_symbol` | Coloca um simbolo do catalogo num ponto livre (rotacao em GRAUS). | symbol, x, y, rotation, scale, layer |
 | `place_symbol_on_wall` | Coloca um simbolo NA PAREDE: a `offset` do inicio do eixo, deslocado `side` | wall, offset, symbol, side, distance, rot_offset, scale, layer |
+| `symbol_counts` | Contagem dos simbolos colocados na sessao (relatorio/quantitativo). |  |
+| `symbol_legend` | Legenda de simbolos (amostra + nome), opcional por disciplina. | x, y, discipline, scale, passo |
+| `symbol_schedule` | Quadro de quantitativos: contagem por tipo dos simbolos colocados. | x, y, layer |
 
 ## Servicos (1)
 
@@ -224,4 +227,4 @@ Fonte: `codigo/src/cad_mcp` @ HEAD `ea99572`. **Somente 2D** (nenhuma ferramenta
 
 ## Lacunas para disciplinas (eletrica / hidraulica)
 
-P1 IMPLEMENTADO (catalogo + place_symbol/place_symbol_on_wall) e P2 IMPLEMENTADO (service_run: fiacao/eletroduto/tubo com camada/cor por servico + comprimento). Falta: P3 legenda/quadro de cargas, P4 multi-pavimento.
+P1 (catalogo+place_symbol), P2 (service_run) e P3 (symbol_legend/symbol_schedule/symbol_counts) IMPLEMENTADOS. Falta: P4 multi-pavimento (2D por andar).
