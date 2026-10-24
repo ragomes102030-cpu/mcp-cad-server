@@ -395,7 +395,16 @@ class ComBackend(AutoCADBackend):
             expr = '(sslength (ssget "_X" (list (cons 8 "%s"))))' % _q(layer)
         else:
             expr = '(vla-get-Count (vla-get-ModelSpace (vla-get-ActiveDocument (vlax-get-acad-object))))'
-        return self._aval(expr)
+        r = self._aval(expr)
+        if r.ok:
+            # Contrato comum aos backends (ezdxf/file_ipc): payload {"count": N}.
+            # Antes o COM devolvia um int cru e o consumidor quebrava.
+            try:
+                n = int(r.payload)
+            except (TypeError, ValueError):
+                n = 0
+            r.payload = {"count": n}
+        return r
 
     async def layer_list(self) -> CommandResult:
         expr = (
@@ -459,7 +468,8 @@ class ComBackend(AutoCADBackend):
         try:
             self._conectar()
             if not name:
-                novo = self._chamar(self._app.Documents.Add)
+                self._chamar(self._app.Documents.Add)
+                novo = self._chamar(lambda: self._app.ActiveDocument)
                 self._doc = novo
                 return CommandResult(ok=True, payload={"documento": self._chamar(lambda: novo.Name),
                                                        "reutilizado": False})
@@ -475,7 +485,11 @@ class ComBackend(AutoCADBackend):
                     pass
                 return CommandResult(ok=True, payload={"documento": self._chamar(lambda: aberto.Name),
                                                        "caminho": str(alvo), "reutilizado": True})
-            novo = self._chamar(self._app.Documents.Add)
+            self._chamar(self._app.Documents.Add)
+            # `Documents.Add` devolve objeto sem type-info (binding tardio): `.Name`
+            # e `.SaveAs` nele estouram ("Add.Name"). ActiveDocument e' a referencia
+            # confiavel (ver licao #4 no topo do modulo).
+            novo = self._chamar(lambda: self._app.ActiveDocument)
             self._doc = novo
             try:
                 self._chamar(novo.SaveAs, str(alvo).replace("\\", "/"))
