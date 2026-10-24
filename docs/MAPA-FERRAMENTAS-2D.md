@@ -1,6 +1,6 @@
-# Mapa das ferramentas CAD (2D) — 125 tools
+# Mapa das ferramentas CAD (2D) — 126 tools
 
-Fonte: `codigo/src/cad_mcp` @ HEAD `0ee4cd6`. **Somente 2D** (nenhuma ferramenta 3D).
+Fonte: `codigo/src/cad_mcp` @ HEAD `ea99572`. **Somente 2D** (nenhuma ferramenta 3D).
 
 | categoria | tools |
 |---|---|
@@ -8,6 +8,7 @@ Fonte: `codigo/src/cad_mcp` @ HEAD `0ee4cd6`. **Somente 2D** (nenhuma ferramenta
 | Edicao | 22 |
 | Consulta | 5 |
 | Simbolos | 2 |
+| Servicos | 1 |
 | Camada/estilo | 16 |
 | Bloco | 5 |
 | Cota/anotacao | 6 |
@@ -18,7 +19,7 @@ Fonte: `codigo/src/cad_mcp` @ HEAD `0ee4cd6`. **Somente 2D** (nenhuma ferramenta
 | Visualizacao | 4 |
 | Sistema | 5 |
 | Quantitativo | 1 |
-| **TOTAL** | **125** |
+| **TOTAL** | **126** |
 
 ## Desenho (15)
 
@@ -83,6 +84,12 @@ Fonte: `codigo/src/cad_mcp` @ HEAD `0ee4cd6`. **Somente 2D** (nenhuma ferramenta
 |---|---|---|
 | `place_symbol` | Coloca um simbolo do catalogo num ponto livre (rotacao em GRAUS). | symbol, x, y, rotation, scale, layer |
 | `place_symbol_on_wall` | Coloca um simbolo NA PAREDE: a `offset` do inicio do eixo, deslocado `side` | wall, offset, symbol, side, distance, rot_offset, scale, layer |
+
+## Servicos (1)
+
+| ferramenta | o que faz | parametros |
+|---|---|---|
+| `service_run` | Desenha um trecho de servico (fiacao/eletroduto/tubo) por uma polilinha. | points, service, diameter, label, closed, layer |
 
 ## Camada/estilo (16)
 
@@ -217,4 +224,4 @@ Fonte: `codigo/src/cad_mcp` @ HEAD `0ee4cd6`. **Somente 2D** (nenhuma ferramenta
 
 ## Lacunas para disciplinas (eletrica / hidraulica)
 
-P1 IMPLEMENTADO: catalogo (`catalogue.py`, 11 simbolos) + `place_symbol` + `place_symbol_on_wall` + layers por disciplina (E-TOMADA/E-ILUM/E-QUADRO/H-*). Falta: P2 roteamento de servico (`service_run`), P3 legenda/quadro de cargas, P4 multi-pavimento.
+P1 IMPLEMENTADO (catalogo + place_symbol/place_symbol_on_wall) e P2 IMPLEMENTADO (service_run: fiacao/eletroduto/tubo com camada/cor por servico + comprimento). Falta: P3 legenda/quadro de cargas, P4 multi-pavimento.

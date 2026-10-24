@@ -22,6 +22,7 @@ para dizer que já temos.
 | sistema | 23 | 4 | 19 |
 | arquitetura | 19 | 12 | 7 |
 | simbolos | 0 | 2 | 0 |
+| servicos | 0 | 1 | 0 |
 | mecanica | 13 | 0 | 13 |
 | bloco | 11 | 6 | 5 |
 | cota/anotacao | 9 | 5 | 4 |
@@ -46,6 +47,7 @@ para dizer que já temos.
 | arch_wall | `arch_wall` | sim | Add walls to the plan: clean L/T/X junctions, cut openings, material p |
 | place_symbol | `place_symbol` | não | só nossa: símbolo do catálogo em ponto livre (elétrica/hidráulica) |
 | place_symbol_on_wall | `place_symbol_on_wall` | não | só nossa: símbolo na parede por offset |
+| service_run | `service_run` | não | só nossa: roteamento de serviço (fiação/tubo) + comprimento |
 | batch_plot | `batch_plot` | sim | Plot every sheet (or the named ones) to PDF; each sheet size is read b |
 | block_define | `block_define` | sim | Define a block from typed primitives and attribute definitions, on bot |
 | block_get_attributes | `block_get_attributes` | sim | Read the tag/value pairs off a block reference. |

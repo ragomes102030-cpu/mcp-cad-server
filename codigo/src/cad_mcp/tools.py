@@ -879,6 +879,44 @@ async def place_symbol_on_wall(wall: str, offset: float, symbol: str, side: int 
     return res
 
 
+async def service_run(points: list[list[float]], service: str = "eletrica",
+                      diameter: float | None = None, label: bool = True,
+                      closed: bool = False, layer: str | None = None) -> dict:
+    """Desenha um trecho de servico (fiacao/eletroduto/tubo) por uma polilinha.
+
+    service: eletrica | agua_fria | agua_quente | esgoto | gas (camada/cor por tipo).
+    diameter: diametro em METROS; se dado, rotula em mm no meio do trecho.
+    Devolve o comprimento do trecho (quantitativo por servico).
+    """
+    from .services import servico, comprimento
+
+    if len(points) < 2:
+        return {"ok": False, "erro": "service_run precisa de >= 2 pontos"}
+    try:
+        cfg = servico(service)
+    except ValueError as e:
+        return {"ok": False, "erro": str(e)}
+
+    lay = layer or cfg["camada"]
+    b = await _b()
+    await b.layer_create(lay, color=cfg["cor"], linetype="CONTINUOUS")
+    r = await b.create_polyline(points, closed=closed, layer=lay)
+    handles = []
+    if r.ok:
+        handles.append(r.payload)
+
+    if label and diameter is not None:
+        mid = points[len(points) // 2]
+        txt = ("Ø%d" % round(diameter * 1000)) if diameter < 1 else ("Ø%d" % round(diameter))
+        t = await b.create_text(mid[0], mid[1] + 0.12, txt, height=0.10, layer=lay)
+        if t.ok:
+            handles.append(t.payload)
+
+    comp = comprimento(points, closed=closed)
+    return {"ok": True, "payload": {"service": service, "camada": lay,
+                                    "handles": handles, "comprimento": round(comp, 3)}}
+
+
 # --- novas ops por geometria (ponte .NET ou COM) -----------------------------
 async def _pontes_trim(alvo: str, corte: str, keep: list[float]) -> dict:
     """Encurta a reta `alvo` ate' a `corte`, mantendo o lado de `keep`."""
@@ -964,6 +1002,7 @@ TOOLS = [
     arch_stair,
     place_symbol,
     place_symbol_on_wall,
+    service_run,
 ]
 
 # --------------------------------------------------------------- vocabulario
@@ -1029,6 +1068,7 @@ NOMES = {
     "arch_stair": "arch_stair",
     "place_symbol": "place_symbol",
     "place_symbol_on_wall": "place_symbol_on_wall",
+    "service_run": "service_run",
 }
 
 
