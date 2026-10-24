@@ -917,7 +917,8 @@ async def title_block(x, y, width=8.0, height=5.0, projeto="PROJETO", cliente="C
     await b.create_text(x+width/2+0.2, y+height-0.3, "RESP: " + responsavel, height=h, rotation=0.0, layer="A-TEXTO")
     await b.create_text(x+width/2+0.2, y+height*0.8-0.3, crea, height=h, rotation=0.0, layer="A-TEXTO")
     await b.create_text(x+width/2+0.2, y+height*0.6-0.3, "REVISAO: " + revisao, height=h, rotation=0.0, layer="A-TEXTO")
-    await b.create_text(x+width/2+0.2, y+height*0.4-0.3, "NBR 6492", height=h, rotation=0.0, layer="A-TEXTO")
+    await b.create_text(x+width/2+0.2, y+height*0.4-0.3, "ART: 000000", height=h, rotation=0.0, layer="A-TEXTO")
+    await b.create_text(x+width/2+0.2, y+height*0.2-0.3, "NBR 6492", height=h, rotation=0.0, layer="A-TEXTO")
     return {"ok": True, "payload": {"handles": handles, "count": len(handles)}}
 
 
