@@ -88,6 +88,10 @@ async def _run(app):
     checar("entity_count devolve {'count': N}",
            isinstance(ec.payload, dict) and "count" in ec.payload, ec.payload)
     n0 = ec.payload.get("count", 0) if isinstance(ec.payload, dict) else 0
+    ec_vazia = await b.entity_count(layer="CAMADA_VAZIA_XYZ")
+    checar("entity_count(camada vazia) -> {'count': 0}",
+           isinstance(ec_vazia.payload, dict) and ec_vazia.payload.get("count") == 0,
+           ec_vazia.payload)
 
     # 4) tool REAL arch_stair via MANAGER/COM
     await MANAGER.reset()

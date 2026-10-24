@@ -392,7 +392,7 @@ class ComBackend(AutoCADBackend):
 
     async def entity_count(self, layer: str | None = None) -> CommandResult:
         if layer:
-            expr = '(sslength (ssget "_X" (list (cons 8 "%s"))))' % _q(layer)
+            expr = '(progn (setq __s (ssget "_X" (list (cons 8 "%s")))) (if __s (sslength __s) 0))' % _q(layer)
         else:
             expr = '(vla-get-Count (vla-get-ModelSpace (vla-get-ActiveDocument (vlax-get-acad-object))))'
         r = self._aval(expr)
