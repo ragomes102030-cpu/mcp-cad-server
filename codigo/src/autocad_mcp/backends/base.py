@@ -126,6 +126,15 @@ class AutoCADBackend(ABC):
     async def create_hatch(self, entity_id: str, pattern: str = "ANSI31") -> CommandResult:
         return CommandResult(ok=False, error="Not supported on this backend")
 
+    async def create_table(self, x: float, y: float, rows: list[list[str]],
+                           headers: list[str] | None = None,
+                           column_widths: list[float] | None = None,
+                           row_height: float = 2.5,
+                           text_height: float = 2.5,
+                           title: str | None = None,
+                           layer: str | None = None) -> CommandResult:
+        return CommandResult(ok=False, error="Not supported on this backend")
+
     async def entity_list(self, layer: str | None = None) -> CommandResult:
         return CommandResult(ok=False, error="Not supported on this backend")
 

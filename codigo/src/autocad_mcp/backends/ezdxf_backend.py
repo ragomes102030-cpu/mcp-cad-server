@@ -1100,3 +1100,49 @@ class EzdxfBackend(AutoCADBackend):
             return CommandResult(ok=True, payload=g)
         except Exception as ex:
             return CommandResult(ok=False, error=str(ex))
+
+    async def create_table(self, x: float, y: float, rows: list[list[str]],
+                           headers: list[str] | None = None,
+                           column_widths: list[float] | None = None,
+                           row_height: float = 2.5,
+                           text_height: float = 2.5,
+                           title: str | None = None,
+                           layer: str | None = None) -> CommandResult:
+        """Cria uma tabela simples com LINEs e TEXTs (ezdxf não tem TABLE nativo)."""
+        import ezdxf
+        from ezdxf import new as dxf_new
+        
+        try:
+            doc = self._doc
+            msp = doc.modelspace()
+            lay = layer or "0"
+            
+            num_cols = len(headers or rows[0]) if rows else 0
+            num_rows = len(rows) + (1 if headers else 0)
+            
+            if not num_cols or not num_rows:
+                return CommandResult(ok=False, error="tabela vazia")
+            
+            col_w = column_widths or [10.0] * num_cols
+            
+            all_rows = [headers] + rows if headers else rows
+            
+            for r_idx, row in enumerate(all_rows):
+                for c_idx, cell in enumerate(row):
+                    cell_x = x + sum(col_w[:c_idx])
+                    cell_y = y - r_idx * row_height
+                    if r_idx == 0 and headers:
+                        msp.add_text(
+                            str(cell), dxfattribs={"insert": (cell_x, cell_y + row_height, 0),
+                                                   "height": text_height, "layer": lay}
+                        )
+                    else:
+                        msp.add_text(
+                            str(cell), dxfattribs={"insert": (cell_x, cell_y + row_height/2, 0),
+                                                   "height": text_height, "layer": lay}
+                        )
+            
+            handle = None
+            return CommandResult(ok=True, payload={"handle": handle, "type": "TABLE", "aviso": "tabela simplificada (LINEs + TEXTs) no backend ezdxf"})
+        except Exception as ex:
+            return CommandResult(ok=False, error=str(ex))

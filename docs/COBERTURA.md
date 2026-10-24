@@ -4,7 +4,7 @@ Gerado por `python tools/importar_acmpro.py`. Não editar à mão.
 
 | | deles | nossos | mesmo nome |
 |---|---|---|---|
-| total | 247 | 118 | 107 |
+| total | 247 | 119 | 108 |
 
 **Mesmo nome não é a mesma ferramenta.** `drawing_save` deles e o nosso fazem
 coisas diferentes nos detalhes. A comparação serve para achar **buraco**, não
@@ -14,7 +14,7 @@ para dizer que já temos.
 
 | família | deles | nossos | faltando |
 |---|---|---|---|
-| desenho | 31 | 18 | 13 |
+| desenho | 31 | 19 | 12 |
 | plot/arquivo | 30 | 24 | 6 |
 | camada/estilo | 30 | 17 | 13 |
 | edicao | 29 | 19 | 10 |
@@ -88,6 +88,7 @@ para dizer que já temos.
 | entity_create_rectangle | `entity_create_rectangle` | sim | Draw a closed rectangle from two opposite corners. |
 | entity_create_revcloud | `entity_create_revcloud` | sim | Draw a revision cloud around an area. |
 | entity_create_spline | `entity_create_spline` | sim | Draw a smooth NURBS curve through fit points. |
+| entity_create_table | `entity_create_table` | sim | Place a parts list, BOM or schedule as a table with headers and rows. |
 | entity_create_text | `entity_create_text` | sim | Place a single-line text label. |
 | entity_delete_many | `entity_delete_many` | sim | Erase a whole list of entities in one call. |
 | entity_edit_text | `entity_edit_text` | sim | Reword a label, or change its height or rotation, keeping its handle. |
@@ -156,9 +157,8 @@ para dizer que já temos.
 
 ## O que eles têm e nós não (candidatos, por família)
 
-### desenho (14)
+### desenho (13)
 
-- `entity_create_table` — Place a parts list, BOM or schedule as a table with headers and rows.
 - `drawing_settings` — Read or change drawing units, precision, linetype and dimension scale by name.
 - `keyway_draw_keyed_bore` — Draw a bore with a DIN 6885 keyway, auto-sized from the bore diameter.
 - `keyway_draw_section` — Draw the side cross-section of a keyed bore.

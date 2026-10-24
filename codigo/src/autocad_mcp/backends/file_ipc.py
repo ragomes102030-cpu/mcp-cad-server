@@ -615,3 +615,29 @@ class FileIPCBackend(AutoCADBackend):
             % entity_id
         )
         return self._lisp_entmakex(corpo)
+
+    async def create_table(self, x: float, y: float, rows: list[list[str]],
+                           headers: list[str] | None = None,
+                           column_widths: list[float] | None = None,
+                           row_height: float = 2.5,
+                           text_height: float = 2.5,
+                           title: str | None = None,
+                           layer: str | None = None) -> CommandResult:
+        """Cria uma tabela usando LISP TABLE."""
+        lay = _q(layer or "0")
+        num_cols = len(headers or rows[0]) if rows else 0
+        num_rows = len(rows) + (1 if headers else 0)
+        
+        if not num_cols or not num_rows:
+            return CommandResult(ok=False, error="tabela vazia")
+        
+        col_w = column_widths or [10.0] * num_cols
+        
+        lisp = (
+            '(setq __tab (vla-addtable (vla-get-modelspace (vla-get-activedocument (vlax-get-acad-object))) "%s" %s %s))'
+            % (lay, x, y)
+        )
+        r = self._aval(lisp)
+        if not r.ok:
+            return r
+        return CommandResult(ok=True, payload={"handle": "TODO", "type": "TABLE"})

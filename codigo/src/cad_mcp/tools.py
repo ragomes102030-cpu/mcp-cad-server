@@ -372,6 +372,34 @@ async def draw_hatch(entity_id: str, pattern: str = "ANSI31") -> dict:
     return _r(await (await _b()).create_hatch(entity_id, pattern=pattern))
 
 
+async def entity_create_table(
+    x: float, y: float,
+    rows: list[list[str]],
+    headers: list[str] | None = None,
+    column_widths: list[float] | None = None,
+    row_height: float = 2.5,
+    text_height: float = 2.5,
+    title: str | None = None,
+    layer: str | None = None,
+) -> dict:
+    """Cria uma tabela com cabeçalhos e linhas.
+
+    Argumentos:
+        x, y: ponto de inserção (canto inferior esquerdo)
+        rows: lista de linhas, cada linha é uma lista de células (strings)
+        headers: lista opcional de cabeçalhos das colunas
+        column_widths: larguras das colunas (opcional, default 10.0 cada)
+        row_height: altura das linhas (default 2.5)
+        text_height: altura do texto (default 2.5)
+        title: título da tabela (opcional)
+        layer: camada (opcional, default "0")
+    """
+    return _r(await (await _b()).create_table(
+        x=x, y=y, rows=rows, headers=headers, column_widths=column_widths,
+        row_height=row_height, text_height=text_height, title=title, layer=layer
+    ))
+
+
 async def dim_linear(x1: float, y1: float, x2: float, y2: float, dim_x: float, dim_y: float) -> dict:
     """Cota linear entre dois pontos, com a linha de cota em (dim_x, dim_y).
 
@@ -604,7 +632,7 @@ TOOLS = [
     new_drawing, open, save, export_dxf, plot_pdf, drawing_setup, render_png, screenshot,
     undo, redo, zoom_extents,
     draw_line, draw_rectangle, draw_polyline, draw_circle, draw_arc,
-    draw_text, draw_mtext, draw_hatch, dim_linear, dim_aligned,
+    draw_text, draw_mtext, draw_hatch, entity_create_table, dim_linear, dim_aligned,
     layer_create, layer_set_current, ensure_standard_layers,
     block_insert, block_attributes, block_set_attribute,
     desenhar_ambiente,

@@ -2010,3 +2010,75 @@ class ComBackend(AutoCADBackend):
             return CommandResult(ok=True, payload=sorted(estilos))
         except Exception:
             return CommandResult(ok=False, error="nao foi possivel listar estilos de plotagem")
+
+    async def create_table(self, x: float, y: float, rows: list[list[str]],
+                           headers: list[str] | None = None,
+                           column_widths: list[float] | None = None,
+                           row_height: float = 2.5,
+                           text_height: float = 2.5,
+                           title: str | None = None,
+                           layer: str | None = None) -> CommandResult:
+        """Cria uma tabela com cabeçalhos e linhas (entity_create_table).
+
+        Usa a API do AutoCAD COM (IAcadTable) que tem métodos nativos para tabela.
+        Se a API falhar, cai para LISP.
+        """
+        lay = _q(layer or "0")
+        try:
+            db = self._doc.Database
+            ms = self._chamar(lambda: db.CurrentSpaceId)
+            
+            def _mk():
+                from comtypes.client import CreateObject
+                table = self._doc.ModelSpace.AddTable(
+                    insertionPoint=[x, y, 0],
+                    numRows=len(rows) + (1 if headers else 0),
+                    numColumns=len(headers or rows[0]) if rows else 0
+                )
+                return table
+            
+            table = self._chamar(_mk)
+            
+            if headers:
+                for i, h in enumerate(headers):
+                    self._chamar(lambda t=table, c=i, v=h: t.SetTextString(0, c, v))
+            
+            for r_idx, row in enumerate(rows):
+                for c_idx, cell in enumerate(row):
+                    self._chamar(lambda t=table, ri=r_idx+1, ci=c_idx, v=cell: t.SetTextString(ri, ci, v))
+            
+            handle = self._chamar(lambda: table.Handle)
+            return CommandResult(ok=True, payload={"handle": handle.Value, "type": "TABLE"})
+        except Exception as e:
+            pass
+        
+        if not rows:
+            return CommandResult(ok=False, error="rows vazio")
+        
+        num_cols = len(headers or rows[0])
+        num_rows = len(rows) + (1 if headers else 0)
+        
+        if column_widths and len(column_widths) != num_cols:
+            return CommandResult(ok=False, error="column_widths deve ter %d elementos" % num_cols)
+        
+        col_w = column_widths or [10.0] * num_cols
+        
+        cells = []
+        if headers:
+            cells.append(["(cons 0 \"TEXT\")" + 
+                         " ".join("(cons 1 \"%s\")" % _q(h) for h in headers)])
+        for row in rows:
+            cells.append(["(cons 0 \"TEXT\")" + 
+                         " ".join("(cons 1 \"%s\")" % _q(str(c)) for c in row)])
+        
+        col_defs = " ".join("(list %s %s %s)" % (col_w[i], 1, text_height) 
+                            for i in range(num_cols))
+        
+        body = (
+            '(list (cons 0 "TABLE") (cons 100 "AcDbEntity") (cons 8 "%s")'
+            ' (cons 100 "AcDbTable") (cons 10 (list %s %s 0.0))'
+            ' (cons 90 %d) (cons 70 %d) (cons 71 1) (cons 72 1)'  # flags
+            ' (cons 170 0) (cons 171 0) (cons 280 "%s")%s)'  # title, column defs
+            % (lay, x, y, num_rows, num_cols, title or "", col_defs)
+        )
+        return self._aval(self._handle(body))
