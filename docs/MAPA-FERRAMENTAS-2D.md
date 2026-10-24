@@ -1,4 +1,4 @@
-# Mapa das ferramentas CAD (2D) — 130 tools
+# Mapa das ferramentas CAD (2D) — 131 tools
 
 Fonte: `codigo/src/cad_mcp` @ HEAD `7cfbf39`. **Somente 2D** (nenhuma ferramenta 3D).
 
@@ -19,7 +19,7 @@ Fonte: `codigo/src/cad_mcp` @ HEAD `7cfbf39`. **Somente 2D** (nenhuma ferramenta
 | Visualizacao | 4 |
 | Sistema | 5 |
 | Quantitativo | 1 |
-| **TOTAL** | **130** |
+| **TOTAL** | **131** |
 
 ## Desenho (15)
 
@@ -146,6 +146,7 @@ Fonte: `codigo/src/cad_mcp` @ HEAD `7cfbf39`. **Somente 2D** (nenhuma ferramenta
 | `arch_room` | Desenha um ambiente como contorno fechado em PAREDES + hachura + texto com nome e área. | nome, x, y, largura, altura, com_hachura, com_texto, altura_texto, padrao_hachur |
 | `arch_rooms_detect` | Descobre ambientes de uma planta: polilineas fechadas com area >= min_area. | layers, min_area, tol |
 | `arch_stair` | Escada reta/L/U em planta; Blondel. tipo=reta|L|U, n1. | x, y, largura, degraus, piso, altura_total, angulo, seta, rotulo, camada, lang, tipo, n1 |
+| `floor_copy` | Copia entidades cujo ponto caia em bbox para (dx,dy). Duplicar pavimento. | x1, y1, x2, y2, dx, dy, layer |
 | `prumada` | Prumada (shaft) em planta: circulo com cruz + texto nome/nivel. | x, y, nome, nivel, diametro, camada |
 | `arch_symbol` | Simbolo de planta: norte, marcador de corte ou marcador de nivel. | kind, x, y, params, lang, scale |
 | `arch_wall` | Desenha paredes de uma planta baixa. | walls, poche |

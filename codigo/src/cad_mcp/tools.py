@@ -842,6 +842,50 @@ async def prumada(x: float, y: float, nome: str = "PRUMADA", nivel: str | None =
                                     "x": x, "y": y, "nome": nome, "nivel": nivel}}
 
 
+async def floor_copy(x1: float, y1: float, x2: float, y2: float,
+                     dx: float, dy: float, layer: str | None = None) -> dict:
+    """Copia para (x+dx, y+dy) todas as entidades cujo ponto representativo
+    caia dentro do retangulo [x1,y1]-[x2,y2]. Util para duplicar um pavimento.
+
+    Argumentos:
+        x1, y1, x2, y2 -- bbox da origem (metros)
+        dx, dy          -- deslocamento aplicado a cada copia
+        layer           -- filtra por camada (None = todas)
+    """
+    import re
+    b = await _b()
+    r = await b.entity_list(layer=layer)
+    if not r.ok:
+        return {"ok": False, "erro": r.error}
+    ents = r.payload.get("entities", [])
+    to_copy = []
+    for e in ents:
+        h = e["handle"]
+        gr = await b.entity_get(h)
+        if not (isinstance(gr, object) and getattr(gr, "ok", False)):
+            continue
+        payload = gr.payload if hasattr(gr, "payload") else gr
+        dxf = ""
+        if isinstance(payload, list):
+            for kv in payload:
+                if isinstance(kv, (list, tuple)) and len(kv) >= 2 and str(kv[0]).upper() == "DXF":
+                    dxf = str(kv[1])
+        pts = []
+        for m in re.finditer(r"\(1[01]\s+([-0-9.eE+]+)\s+([-0-9.eE+]+)\)", dxf):
+            pts.append((float(m.group(1)), float(m.group(2))))
+        if not pts:
+            continue
+        if any(x1 <= px <= x2 and y1 <= py <= y2 for px, py in pts):
+            to_copy.append(h)
+    handles = []
+    for h in to_copy:
+        cr = await b.entity_copy(h, dx, dy)
+        if isinstance(cr, object) and getattr(cr, "ok", False):
+            handles.append(cr.payload if not isinstance(cr.payload, dict) else cr.payload)
+    return {"ok": True, "payload": {"copied": len(handles), "handles": handles,
+                                    "total_candidatos": len(to_copy)}}
+
+
 async def place_symbol(symbol: str, x: float, y: float, rotation: float = 0.0,
                        scale: float = 1.0, layer: str | None = None) -> dict:
     """Coloca um simbodo num ponto livre (rotacao em GRAUS).
@@ -1114,6 +1158,7 @@ TOOLS = [
     arch_opening,
     arch_stair,
     prumada,
+    floor_copy,
     place_symbol,
     place_symbol_on_wall,
     service_run,
@@ -1184,6 +1229,7 @@ NOMES = {
     "arch_opening": "arch_opening",
     "arch_stair": "arch_stair",
     "prumada": "prumada",
+    "floor_copy": "floor_copy",
     "place_symbol": "place_symbol",
     "place_symbol_on_wall": "place_symbol_on_wall",
     "service_run": "service_run",
