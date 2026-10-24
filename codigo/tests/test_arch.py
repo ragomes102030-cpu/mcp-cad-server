@@ -23,7 +23,7 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "src"))
 
 from cad_mcp.arch import (Abertura, Parede, comprimento, expandir,  # noqa: E402
-                          primitivas, trechos, validar)
+                          escada_reta, primitivas, trechos, validar)
 from cad_mcp.validar_modelo import validar as validar_modelo  # noqa: E402
 
 falhas = []
@@ -171,6 +171,37 @@ def main() -> int:
     checar("anel cortado em 5 (4 lados, um deles partido)", len(segs) == 5, len(segs))
     checar("material 11,20", perto(sum(math.dist(a, b) for a, b in segs), 11.2),
            sum(math.dist(a, b) for a, b in segs))
+
+    print("\n7) escada reta: tramo, talaias, pisadas, seta, Blondel")
+    es = escada_reta(x=0.0, y=0.0, largura=1.0, degraus=10, piso=0.28,
+                     altura_total=1.80, angulo=0.0)
+    checar("comprimento = 10 x 0,28 = 2,80", perto(es["comprimento"], 2.8), es["comprimento"])
+    checar("2 talaias + 9 pisadas = 11 linhas", len(es["linhas"]) == 11, len(es["linhas"]))
+    checar("riser = 1,80/10 = 0,18", perto(es["riser"], 0.18), es["riser"])
+    checar("blondel = 2*0,18 + 0,28 = 0,64", perto(es["blondel"], 0.64), es["blondel"])
+    checar("blondel conforme (0,62..0,66)", es["blondel_conforme"] is True, es["blondel_conforme"])
+    checar("seta desenhada (ponta de 3 pts)",
+           es["seta"] is not None and len(es["seta"]["ponta"]) == 3, es["seta"])
+    checar("rotulo SUBA no inicio", es["rotulo"] and es["rotulo"]["texto"] == "SUBA", es["rotulo"])
+
+    es90 = escada_reta(x=0.0, y=0.0, largura=1.0, degraus=4, piso=0.3, angulo=90.0)
+    checar("talaias giradas 90 ficam verticais",
+           perto(es90["linhas"][0][1][0], 0.0) and perto(es90["linhas"][0][1][1], 1.2),
+           es90["linhas"][0])
+
+    es1 = escada_reta(largura=1.0, degraus=1, piso=0.3)
+    checar("1 degrau: so' 2 talaias, sem pisada", len(es1["linhas"]) == 2, len(es1["linhas"]))
+    checar("sem altura_total: sem Blondel", es1["blondel"] is None, es1["blondel"])
+    checar("seta=False omite a seta",
+           escada_reta(largura=1.0, degraus=4, piso=0.3, seta=False)["seta"] is None)
+    checar("rotulo=None omite o rotulo",
+           escada_reta(largura=1.0, degraus=4, piso=0.3, rotulo=None)["rotulo"] is None)
+
+    recusa("escada: largura zero", lambda: escada_reta(largura=0, degraus=4, piso=0.3))
+    recusa("escada: piso zero", lambda: escada_reta(largura=1.0, degraus=4, piso=0))
+    recusa("escada: degraus < 1", lambda: escada_reta(largura=1.0, degraus=0, piso=0.3))
+    recusa("escada: altura_total negativa",
+           lambda: escada_reta(largura=1.0, degraus=4, piso=0.3, altura_total=-1.0))
 
     print()
     if falhas:

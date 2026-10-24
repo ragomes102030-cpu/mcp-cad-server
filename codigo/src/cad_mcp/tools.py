@@ -721,6 +721,82 @@ async def arch_opening(wall: str, offset: float, width: float,
     return {"ok": True, "payload": {"handles": handles, "opening_id": ab.id}}
 
 
+async def arch_stair(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
+                     degraus: int = 11, piso: float = 0.28,
+                     altura_total: float | None = 1.80, angulo: float = 0.0,
+                     seta: bool = True, rotulo: str | None = "SUBA",
+                     camada: str = "ESCADAS", lang: str = "pt") -> dict:
+    """Draw a straight-run staircase in plan; reports its Blondel step rule.
+
+    Implementacao baseada no modulo arch.py (`escada_reta`). Desenha um tramo
+    reto: duas talaias, (degraus-1) pisadas, uma seta de subida e um rotulo.
+    A escada NAO precisa de nada ja' desenhado -- e geometria nova no modelo.
+
+    Argumentos:
+        x, y          -- canto de partida da escada (metros, no modelspace)
+        largura       -- largura do tramo (> 0)
+        degraus       -- numero de risos (inteiro >= 1)
+        piso          -- profundidade (corrida) de cada degrau (> 0)
+        altura_total  -- subida total; com ela, calcula o riso e a regra de Blondel
+        angulo        -- direcao de subida em graus (0 = +X, 90 = +Y)
+        seta          -- desenha a seta de subida (default True)
+        rotulo        -- texto ao lado (default "SUBA"; None desliga)
+        camada        -- camada das entidades (default "ESCADAS")
+        lang          -- "pt" (SUBA) ou "en" (UP) para o rotulo-padrao
+
+    Retorna dict com os handles das entidades criadas e o resumo da escada
+    (comprimento, riser, corrida e a regra de Blondel).
+    """
+    from .arch import escada_reta
+
+    if rotulo is None:
+        label = None
+    elif isinstance(rotulo, str) and rotulo not in ("", "SUBA", "UP"):
+        label = rotulo                        # texto proprio, respeitado em qualquer lang
+    else:
+        label = "UP" if lang == "en" else "SUBA"
+
+    try:
+        geo = escada_reta(x=x, y=y, largura=largura, degraus=degraus, piso=piso,
+                          altura_total=altura_total, angulo=angulo, seta=seta,
+                          rotulo=label, camada=camada)
+    except ValueError as e:
+        return {"ok": False, "erro": str(e)}
+
+    b = await _b()
+    handles = []
+
+    # talaias + pisadas: linhas retas
+    for (a, c) in geo["linhas"]:
+        r = await b.create_line(a[0], a[1], c[0], c[1], layer=camada)
+        if r.ok:
+            handles.append(r.payload)
+
+    # seta de subida: tronco (linha) + ponta (polilinea de 3 pontos)
+    if seta and geo.get("seta"):
+        s = geo["seta"]
+        t = s["tronco"]
+        r = await b.create_line(t[0], t[1], t[2], t[3], layer=camada)
+        if r.ok:
+            handles.append(r.payload)
+        r = await b.create_polyline([[pt[0], pt[1]] for pt in s["ponta"]],
+                                    closed=False, layer=camada)
+        if r.ok:
+            handles.append(r.payload)
+
+    # rotulo de subida
+    if geo.get("rotulo"):
+        lz = geo["rotulo"]
+        r = await b.create_text(lz["x"], lz["y"], lz["texto"],
+                                height=lz["altura"], rotation=lz["rotacao"], layer=camada)
+        if r.ok:
+            handles.append(r.payload)
+
+    geo["handles"] = handles
+    geo["count"] = len(handles)
+    return {"ok": True, "payload": geo}
+
+
 # --- novas ops por geometria (ponte .NET ou COM) -----------------------------
 async def _pontes_trim(alvo: str, corte: str, keep: list[float]) -> dict:
     """Encurta a reta `alvo` ate' a `corte`, mantendo o lado de `keep`."""
@@ -803,6 +879,7 @@ TOOLS = [
     desenhar_ambiente, arch_wall,
     trim_entity, extend_entity, fillet_entity,
     arch_opening,
+    arch_stair,
 ]
 
 # --------------------------------------------------------------- vocabulario
@@ -865,6 +942,7 @@ NOMES = {
     "entity_delete": "entity_delete",
     "arch_wall": "arch_wall",
     "arch_opening": "arch_opening",
+    "arch_stair": "arch_stair",
 }
 
 

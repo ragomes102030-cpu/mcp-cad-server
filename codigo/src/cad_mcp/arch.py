@@ -31,7 +31,7 @@ from dataclasses import dataclass, field
 
 __all__ = [
     "Pt", "Parede", "Abertura", "segmentos_eixo", "comprimento",
-    "ponto_no_eixo", "validar", "trechos", "primitivas", "expandir",
+    "ponto_no_eixo", "validar", "trechos", "primitivas", "escada_reta", "expandir",
 ]
 
 Pt = tuple[float, float]
@@ -273,6 +273,103 @@ def primitivas(p: Parede, ab: Abertura) -> dict:
                        (q[0] + n[0] * mt, q[1] + n[1] * mt)))
     base["linhas"] = linhas
     return base
+
+
+# -------------------------------------------------------------- escada reta (planta)
+def escada_reta(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
+                degraus: int = 11, piso: float = 0.28,
+                altura_total: float | None = None, angulo: float = 0.0,
+                seta: bool = True, rotulo: str | None = "SUBA",
+                camada: str = "ESCADAS") -> dict:
+    """Escada RETA em planta baixa -- a menor versao util (so' tramo reto).
+
+    De que se trata: um tramo reto de `degraus` risos. Em planta ele e um
+    retangulo de largura `largura` e comprimento `degraus * piso`, dividido em
+    `degraus` pisadas por (`degraus - 1`) linhas paralelas. Duas linhas longas
+    sao as talaias (bordas do tramo); a seta no meio aponta para CIMA (sentido
+    de subida); o rotulo marca o inicio. Escadas em L e U ficam para frente.
+
+    Parametros (metros; angulo em GRAUS, sentido anti-horario):
+        x, y          -- canto de partida da escada (origem, canto "baixo")
+        largura       -- largura do tramo (perpendicular a subida), > 0
+        degraus       -- numero de risos (inteiro >= 1)
+        piso          -- profundidade (corrida) de cada degrau, > 0
+        altura_total  -- subida total; se dada, calcula o riso e a regra de Blondel
+        angulo        -- direcao de subida (0 = +X, 90 = +Y)
+        seta          -- desenha a seta de subida no meio
+        rotulo        -- texto ao lado da escada; None desliga
+        camada        -- camada das entidades (auto-criada pelo entmakex)
+
+    Devolve dict com a geometria no referencial do MUNDO (ja' girada e translada):
+        linhas  -- [[(x1,y1),(x2,y2)], ...]: 2 talaias + (degraus-1) pisadas
+        seta    -- None ou {"tronco": (x1,y1,x2,y2), "ponta": [(a,b),(c,d),(e,f)]}
+        rotulo  -- None ou {"x","y","texto","altura","rotacao"}
+        largura, degraus, piso, comprimento, altura_total, riser, corrida,
+        blondel, blondel_conforme -- resumo (Blondel so quando altura_total foi dada)
+    """
+    if largura <= 0:
+        raise ValueError("largura deve ser > 0")
+    if piso <= 0:
+        raise ValueError("piso (corrida) deve ser > 0")
+    if degraus < 1:
+        raise ValueError("degraus deve ser >= 1")
+    if float(degraus) != int(degraus):
+        raise ValueError("degraus deve ser um numero inteiro")
+    degraus = int(degraus)
+    if altura_total is not None and altura_total <= 0:
+        raise ValueError("altura_total deve ser > 0 (ou None)")
+
+    W = float(largura)
+    N = degraus
+    p = float(piso)
+    L = N * p
+    half = W / 2.0
+
+    # referencial local: subida ao longo de +X, origem no canto (0, 0)
+    linhas_loc = [((0.0, 0.0), (L, 0.0)), ((0.0, W), (L, W))]          # talaias
+    linhas_loc += [((k * p, 0.0), (k * p, W)) for k in range(1, N)]    # pisadas
+
+    a = math.radians(angulo)
+    ca, sa = math.cos(a), math.sin(a)
+
+    def _tr(pt):
+        lx, ly = pt
+        return (x + lx * ca - ly * sa, y + lx * sa + ly * ca)
+
+    linhas = [[_tr(p0), _tr(p1)] for p0, p1 in linhas_loc]
+
+    seta_out = None
+    if seta:
+        ah = min(0.6, max(0.25, W * 0.3))     # comprimento da ponta da seta
+        aw = ah * 0.4                          # meia-largura da ponta
+        t0 = _tr((0.0, half))
+        t1 = _tr((L - ah, half))
+        seta_out = {"tronco": (t0[0], t0[1], t1[0], t1[1]),
+                    "ponta": [_tr((L - ah, half - aw)),
+                              _tr((L, half)),
+                              _tr((L - ah, half + aw))]}
+
+    rotulo_out = None
+    if rotulo:
+        g = max(0.3, W * 0.25)
+        lp = _tr((0.0, -g))
+        rotulo_out = {"x": lp[0], "y": lp[1], "texto": str(rotulo),
+                      "altura": max(0.2, W * 0.12), "rotacao": 0.0}
+
+    riser = (altura_total / N) if altura_total is not None else None
+    blondel = (2.0 * riser + p) if riser is not None else None
+    blondel_conforme = (0.62 <= blondel <= 0.66) if blondel is not None else None
+
+    return {
+        "layer": camada, "x": float(x), "y": float(y), "angulo": float(angulo),
+        "largura": W, "degraus": N, "piso": p, "comprimento": L,
+        "altura_total": (float(altura_total) if altura_total is not None else None),
+        "riser": (round(riser, 4) if riser is not None else None),
+        "corrida": p,
+        "blondel": (round(blondel, 4) if blondel is not None else None),
+        "blondel_conforme": blondel_conforme,
+        "linhas": linhas, "seta": seta_out, "rotulo": rotulo_out,
+    }
 
 
 # ------------------------------------------------------------------- ponte

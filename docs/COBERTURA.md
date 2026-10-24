@@ -20,7 +20,7 @@ para dizer que já temos.
 | edicao | 29 | 20 | 9 |
 | consulta | 24 | 6 | 18 |
 | sistema | 23 | 4 | 19 |
-| arquitetura | 19 | 11 | 8 |
+| arquitetura | 19 | 12 | 7 |
 | mecanica | 13 | 0 | 13 |
 | bloco | 11 | 6 | 5 |
 | cota/anotacao | 9 | 5 | 4 |
@@ -38,6 +38,7 @@ para dizer que já temos.
 | arch_dimension_chains | `arch_dimension_chains` | sim | Dimension the plan's facades: openings, walls and overall chains outsi |
 | arch_grid | `arch_grid` | sim | Draw a structural grid: axis lines with numbered and lettered bubbles  |
 | arch_opening | `arch_opening` | sim | Host a door or a window in a drawn wall by distance along it; the wall |
+| arch_stair | `arch_stair` | sim | Draw a straight-run stair in plan (talaias, pisadas, seta) and its Blondel |
 | arch_room | `arch_room` | sim | Label a room with its name, number and measured area. |
 | arch_rooms_detect | `arch_rooms_detect` | sim | Find the rooms of any plan and measure them; never modifies it. |
 | arch_symbol | `arch_symbol` | sim | Draw a plan symbol: north arrow, section mark, level mark or elevation |
@@ -258,11 +259,10 @@ para dizer que já temos.
 - `system_variable_describe` — Explain a system variable: type, range, default, where it is saved, which engine honours it.
 - `data_extract` — Write the bill of materials to a CSV file, or to XLSX when openpyxl is present.
 
-### arquitetura (9)
+### arquitetura (8)
 
 - `bom_extract` — Read the bill of materials out of the drawing's block references.
 - `bom_table` — Draw the parts list as a real TABLE above the title block.
-- `arch_stair` — Draw a straight, L or U stair in plan and report its Blondel step rule.
 - `arch_schedule` — Draw a door, window or room schedule from the plan records.
 - `arch_catalogue_list` — Search the furniture and sanitary catalogue in English or Turkish.
 - `arch_catalogue_insert` — Insert a furniture or sanitary item - bed, sofa, WC, basin, bathtub - as a block.
