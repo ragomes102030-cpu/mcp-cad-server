@@ -184,17 +184,27 @@ async def script(linhas: list[str]) -> dict:
 async def cancel() -> dict:
     """Envia ESC ao AutoCAD (cancela comando em execução / limpa seleção)."""
     b = await _b()
-    if b.name != "file_ipc":
-        return {"ok": False, "erro": "cancel só se aplica com AutoCAD aberto"}
-    try:
-        target = getattr(b, "_command_hwnd", None) or getattr(b, "_hwnd", None)
-        VK_ESCAPE, WM_KEYDOWN, WM_KEYUP = 0x1B, 0x0100, 0x0101
-        post = ctypes.windll.user32.PostMessageW
-        post(target, WM_KEYDOWN, VK_ESCAPE, 0)
-        post(target, WM_KEYUP, VK_ESCAPE, 0)
-        return {"ok": True, "acao": "ESC enviado ao AutoCAD"}
-    except Exception as exc:
-        return {"ok": False, "erro": str(exc)}
+    if b.name == "file_ipc":
+        try:
+            target = getattr(b, "_command_hwnd", None) or getattr(b, "_hwnd", None)
+            VK_ESCAPE, WM_KEYDOWN, WM_KEYUP = 0x1B, 0x0100, 0x0101
+            post = ctypes.windll.user32.PostMessageW
+            post(target, WM_KEYDOWN, VK_ESCAPE, 0)
+            post(target, WM_KEYUP, VK_ESCAPE, 0)
+            return {"ok": True, "acao": "ESC enviado ao AutoCAD"}
+        except Exception as exc:
+            return {"ok": False, "erro": str(exc)}
+    elif b.name == "autocad_com":
+        try:
+            from . import win32_bridge
+            h = win32_bridge.find_autocad_window()
+            if h:
+                win32_bridge.enviar_esc(h, forcado=True)
+                return {"ok": True, "acao": "ESC enviado ao AutoCAD via COM"}
+        except Exception:
+            pass
+        return {"ok": False, "erro": "cancel via COM nao implementado"}
+    return {"ok": False, "erro": "cancel so funciona com AutoCAD aberto (COM ou file_ipc)"}
 
 
 # ------------------------------------------------------------- arquivo
@@ -518,26 +528,47 @@ async def quantitativo(layer: str | None = None) -> dict:
     return dados
 
 
-# --- novas ops por geometria (ponte .NET) ---------------------------------
-def _pontes_trim(alvo: str, corte: str, keep: list[float]) -> dict:
+# --- novas ops por geometria (ponte .NET ou COM) -----------------------------
+async def _pontes_trim(alvo: str, corte: str, keep: list[float]) -> dict:
     """Encurta a reta `alvo` ate' a `corte`, mantendo o lado de `keep`."""
+    try:
+        b = await _b()
+        if hasattr(b, 'entity_trim'):
+            r = await b.entity_trim(alvo=alvo, corte=corte, keep=keep)
+            return r.to_dict() if hasattr(r, 'to_dict') else {"ok": bool(r), "payload": r}
+    except Exception:
+        pass
     try:
         return Ponte().trim(alvo=alvo, corte=corte, keep=keep)
     except _PonteIndisponivel:
         return {"ok": False, "erro": "ponte .NET nao carregada (reinicie o AutoCAD)"}
 
 
-def _pontes_extend(alvo: str, limite: str, ponto: list[float] | None = None) -> dict:
+async def _pontes_extend(alvo: str, limite: str, ponto: list[float] | None = None) -> dict:
     """Estende a reta `alvo` ate' a `limite` (extremo auto se `ponto` for None)."""
+    try:
+        b = await _b()
+        if hasattr(b, 'entity_extend'):
+            r = await b.entity_extend(alvo=alvo, limite=limite, ponto=ponto)
+            return r.to_dict() if hasattr(r, 'to_dict') else {"ok": bool(r), "payload": r}
+    except Exception:
+        pass
     try:
         return Ponte().extend(alvo=alvo, limite=limite, ponto=ponto)
     except _PonteIndisponivel:
         return {"ok": False, "erro": "ponte .NET nao carregada (reinicie o AutoCAD)"}
 
 
-def _pontes_fillet(h1: str, h2: str, raio: float, trim: bool = True,
-                   p1: list[float] | None = None, p2: list[float] | None = None) -> dict:
+async def _pontes_fillet(h1: str, h2: str, raio: float, trim: bool = True,
+                       p1: list[float] | None = None, p2: list[float] | None = None) -> dict:
     """Arredonda o canto entre duas retas com arco tangente de `raio`."""
+    try:
+        b = await _b()
+        if hasattr(b, 'entity_fillet'):
+            r = await b.entity_fillet(h1=h1, h2=h2, raio=raio, trim=trim, p1=p1, p2=p2)
+            return r.to_dict() if hasattr(r, 'to_dict') else {"ok": bool(r), "payload": r}
+    except Exception:
+        pass
     try:
         return Ponte().fillet(h1=h1, h2=h2, raio=raio, trim=trim, p1=p1, p2=p2)
     except _PonteIndisponivel:
@@ -549,18 +580,18 @@ async def trim_entity(alvo: str, corte: str, keep: list[float]) -> dict:
 
     Geometria nativa via ponte .NET (sem SendCommand). Devolve {ok, handle, ...}.
     """
-    return _pontes_trim(alvo=alvo, corte=corte, keep=keep)
+    return await _pontes_trim(alvo=alvo, corte=corte, keep=keep)
 
 
 async def extend_entity(alvo: str, limite: str, ponto: list[float] | None = None) -> dict:
     """Estende a reta `alvo` ate' encontrar a reta `limite`."""
-    return _pontes_extend(alvo=alvo, limite=limite, ponto=ponto)
+    return await _pontes_extend(alvo=alvo, limite=limite, ponto=ponto)
 
 
 async def fillet_entity(h1: str, h2: str, raio: float, trim: bool = True,
                         p1: list[float] | None = None, p2: list[float] | None = None) -> dict:
     """Arredonda o canto entre duas retas com arco tangente de `raio`."""
-    return _pontes_fillet(h1=h1, h2=h2, raio=raio, trim=trim, p1=p1, p2=p2)
+    return await _pontes_fillet(h1=h1, h2=h2, raio=raio, trim=trim, p1=p1, p2=p2)
 
 
 TOOLS = [

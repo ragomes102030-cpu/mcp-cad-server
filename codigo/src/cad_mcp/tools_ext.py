@@ -318,6 +318,14 @@ def _dirs_plot_styles() -> list[Path]:
 
 async def plot_style_list() -> dict:
     """Lista os arquivos .ctb/.stb instalados (monochrome, acad, grayscale...)."""
+    try:
+        b = await _b()
+        if hasattr(b, 'plot_style_list'):
+            r = await b.plot_style_list()
+            if r.ok:
+                return {"ok": True, "payload": r.payload, "pastas": []}
+    except Exception:
+        pass
     nomes: set[str] = set()
     pastas = []
     for d in _dirs_plot_styles():

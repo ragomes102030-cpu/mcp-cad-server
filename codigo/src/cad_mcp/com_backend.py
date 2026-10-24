@@ -1957,3 +1957,56 @@ class ComBackend(AutoCADBackend):
                     itens[str(par[0])] = par[1]
             r.payload = itens
         return r
+
+    # --- Operacoes geometricas (trim/extend/fillet) via ponte .NET ---
+
+    async def entity_trim(self, alvo: str, corte: str, keep: list[float]) -> CommandResult:
+        """Encurta a reta `alvo` ate a `corte`.
+
+        Usa a ponte .NET (plugin CadMcpBridge) que executa dentro do AutoCAD
+        com geometria nativa, sem passar por SendCommand.
+        """
+        try:
+            from .bridge import Ponte, PonteIndisponivel
+            p = Ponte(timeout=15)
+            return CommandResult(ok=True, payload=p.trim(alvo=alvo, corte=corte, keep=keep))
+        except (PonteIndisponivel, Exception) as e:
+            return CommandResult(ok=False, error="ponte .NET nao disponivel: %s" % e)
+
+    async def entity_extend(self, alvo: str, limite: str,
+                            ponto: list[float] | None = None) -> CommandResult:
+        """Estende a reta `alvo` ate a `limite`."""
+        try:
+            from .bridge import Ponte, PonteIndisponivel
+            p = Ponte(timeout=15)
+            return CommandResult(ok=True, payload=p.extend(alvo=alvo, limite=limite, ponto=ponto))
+        except (PonteIndisponivel, Exception) as e:
+            return CommandResult(ok=False, error="ponte .NET nao disponivel: %s" % e)
+
+    async def entity_fillet(self, h1: str, h2: str, raio: float,
+                            trim: bool = True, p1: list[float] | None = None,
+                            p2: list[float] | None = None) -> CommandResult:
+        """Arredonda o canto entre duas retas com arco de `raio`."""
+        try:
+            from .bridge import Ponte, PonteIndisponivel
+            p = Ponte(timeout=15)
+            return CommandResult(ok=True, payload=p.fillet(h1=h1, h2=h2, raio=raio, trim=trim, p1=p1, p2=p2))
+        except (PonteIndisponivel, Exception) as e:
+            return CommandResult(ok=False, error="ponte .NET nao disponivel: %s" % e)
+
+    async def plot_style_list(self) -> CommandResult:
+        """Lista os estilos de plotagem (.ctb/.stb) do AutoCAD."""
+        estilos: set[str] = set()
+        try:
+            app = self._app
+            plot_factory = app.PlotConfigurations
+            for pc in plot_factory:
+                try:
+                    estilo = pc.PlotStyleSheet
+                    if estilo and estilo.lower().endswith((".ctb", ".stb")):
+                        estilos.add(estilo)
+                except Exception:
+                    pass
+            return CommandResult(ok=True, payload=sorted(estilos))
+        except Exception:
+            return CommandResult(ok=False, error="nao foi possivel listar estilos de plotagem")
