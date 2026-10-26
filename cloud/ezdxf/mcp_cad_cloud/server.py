@@ -74,7 +74,9 @@ mcp = FastMCP(
 )
 
 # registrar todas as ferramentas do mapa
-for _nome, _fn in TOOLS.items():
+import mcp_cad_cloud.tools as _tools_mod
+for _nome in TOOLS:
+    _fn = getattr(_tools_mod, _nome)
     mcp.tool(_nome)(_fn)
 
 # relatório de estado + healthz (endpoint HTTP)
