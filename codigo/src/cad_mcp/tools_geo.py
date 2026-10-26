@@ -264,6 +264,31 @@ async def entity_set_properties(handle: str, layer: str | None = None,
                                                         visible=visible))
 
 
+async def entity_set_properties_filter(filter_layer: str | None = None,
+                                       tipo: str | None = None,
+                                       target_layer: str | None = None,
+                                       color: int | str | None = None,
+                                       linetype: str | None = None,
+                                       lineweight: int | None = None,
+                                       visible: bool | None = None) -> dict:
+    """Altera em lote entidades filtradas por camada e/ou tipo DXF.
+
+    Exige um filtro e uma propriedade de destino. Use ``target_layer`` para
+    evitar confundir a camada selecionada (``filter_layer``) com a de destino.
+    """
+    if filter_layer is None and tipo is None:
+        return {"ok": False, "erro": "informe ao menos um filtro (filter_layer ou tipo)"}
+    if all(v is None for v in (target_layer, color, linetype, lineweight, visible)):
+        return {"ok": False, "erro": "nenhuma propriedade de destino informada"}
+    b = await _b()
+    fn = getattr(b, "entity_set_properties_filter", None)
+    if fn is None:
+        return {"ok": False, "erro": "backend '%s' nao suporta edicao em lote" % getattr(b, "name", "?")}
+    return _r(await fn(filter_layer=filter_layer, tipo=tipo, target_layer=target_layer,
+                       color=color, linetype=linetype, lineweight=lineweight,
+                       visible=visible))
+
+
 async def entity_edit_text(handle: str, text: str | None = None,
                            height: float | None = None,
                            rotation: float | None = None) -> dict:
@@ -797,7 +822,7 @@ TOOLS = [
     drawing_apply_standard, user_pick_point,
     # edicao
     entity_scale, entity_chamfer, entity_array_rectangular, entity_array_polar,
-    entity_set_properties, entity_edit_text, entity_delete_many, hatch_edit,
+    entity_set_properties, entity_set_properties_filter, entity_edit_text, entity_delete_many, hatch_edit,
     # consulta / geometria
     entity_get, point_from_snap, point_tangent, selection_window, view_zoom_window,
     # arquitetura
@@ -821,6 +846,7 @@ NOMES = {
     "entity_array_rectangular": "entity_array_rectangular",
     "entity_array_polar": "entity_array_polar",
     "entity_set_properties": "entity_set_properties",
+    "entity_set_properties_filter": "entity_set_properties_filter",
     "entity_edit_text": "entity_edit_text",
     "entity_delete_many": "entity_delete_many",
     "hatch_edit": "hatch_edit",

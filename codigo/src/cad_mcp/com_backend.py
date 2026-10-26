@@ -1088,13 +1088,32 @@ class ComBackend(AutoCADBackend):
         )
         return self._aval(self._handle(corpo))
 
-    async def create_text(self, x: float, y: float, text: str, height: float = 2.5, rotation: float = 0.0, layer: str | None = None) -> CommandResult:
+    async def create_text(self, x: float, y: float, text: str, height: float = 2.5,
+                          rotation: float = 0.0, layer: str | None = None,
+                          justification: str = "left") -> CommandResult:
+        """Cria TEXT usando ``(x, y)`` como ancora de alinhamento quando pedido."""
         lay = _q(layer or "0")
+        alignment = {
+            "left": None,
+            "center": 1,
+            "right": 2,
+            "aligned": 3,
+            "middle": 4,
+            "fit": 5,
+        }.get(justification.lower())
+        if justification.lower() not in ("left", "center", "right", "aligned", "middle", "fit"):
+            return CommandResult(ok=False, error=(
+                "justification invalida: %s (use left, center, right, aligned, middle ou fit)"
+                % justification
+            ))
+        justify_dxf = "" if alignment is None else (
+            ' (cons 72 %d) (cons 11 (list %s %s 0.0))' % (alignment, x, y)
+        )
         corpo = (
             '(list (cons 0 "TEXT") (cons 100 "AcDbEntity") (cons 8 "%s")'
             ' (cons 100 "AcDbText") (cons 10 (list %s %s 0.0)) (cons 40 %s) (cons 1 "%s")'
-            ' (cons 50 (angtof "%s")))'
-            % (lay, x, y, height, _q(text), rotation)
+            ' (cons 50 (angtof "%s"))%s)'
+            % (lay, x, y, height, _q(text), rotation, justify_dxf)
         )
         return self._aval(self._handle(corpo))
 
@@ -1569,12 +1588,35 @@ class ComBackend(AutoCADBackend):
 
 
     # ------------------------------------------------------------ cotas/texto
-    async def create_dimension_linear(self, x1: float, y1: float, x2: float, y2: float, dim_x: float, dim_y: float) -> CommandResult:
+    async def create_dimension_linear(self, x1: float, y1: float, x2: float, y2: float,
+                                      dim_x: float, dim_y: float,
+                                      layer: str | None = None,
+                                      text_height: float | None = None,
+                                      arrow_size: float | None = None,
+                                      scale: float | None = None) -> CommandResult:
+        """Cria uma cota com sobrescritas locais, sem modificar o DIMSTYLE global."""
+        overrides = []
+        if layer is not None:
+            safe_layer = _q(layer)
+            overrides.append(
+                ' (setq __d (vla-get-ActiveDocument (vlax-get-acad-object)))'
+                ' (if (not (tblsearch "LAYER" "%s"))'
+                ' (vla-Add (vla-get-Layers __d) "%s"))'
+                ' (vla-put-Layer __o "%s")' % (safe_layer, safe_layer, safe_layer)
+            )
+        if text_height is not None:
+            overrides.append(' (vla-put-TextHeight __o %s)' % text_height)
+        if arrow_size is not None:
+            overrides.append(' (vla-put-ArrowheadSize __o %s)' % arrow_size)
+        if scale is not None:
+            overrides.append(' (vla-put-ScaleFactor __o %s)' % scale)
         expr = (
             '(progn (setvar "CMDECHO" 0) (setvar "OSMODE" 0)'
             ' (command "_.DIMLINEAR" "_non" (list %s %s 0.0) "_non" (list %s %s 0.0) "_non" (list %s %s 0.0))'
-            ' (if (entlast) (cdr (assoc 5 (entget (entlast)))) nil))'
-            % (x1, y1, x2, y2, dim_x, dim_y)
+            ' (setq __e (entlast))'
+            ' (if __e (progn (vl-load-com) (setq __o (vlax-ename->vla-object __e))%s'
+            ' (cdr (assoc 5 (entget __e)))) nil))'
+            % (x1, y1, x2, y2, dim_x, dim_y, "".join(overrides))
         )
         return self._aval(expr)
 
@@ -1847,6 +1889,59 @@ class ComBackend(AutoCADBackend):
                 ' (progn (setq __d (entget __e)) %s (entmod __d) (entupd __e) T)))'
                 % (_q(entity_id), " ".join(partes)))
         return self._aval(expr)
+
+    async def entity_set_properties_filter(self, filter_layer: str | None = None,
+                                           tipo: str | None = None,
+                                           target_layer: str | None = None,
+                                           color: int | str | None = None,
+                                           linetype: str | None = None,
+                                           lineweight: int | None = None,
+                                           visible: bool | None = None) -> CommandResult:
+        """Altera propriedades de todas as entidades que atendem ao filtro.
+
+        A selecao exige ao menos ``filter_layer`` ou ``tipo``. ``target_layer``
+        tem nome distinto para que nao haja ambiguidade entre a camada usada
+        para selecionar e a camada de destino.
+        """
+        cond = self._cond_filtro(filter_layer, tipo)
+        if cond is None:
+            return CommandResult(ok=False, error="informe ao menos um filtro (filter_layer ou tipo)")
+        if all(v is None for v in (target_layer, color, linetype, lineweight, visible)):
+            return CommandResult(ok=False, error="nenhuma propriedade de destino informada")
+
+        updates = []
+        prepare = ""
+        if target_layer is not None:
+            quoted = _q(target_layer)
+            prepare = ('(if (not (tblsearch "LAYER" "%s")) '
+                       '(vla-Add (vla-get-Layers __d) "%s"))' % (quoted, quoted))
+            updates.append('(vla-put-Layer __e "%s")' % quoted)
+        if color is not None:
+            try:
+                color_value = int(color)
+            except (TypeError, ValueError):
+                return CommandResult(ok=False, error="color precisa ser um indice ACI inteiro (1-255)")
+            if not 1 <= color_value <= 255:
+                return CommandResult(ok=False, error="color precisa estar entre 1 e 255")
+            updates.append('(vla-put-Color __e %d)' % color_value)
+        if linetype is not None:
+            updates.append('(vla-put-Linetype __e "%s")' % _q(linetype))
+        if lineweight is not None:
+            updates.append('(vla-put-Lineweight __e %d)' % int(lineweight))
+        if visible is not None:
+            updates.append('(vla-put-Visible __e %s)' % (":vlax-true" if visible else ":vlax-false"))
+
+        expr = (
+            '(progn (vl-load-com) (setq __d (vla-get-ActiveDocument (vlax-get-acad-object)))'
+            ' %s (setq __n 0)'
+            ' (vlax-for __e (vla-get-ModelSpace __d)'
+            '  (if %s (progn %s (setq __n (1+ __n))))) __n)'
+            % (prepare, cond, " ".join(updates))
+        )
+        result = self._aval(expr)
+        if result.ok and isinstance(result.payload, int):
+            result.payload = {"alteradas": result.payload}
+        return result
 
     async def entity_edit_text(self, entity_id: str, text: str | None = None,
                                height: float | None = None,

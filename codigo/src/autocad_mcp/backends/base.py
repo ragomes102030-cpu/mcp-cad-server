@@ -222,7 +222,9 @@ class AutoCADBackend(ABC):
 
     # --- Annotation ---
 
-    async def create_text(self, x: float, y: float, text: str, height: float = 2.5, rotation: float = 0.0, layer: str | None = None) -> CommandResult:
+    async def create_text(self, x: float, y: float, text: str, height: float = 2.5,
+                          rotation: float = 0.0, layer: str | None = None,
+                          justification: str = "left") -> CommandResult:
         return CommandResult(ok=False, error="Not supported on this backend")
 
     async def create_dimension_linear(self, x1: float, y1: float, x2: float, y2: float, dim_x: float, dim_y: float) -> CommandResult:

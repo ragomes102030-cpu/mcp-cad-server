@@ -424,8 +424,11 @@ class FileIPCBackend(AutoCADBackend):
 
     # --- Annotation ---
 
-    async def create_text(self, x, y, text, height=2.5, rotation=0.0, layer=None) -> CommandResult:
-        return await self._dispatch("create-text", {"x": x, "y": y, "text": text, "height": height, "rotation": rotation, "layer": layer})
+    async def create_text(self, x, y, text, height=2.5, rotation=0.0, layer=None,
+                          justification="left") -> CommandResult:
+        return await self._dispatch("create-text", {"x": x, "y": y, "text": text, "height": height,
+                                                      "rotation": rotation, "layer": layer,
+                                                      "justification": justification})
 
     async def create_dimension_linear(self, x1, y1, x2, y2, dim_x, dim_y) -> CommandResult:
         return await self._dispatch("create-dimension-linear", {"x1": x1, "y1": y1, "x2": x2, "y2": y2, "dim_x": dim_x, "dim_y": dim_y})

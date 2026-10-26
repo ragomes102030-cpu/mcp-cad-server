@@ -542,7 +542,22 @@ class EzdxfBackend(AutoCADBackend):
 
     # --- Annotation ---
 
-    async def create_text(self, x, y, text, height=2.5, rotation=0.0, layer=None) -> CommandResult:
+    async def create_text(self, x, y, text, height=2.5, rotation=0.0, layer=None,
+                          justification="left") -> CommandResult:
+        from ezdxf.enums import TextEntityAlignment
+
+        alignment = {
+            "left": TextEntityAlignment.LEFT,
+            "center": TextEntityAlignment.CENTER,
+            "right": TextEntityAlignment.RIGHT,
+            "aligned": TextEntityAlignment.ALIGNED,
+            "middle": TextEntityAlignment.MIDDLE,
+            "fit": TextEntityAlignment.FIT,
+        }.get(str(justification).lower())
+        if alignment is None:
+            return CommandResult(ok=False, error=("justification invalida: %r "
+                                                  "(use left, center, right, aligned, middle ou fit)"
+                                                  % justification))
         self._ensure_layer(layer)
         e = self._msp.add_text(text, dxfattribs={
             "insert": (x, y),
@@ -550,6 +565,8 @@ class EzdxfBackend(AutoCADBackend):
             "rotation": rotation,
             "layer": layer or "0",
         })
+        if alignment is not TextEntityAlignment.LEFT:
+            e.set_placement((x, y), align=alignment)
         return CommandResult(ok=True, payload={"entity_type": "TEXT", "handle": e.dxf.handle})
 
     async def create_dimension_linear(self, x1, y1, x2, y2, dim_x, dim_y) -> CommandResult:

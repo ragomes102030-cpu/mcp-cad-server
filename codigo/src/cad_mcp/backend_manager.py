@@ -106,15 +106,27 @@ class BackendManager:
         return self._backend
 
     async def status(self) -> dict:
-        b = await self.get()
-        st = await b.status()
-        return {
-            "backend": b.name,
-            "selecao": getattr(self, "_motivo", "?"),
-            "modo_configurado": self.mode,
-            "capabilities": vars(b.capabilities),
-            "status": st.to_dict(),
-        }
+        try:
+            b = await self.get()
+            st = await b.status()
+            return {
+                "ok": st.ok,
+                "backend": b.name,
+                "selecao": getattr(self, "_motivo", "?"),
+                "modo_configurado": self.mode,
+                "capabilities": vars(b.capabilities),
+                "status": st.to_dict(),
+            }
+        except Exception as e:
+            return {
+                "ok": False,
+                "backend": None,
+                "modo_configurado": self.mode,
+                "erro": _com_erro(e),
+                "dica": ("Abra um desenho no AutoCAD e aguarde a tela inicial terminar; "
+                         "depois reconecte o MCP. Se usar AutoCAD LT, configure "
+                         "CAD_MCP_BACKEND=file_ipc e carregue o dispatcher LISP."),
+            }
 
     async def reset(self) -> None:
         self._backend = None

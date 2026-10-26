@@ -364,9 +364,14 @@ async def draw_arc(cx: float, cy: float, radius: float, start_angle: float, end_
     return _r(await (await _b()).create_arc(cx, cy, radius, start_angle, end_angle, layer=layer))
 
 
-async def draw_text(x: float, y: float, text: str, height: float = 2.5, rotation: float = 0.0, layer: str | None = None) -> dict:
-    """Escreve um texto simples."""
-    return _r(await (await _b()).create_text(x, y, text, height=height, rotation=rotation, layer=layer))
+async def draw_text(x: float, y: float, text: str, height: float = 2.5,
+                    rotation: float = 0.0, layer: str | None = None,
+                    justification: str = "left") -> dict:
+    """Escreve um texto simples; ``justification`` ancora left/center/right no ponto."""
+    return _r(await (await _b()).create_text(
+        x, y, text, height=height, rotation=rotation, layer=layer,
+        justification=justification,
+    ))
 
 
 async def draw_mtext(x: float, y: float, width: float, text: str, height: float = 2.5, layer: str | None = None) -> dict:
@@ -407,7 +412,9 @@ async def entity_create_table(
     ))
 
 
-async def dim_linear(x1: float, y1: float, x2: float, y2: float, dim_x: float, dim_y: float) -> dict:
+async def dim_linear(x1: float, y1: float, x2: float, y2: float, dim_x: float, dim_y: float,
+                     layer: str | None = None, text_height: float | None = None,
+                     arrow_size: float | None = None, scale: float | None = None) -> dict:
     """Cota linear entre dois pontos, com a linha de cota em (dim_x, dim_y).
 
     Em cota HORIZONTAL (y1 == y2) só o Y do terceiro ponto posiciona a linha: o
@@ -415,7 +422,10 @@ async def dim_linear(x1: float, y1: float, x2: float, y2: float, dim_x: float, d
     vertical/alinhada ou mova o texto depois. Em cota VERTICAL (x1 == x2) é o X que
     posiciona. Não é bug da ferramenta: é como o DIMLINEAR escolhe a direção.
     """
-    return _r(await (await _b()).create_dimension_linear(x1, y1, x2, y2, dim_x, dim_y))
+    return _r(await (await _b()).create_dimension_linear(
+        x1, y1, x2, y2, dim_x, dim_y, layer=layer, text_height=text_height,
+        arrow_size=arrow_size, scale=scale,
+    ))
 
 
 async def dim_aligned(x1: float, y1: float, x2: float, y2: float, offset: float) -> dict:

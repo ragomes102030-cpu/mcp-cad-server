@@ -171,6 +171,11 @@ async def layout_list() -> dict:
     )
 
 
+async def layout_current() -> dict:
+    """Devolve a aba atualmente ativa (Model ou uma prancha de paper space)."""
+    return await _aval('(getvar "CTAB")')
+
+
 async def layout_create(name: str) -> dict:
     """Cria uma aba de layout (paper space) nova."""
     return await _aval(
@@ -352,43 +357,53 @@ async def batch_plot(layouts: list[str] | None = None, out_dir: str | None = Non
     if not hasattr(b, "drawing_plot_pdf"):
         return {"ok": False, "erro": "backend '%s' nao plota PDF" % getattr(b, "name", "?")}
 
+    lista = await layout_list()
+    if not lista.get("ok"):
+        return lista
+    brutos = lista.get("payload") or []
+    atual = await layout_current()
+    if not atual.get("ok") or not atual.get("payload"):
+        return {"ok": False, "erro": "nao consegui identificar a aba ativa antes do plot"}
+    aba_original = str(atual["payload"])
     if layouts is None:
-        r = await layout_list()
-        if not r.get("ok"):
-            return r
-        brutos = r.get("payload") or []
         layouts = [n for n in brutos if str(n).lower() != "model"]
     if not layouts:
         return {"ok": False, "erro": "nenhuma aba de paper space para plotar"}
+    faltantes = [str(n) for n in layouts if str(n) not in brutos]
+    if faltantes:
+        return {"ok": False, "erro": "layout inexistente: " + ", ".join(faltantes)}
 
     base = Path(out_dir) if out_dir else None
     if base is not None:
         base.mkdir(parents=True, exist_ok=True)
 
     resultados, falhas = [], 0
-    for nome in layouts:
-        troca = await layout_set_current(nome)
-        if not troca.get("ok"):
-            resultados.append({"layout": nome, "ok": False,
-                               "erro": troca.get("error") or troca.get("erro")})
-            falhas += 1
-            continue
-        arquivo = padrao.replace("{layout}", str(nome))
-        destino = str((base / arquivo) if base else Path(arquivo).resolve())
-        try:
-            res = await b.drawing_plot_pdf(destino, media=media, escala=escala)
-        except TypeError:
-            # backend headless aceita so' o caminho: plota no padrao
-            res = await b.drawing_plot_pdf(destino)
-        d = res.to_dict() if hasattr(res, "to_dict") else {"ok": bool(res)}
-        d["layout"] = nome
-        d["arquivo"] = destino
-        resultados.append(d)
-        if not d.get("ok"):
-            falhas += 1
+    try:
+        for nome in layouts:
+            troca = await layout_set_current(nome)
+            if not troca.get("ok"):
+                resultados.append({"layout": nome, "ok": False,
+                                   "erro": troca.get("error") or troca.get("erro")})
+                falhas += 1
+                continue
+            arquivo = padrao.replace("{layout}", str(nome))
+            destino = str((base / arquivo) if base else Path(arquivo).resolve())
+            try:
+                res = await b.drawing_plot_pdf(destino, media=media, escala=escala)
+            except TypeError:
+                res = await b.drawing_plot_pdf(destino)
+            d = res.to_dict() if hasattr(res, "to_dict") else {"ok": bool(res)}
+            d["layout"] = nome
+            d["arquivo"] = destino
+            resultados.append(d)
+            if not d.get("ok"):
+                falhas += 1
+    finally:
+        restaurar = await layout_set_current(aba_original)
 
-    return {"ok": falhas == 0, "plotados": len(layouts) - falhas,
-            "falhas": falhas, "resultados": resultados}
+    return {"ok": falhas == 0 and restaurar.get("ok", False), "plotados": len(layouts) - falhas,
+            "falhas": falhas, "layout_restaurado": restaurar.get("ok", False),
+            "resultados": resultados}
 
 
 # ------------------------------------------------------------------ arquivo
@@ -442,7 +457,7 @@ TOOLS = [
     layer_hide, layer_show, layer_freeze, layer_thaw,
     layer_lock, layer_unlock, layer_isolate, layer_delete, layer_modify,
     # layouts
-    layout_list, layout_create, layout_set_current,
+    layout_list, layout_current, layout_create, layout_set_current,
     layout_rename, layout_delete, layout_copy,
     # page setup / plot
     page_setup_list, page_setup_apply, plot_style_list, batch_plot,
