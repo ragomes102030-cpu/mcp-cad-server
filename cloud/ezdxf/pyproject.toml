@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-cad-cloud"
+version = "0.1.0"
+description = "MCP HTTP server for CAD mapping tools (ezdxf headless, no AutoCAD)"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=2.0.0",
+    "ezdxf>=1.0.0",
+]
+
+[project.scripts]
+mcp-cad-cloud = "mcp_cad_cloud.server:main"
+
+[tool.setuptools]
+packages = ["mcp_cad_cloud"]

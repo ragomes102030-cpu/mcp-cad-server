@@ -1,0 +1,22 @@
+# Render MCP deploy config — mcp-cad-cloud
+#
+# Usage: no Render Dashboard, "New Render MCP" → URL git branch `cloud/ezdxf`.
+# Render no longer has a separate "MCP service" type for MCP servers in this
+# repo; the file below is a `web` service that starts the FastMCP HTTP server.
+
+services:
+  - type: web
+    name: mcp-cad-cloud
+    env: python
+    plan: starter
+    buildCommand: pip install -e .  # (or: pip install -r requirements.txt)
+    startCommand: python -m mcp_cad_cloud.server
+    autoDeploy: true
+    healthCheckPath: /healthz
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: CAD_BACKEND
+        value: ezdxf
+      - key: CAD_TEMP
+        value: /tmp/mcp_cad
