@@ -47,6 +47,22 @@ def _wrap(fn):
             return {"ok": False, "code": "BACKEND_ERROR", "error": str(exc)}
     return call
 
+
+@_wrap
+def planta_assistida(programa: dict | None = None, modo: str = "preview",
+                     nome: str | None = None) -> dict:
+    """Create the deterministic residential template in headless ezdxf.
+
+    The cloud variant never opens or edits AutoCAD; ``desenhar`` changes only
+    the ephemeral DXF held by this HTTP session.
+    """
+    global DRAWING_NAME
+    from mcp_cad_cloud.planta_assistida import planta_assistida as build
+    result = build(programa=programa, modo=modo, nome=nome)
+    if nome and result.get("ok"):
+        DRAWING_NAME = str(nome)
+    return result
+
 @_wrap
 def cad_status() -> dict:
     """Return capabilities, entity count and warning about temporary memory."""
@@ -224,4 +240,4 @@ def export_dxf() -> dict:
 TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_drawing",
          "query_entities", "draw_line", "draw_rectangle", "draw_polyline", "draw_circle",
          "draw_arc", "draw_text", "dim_aligned", "erase", "drawing_audit",
-         "quantitativo", "export_dxf")
+         "quantitativo", "export_dxf", "planta_assistida")

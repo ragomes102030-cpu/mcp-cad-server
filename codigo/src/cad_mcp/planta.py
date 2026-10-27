@@ -30,6 +30,8 @@ Formato do modelo:
 from __future__ import annotations
 
 import math
+from decimal import Decimal, ROUND_HALF_UP
+from .areas import decimal_area
 import sys
 from pathlib import Path
 
@@ -41,7 +43,7 @@ from .layers import LAYER_STANDARD  # noqa: E402
 
 __all__ = [
     "cons_poligono", "cons_linha", "cons_arco", "cons_texto", "cons_faixa_parede",
-    "Desenho", "desenhar_modelo", "areas_do_modelo", "num_br",
+    "wall_boundary_segments", "Desenho", "desenhar_modelo", "areas_do_modelo", "num_br",
 ]
 
 
@@ -68,7 +70,8 @@ def _rad(graus: float) -> str:
 
 def num_br(v: float, casas: int = 2) -> str:
     """Formata numero no padrao brasileiro (virgula decimal)."""
-    return ("%.*f" % (casas, v)).replace(".", ",")
+    value=Decimal(str(v)).quantize(Decimal(1).scaleb(-casas),rounding=ROUND_HALF_UP)
+    return format(value,'.%df' % casas).replace('.',',')
 
 
 def cons_poligono(x1, y1, x2, y2, camada: str = "0", fechado: bool = True) -> str:
@@ -118,6 +121,66 @@ def cons_faixa_parede(x1, y1, x2, y2, t: float = 0.15, camada: str = "PAREDES") 
     if abs(x2 - x1) < 1e-9:  # vertical
         return cons_poligono(x1 - mt, min(y1, y2), x1 + mt, max(y1, y2), camada)
     return cons_poligono(min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2), camada)
+
+
+def wall_boundary_segments(walls, t: float = 0.15) -> list[tuple[float, float, float, float]]:
+    """Converte eixos cortados em faces/cabeceiras sem sobrepor retângulos.
+
+    Os trechos de eixo já vêm separados nos vãos. Cada trecho vira duas linhas
+    paralelas e só recebe cabeceira quando a ponta não encontra outra parede.
+    Assim, portas e janelas continuam sendo vãos reais, e os encontros L/T não
+    acumulam polilinhas retangulares umas sobre as outras.
+    """
+    segs = [tuple(float(v) for v in p) for p in walls]
+    half = float(t) / 2.0
+    eps = 1e-7
+
+    def on_segment(x, y, s):
+        x1, y1, x2, y2 = s
+        if abs(y2 - y1) < eps:
+            return abs(y - y1) < eps and min(x1, x2) - eps <= x <= max(x1, x2) + eps
+        if abs(x2 - x1) < eps:
+            return abs(x - x1) < eps and min(y1, y2) - eps <= y <= max(y1, y2) + eps
+        return False
+
+    def connected(x, y, current):
+        for other in segs:
+            if other == current:
+                continue
+            if on_segment(x, y, other):
+                return True
+        return False
+
+    out = []
+
+    def add(a, b):
+        key = tuple(round(v, 8) for v in (*a, *b))
+        rev = tuple(round(v, 8) for v in (*b, *a))
+        keys = {tuple(round(v, 8) for v in (*p, *q)) for p, q in out}
+        if key not in keys and rev not in keys:
+            out.append((a, b))
+
+    for s in segs:
+        x1, y1, x2, y2 = s
+        if abs(y2 - y1) < eps:
+            lo, hi = sorted((x1, x2))
+            add((lo, y1 - half), (hi, y1 - half))
+            add((lo, y1 + half), (hi, y1 + half))
+            if not connected(lo, y1, s):
+                add((lo, y1 - half), (lo, y1 + half))
+            if not connected(hi, y1, s):
+                add((hi, y1 - half), (hi, y1 + half))
+        elif abs(x2 - x1) < eps:
+            lo, hi = sorted((y1, y2))
+            add((x1 - half, lo), (x1 - half, hi))
+            add((x1 + half, lo), (x1 + half, hi))
+            if not connected(x1, lo, s):
+                add((x1 - half, lo), (x1 + half, lo))
+            if not connected(x1, hi, s):
+                add((x1 - half, hi), (x1 + half, hi))
+        else:
+            raise ValueError("parede diagonal não suportada: %r" % (s,))
+    return out
 
 
 # ------------------------------------------------------------------ desenhista
@@ -175,7 +238,7 @@ class Desenho:
 def areas_do_modelo(modelo: dict) -> dict:
     out = {}
     for a in modelo.get("ambientes", []):
-        out[a["nome"]] = round((a["x2"] - a["x1"]) * (a["y2"] - a["y1"]), 4)
+        out[a["nome"]] = float(decimal_area(a))
     return out
 
 
@@ -248,8 +311,12 @@ async def desenhar_modelo(b, modelo: dict, log=None,
 
     diga("paredes (%d eixos)..." % len(modelo.get("paredes", [])))
     await b.layer_set_current("PAREDES")
-    for (x1, y1, x2, y2) in modelo.get("paredes", []):
-        await d._ent(cons_faixa_parede(x1, y1, x2, y2, t))
+    if modelo.get("parede_sem_sobreposicao"):
+        for x1, y1, x2, y2 in wall_boundary_segments(modelo.get("paredes", []), t):
+            await d.linha(x1, y1, x2, y2, "PAREDES")
+    else:
+        for (x1, y1, x2, y2) in modelo.get("paredes", []):
+            await d._ent(cons_faixa_parede(x1, y1, x2, y2, t))
 
     diga("ambientes (%d)..." % len(modelo.get("ambientes", [])))
     await b.layer_set_current("TEXTOS")

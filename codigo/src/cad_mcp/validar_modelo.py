@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import math
 import sys
+from .areas import area_summary
 from pathlib import Path
 
 __all__ = ["validar", "AVANCO_TXT", "CHECKS"]
@@ -34,7 +35,8 @@ CHECKS = [
     "modelo-sem-terreno", "ambiente-invertido", "ambiente-area-zero",
     "ambientes-sobrepostos", "area-total-diverge", "parede-comprimento-zero",
     "parede-diagonal", "parede-fora-terreno", "parede-duplicada",
-    "porta-sem-parede", "porta-sem-vao", "porta-estreita", "porta-larga",
+    "porta-sem-parede", "porta-sem-vao", "porta-colide-parede",
+    "porta-estreita", "porta-larga",
     "texto-transborda", "selo-transborda", "selo-linhas-colidem",
     "formato-ruim",
 ]
@@ -88,6 +90,34 @@ def _vao_ao_lado(intervalos, p: float, w: float) -> bool:
 def _lab(texto: str, h: float) -> float:
     """Largura estimada (superior) de um texto de altura h."""
     return AVANCO_TXT * float(h) * len(str(texto))
+
+
+def _distancia_ponto_parede(x: float, y: float, parede) -> float:
+    """Distância de um ponto ao eixo de uma parede ortogonal."""
+    x1, y1, x2, y2 = parede
+    if _eh_h(parede):
+        if min(x1, x2) <= x <= max(x1, x2):
+            return abs(y - y1)
+        return min(math.hypot(x - x1, y - y1), math.hypot(x - x2, y - y2))
+    if _eh_v(parede):
+        if min(y1, y2) <= y <= max(y1, y2):
+            return abs(x - x1)
+        return min(math.hypot(x - x1, y - y1), math.hypot(x - x2, y - y2))
+    return float("inf")
+
+
+def _folha_colide_parede(porta, paredes, espessura: float) -> bool:
+    """Testa pontos da folha aberta, excluindo o pivô da própria parede."""
+    px, py, ang, largura = porta
+    rad = math.radians(ang)
+    # Os primeiros 12 cm pertencem à região do batente e não devem gerar um
+    # falso positivo contra o eixo hospedeiro.
+    for frac in (0.16, 0.28, 0.40, 0.52, 0.64, 0.76, 0.88, 1.0):
+        x = px + largura * frac * math.cos(rad)
+        y = py + largura * frac * math.sin(rad)
+        if any(_distancia_ponto_parede(x, y, p) < espessura / 2.0 - 0.005 for p in paredes):
+            return True
+    return False
 
 
 # ------------------------------------------------------------------ validacao
@@ -213,6 +243,9 @@ def validar(modelo: dict, estrito: bool = False) -> dict:
         if not ok:
             add("porta-sem-vao", onde,
                 "a parede esta FECHADA no pivo: falta abrir o vao de %.2f m no eixo" % w)
+        if _folha_colide_parede((px, py, ang, w), paredes, t):
+            add("porta-colide-parede", onde,
+                "a folha aberta atravessa a faixa de outra parede; revisar dobradiça/sentido")
 
     # ---------------------------------------------------------- selo
     if selo:
@@ -259,6 +292,7 @@ def validar(modelo: dict, estrito: bool = False) -> dict:
     avisos = [p for p in P if p["severidade"] == "aviso"]
     return {
         "ok": not erros,
+        "area_accounting": area_summary(ambientes) if not any(p['chave']=='ambiente-invertido' for p in P) else None,
         "problemas": P,
         "erros": erros,
         "avisos": avisos,

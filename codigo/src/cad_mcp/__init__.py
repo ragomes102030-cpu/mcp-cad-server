@@ -4,7 +4,7 @@
 Contrato de ferramentas compatível com o que o CADCraft já expõe, para que
 prompts e skills do usuário continuem válidos ao trocar de motor.
 """
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 CONTRATO = [
     # núcleo compatível com CADCraft

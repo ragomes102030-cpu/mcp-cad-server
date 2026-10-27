@@ -17,6 +17,14 @@ usar dados sensíveis, adicionar autenticação e isolamento por projeto.
 - Health check: `/healthz`
 - Endpoint MCP: `/mcp`
 
+## Planta assistida
+
+O cloud expõe `planta_assistida` para gerar a mesma residência determinística
+em DXF headless. `modo="preview"` não altera o desenho; `modo="desenhar"`
+cria entidades somente na sessão ezdxf temporária. Ele usa paredes por faces
+sem sobreposição, vãos reais para portas/janelas e cotas do fundo. Não abre o
+AutoCAD e não gera DWG nativo.
+
 ## Testes
 
 ```powershell
