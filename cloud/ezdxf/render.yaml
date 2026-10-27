@@ -16,6 +16,8 @@ services:
     envVars:
       - key: PORT
         value: "8000"
+      - key: HOST
+        value: "0.0.0.0"
       - key: CAD_BACKEND
         value: ezdxf
       - key: CAD_TEMP

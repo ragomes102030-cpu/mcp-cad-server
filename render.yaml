@@ -1,21 +1,19 @@
-# Render deploy config — mcp-cad-cloud (Docker)
-#
-# Build via Dockerfile (multi-stage, python:3.12-slim)
-# Start: python -m mcp_cad_cloud.server
+# Render deploy config — mcp-cad-cloud (ezdxf headless, sem AutoCAD)
 
 services:
-  - type: docker
-    dockerfilePath: Dockerfile
+  - type: web
     name: mcp-cad-cloud
-    env: python
+    runtime: python
     plan: starter
-    buildCommand: pip install -e .
+    buildCommand: pip install -e ./cloud/ezdxf
     startCommand: python -m mcp_cad_cloud.server
     autoDeploy: true
     healthCheckPath: /healthz
     envVars:
       - key: PORT
         value: "8000"
+      - key: HOST
+        value: "0.0.0.0"
       - key: CAD_BACKEND
         value: ezdxf
       - key: CAD_TEMP
