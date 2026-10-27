@@ -19,9 +19,10 @@ _TEMPLATES = (
     {
         "id": "tiny_house_10m2",
         "nome": "Tiny House de 10 m2",
-        "status": "em_desenvolvimento",
-        "dimensoes_externas": {"area": 10.0},
-        "observacao": "Ainda nao deve ser desenhada pelo template residencial.",
+        "status": "disponivel",
+        "dimensoes_externas": {"largura": 2.5, "profundidade": 4.0, "area": 10.0},
+        "ambientes": 2,
+        "modo_desenho": "autocad_com",
     },
 )
 

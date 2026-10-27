@@ -647,7 +647,7 @@ async def planta_assistida(
 
     programa = programa or {}
     solicitado = str(template or programa.get("template") or TEMPLATE_PADRAO).strip()
-    if solicitado != TEMPLATE_PADRAO:
+    if solicitado not in {TEMPLATE_PADRAO, "tiny_house_10m2"}:
         return {
             "ok": False,
             "code": "TEMPLATE_NOT_SUPPORTED",
@@ -655,8 +655,10 @@ async def planta_assistida(
             "templates": listar_templates(),
             "proxima_acao": "escolher um template suportado",
         }
-    if (("largura_externa" in programa and float(programa["largura_externa"]) != 12.0) or
-            ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != 11.0)):
+    largura_padrao = 12.0 if solicitado == TEMPLATE_PADRAO else 2.5
+    profundidade_padrao = 11.0 if solicitado == TEMPLATE_PADRAO else 4.0
+    if (("largura_externa" in programa and float(programa["largura_externa"]) != largura_padrao) or
+            ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != profundidade_padrao)):
         return {
             "ok": False,
             "code": "TEMPLATE_NOT_SUPPORTED",
@@ -666,7 +668,11 @@ async def planta_assistida(
         }
 
     try:
-        modelo = build_assisted_model(programa or {})
+        if solicitado == "tiny_house_10m2":
+            from .tiny_house_assistida import build_tiny_house_model
+            modelo = build_tiny_house_model(programa)
+        else:
+            modelo = build_assisted_model(programa)
     except (TypeError, ValueError) as exc:
         return {"ok": False, "code": "INVALID_PROGRAM", "erro": str(exc)}
 

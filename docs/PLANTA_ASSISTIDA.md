@@ -65,4 +65,6 @@ O agente não precisa chamar `new_drawing` nem descobrir coordenadas individualm
 
 ## Limite do template
 
+O template `tiny_house_10m2` agora esta disponivel como modulo de 2,50 x 4,00 m, com estar/cozinha e banheiro. Ele e uma tipologia fechada para teste; outras Tiny Houses devem receber um template proprio antes de desenhar.
+
 O primeiro template é deliberadamente fechado para dar previsibilidade a modelos menores. Para outras dimensões ou outro programa, crie um novo template validado em vez de permitir que o agente altere coordenadas livremente.

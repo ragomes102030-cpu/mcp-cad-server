@@ -44,6 +44,16 @@ def test_cloud_rejects_unsupported_dimensions_before_drawing():
     assert result["proxima_acao"] == "escolher um template suportado"
 
 
+def test_cloud_tiny_house_template_preview_is_validated_before_drawing():
+    result = planta_assistida(programa={
+        "template": "tiny_house_10m2",
+    }, modo="preview")
+
+    assert result["ok"] is True
+    assert result["resumo"]["area_util"] == 8.695
+    assert result["resumo"]["ambientes"] == 2
+
+
 def test_cloud_assisted_tool_draws_real_entities_in_expected_layers():
     result = tools_verified.planta_assistida(modo="desenhar", nome="planta_corrigida_cloud")
 

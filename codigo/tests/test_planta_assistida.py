@@ -67,6 +67,19 @@ def test_unsupported_dimensions_are_rejected_with_template_guidance():
     assert result["proxima_acao"] == "escolher um template suportado"
 
 
+def test_tiny_house_template_preview_is_validated_before_drawing():
+    import asyncio
+
+    result = asyncio.run(tools.planta_assistida({
+        "template": "tiny_house_10m2",
+    }, modo="preview"))
+
+    assert result["ok"] is True
+    assert result["resumo"]["area_util"] == 8.695
+    assert result["resumo"]["ambientes"] == 2
+    assert result["validacao"]["ok"] is True
+
+
 def test_preview_does_not_require_autocad_or_touch_a_drawing():
     import asyncio
 
