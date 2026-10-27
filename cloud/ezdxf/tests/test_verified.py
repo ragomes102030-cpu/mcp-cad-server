@@ -1,6 +1,7 @@
 """Headless CAD smoke regression: actual entities and DXF roundtrip."""
 import base64
 import io
+import tempfile
 import zipfile
 import ezdxf
 from mcp_cad_cloud import tools_verified as cad
@@ -23,7 +24,15 @@ def test_create_export_roundtrip():
     assert result["ok"]
     with zipfile.ZipFile(io.BytesIO(base64.b64decode(result["data_base64"]))) as z:
         dxf_bytes = z.read("desenho.dxf")
-    doc = ezdxf.read(io.StringIO(dxf_bytes.decode("utf-8", errors="replace")))
+    handle, filename = tempfile.mkstemp(suffix=".dxf")
+    try:
+        with open(handle, "wb", closefd=False) as exported:
+            exported.write(dxf_bytes)
+        doc = ezdxf.readfile(filename)
+    finally:
+        import os
+        os.close(handle)
+        os.unlink(filename)
     assert len(doc.modelspace()) == before["entities"]
     assert doc.header["$INSUNITS"] == 6
     assert sum(1 for e in doc.modelspace() if e.dxftype() == "LINE") == 1
