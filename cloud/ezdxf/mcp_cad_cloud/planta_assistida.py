@@ -157,9 +157,16 @@ def _ensure_layers(doc):
 
 def planta_assistida(programa=None, modo="preview", nome=None):
     model = build_assisted_model(programa)
+    from mcp_cad_cloud.validar_modelo import validar
+    validacao = validar(model)
+    if validacao.get("erros"):
+        return {"ok": False, "code": "INVALID_LAYOUT",
+                "error": "o template foi rejeitado pela validação geométrica",
+                "validacao": validacao}
     summary = _summary(model)
     if modo == "preview":
-        return {"ok": True, "etapa": "preview", "backend": "ezdxf", "resumo": summary, "modelo": model}
+        return {"ok": True, "etapa": "preview", "backend": "ezdxf", "resumo": summary,
+                "validacao": validacao, "modelo": model}
     if modo != "desenhar":
         return {"ok": False, "code": "INVALID_MODE", "error": "modo deve ser preview ou desenhar"}
 
@@ -193,7 +200,7 @@ def planta_assistida(programa=None, modo="preview", nome=None):
     for x, y, text, height in model["selo"]:
         msp.add_text(text, dxfattribs={"height":height,"insert":(x,y),"layer":"TEXTOS"})
     return {"ok": True, "etapa": "desenho", "backend": "ezdxf", "resumo": summary,
-            "entities": len(msp), "drawing": DRAWING_NAME}
+            "validacao": validacao, "entities": len(msp), "drawing": DRAWING_NAME}
 
 
 DRAWING_NAME = "planta_sem_nome"

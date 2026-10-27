@@ -35,8 +35,11 @@ CHECKS = [
     "modelo-sem-terreno", "ambiente-invertido", "ambiente-area-zero",
     "ambientes-sobrepostos", "area-total-diverge", "parede-comprimento-zero",
     "parede-diagonal", "parede-fora-terreno", "parede-duplicada",
+    "paredes-sobrepostas", "janela-sem-parede", "janela-sobreporta",
     "porta-sem-parede", "porta-sem-vao", "porta-colide-parede",
-    "porta-estreita", "porta-larga",
+    "portas-sobrepostas", "porta-estreita", "porta-larga",
+    "moveis-invalidos", "moveis-sobrepostos", "movel-fora-ambiente",
+    "texto-sobre-movel",
     "texto-transborda", "selo-transborda", "selo-linhas-colidem",
     "formato-ruim",
 ]
@@ -118,6 +121,20 @@ def _folha_colide_parede(porta, paredes, espessura: float) -> bool:
         if any(_distancia_ponto_parede(x, y, p) < espessura / 2.0 - 0.005 for p in paredes):
             return True
     return False
+
+
+def _retangulos_sobrepostos(a, b, folga: float = 0.01) -> bool:
+    """Intersecao de area (contato pela borda nao e conflito)."""
+    return (min(a[2], b[2]) - max(a[0], b[0]) > folga and
+            min(a[3], b[3]) - max(a[1], b[1]) > folga)
+
+
+def _intervalo_eixo(x1, y1, x2, y2):
+    if _eh_h((x1, y1, x2, y2)):
+        return "h", round(y1, 4), min(x1, x2), max(x1, x2)
+    if _eh_v((x1, y1, x2, y2)):
+        return "v", round(x1, 4), min(y1, y2), max(y1, y2)
+    return None
 
 
 # ------------------------------------------------------------------ validacao
@@ -208,7 +225,24 @@ def validar(modelo: dict, estrito: bool = False) -> dict:
                     or min(y1, y2) - mt < ty1 - TOL or max(y1, y2) + mt > ty2 + TOL):
                 add("parede-fora-terreno", nome, "faixa da parede sai do terreno")
 
-    # ---------------------------------------------------------- portas
+    # Trechos colineares nao podem se sobrepor: desenhar os dois cria a
+    # aparencia de parede mais grossa e costuma ser a origem dos conflitos
+    # vistos quando um agente gera uma parede inteira e depois outra parcial.
+    for i, a in enumerate(paredes):
+        ea = _intervalo_eixo(*a)
+        if not ea:
+            continue
+        for b in paredes[i + 1:]:
+            eb = _intervalo_eixo(*b)
+            if not eb or ea[:2] != eb[:2]:
+                continue
+            inicio = max(ea[2], eb[2])
+            fim = min(ea[3], eb[3])
+            if fim - inicio > 0.01:
+                add("paredes-sobrepostas", "parede %d x parede %d" % (i + 1, i + 2),
+                    "trechos colineares se sobrepoem em %.2f m" % (fim - inicio))
+
+    # ---------------------------------------------------------- portas e janelas
     eixos_h: dict[float, list[tuple[float, float]]] = {}
     eixos_v: dict[float, list[tuple[float, float]]] = {}
     for (x1, y1, x2, y2) in paredes:
@@ -218,6 +252,36 @@ def validar(modelo: dict, estrito: bool = False) -> dict:
             eixos_v.setdefault(round(x1, 4), []).append((min(y1, y2), max(y1, y2)))
     eixos_h = {y: _fundir(v) for y, v in eixos_h.items()}
     eixos_v = {x: _fundir(v) for x, v in eixos_v.items()}
+
+    def eixo_da_abertura(abertura, nome):
+        x1, y1, x2, y2 = (float(v) for v in abertura)
+        if abs(y2 - y1) < 1e-9:
+            perto = [y for y in eixos_h if abs(y1 - y) <= t / 2 + 0.03]
+            return [("h", y, min(x1, x2), max(x1, x2)) for y in perto]
+        if abs(x2 - x1) < 1e-9:
+            perto = [x for x in eixos_v if abs(x1 - x) <= t / 2 + 0.03]
+            return [("v", x, min(y1, y2), max(y1, y2)) for x in perto]
+        return []
+
+    janelas = [tuple(float(v) for v in j) for j in modelo.get("janelas", []) or []]
+    for idx, janela in enumerate(janelas, 1):
+        x1, y1, x2, y2 = janela
+        if _comprimento(janela) < 0.05:
+            add("janela-sem-parede", "janela %d" % idx, "vao de janela degenerado")
+            continue
+        eixos = eixo_da_abertura(janela, "janela")
+        if not eixos:
+            add("janela-sem-parede", "janela %d" % idx,
+                "janela nao esta sobre um eixo de parede ortogonal")
+            continue
+        tem_vao = False
+        for orient, eixo, a, b in eixos:
+            intervalos = eixos_h[eixo] if orient == "h" else eixos_v[eixo]
+            if _vao_ao_lado(intervalos, a, b - a):
+                tem_vao = True
+        if not tem_vao:
+            add("janela-sem-parede", "janela %d" % idx,
+                "a parede esta fechada no trecho da janela; falta abrir o vao")
 
     for (px, py, ang, w) in portas:
         onde = "porta (%.2f, %.2f) %.0f graus, %.2f m" % (px, py, ang, w)
@@ -246,6 +310,50 @@ def validar(modelo: dict, estrito: bool = False) -> dict:
         if _folha_colide_parede((px, py, ang, w), paredes, t):
             add("porta-colide-parede", onde,
                 "a folha aberta atravessa a faixa de outra parede; revisar dobradiça/sentido")
+
+    # Aberturas de portas do mesmo eixo nao podem ocupar o mesmo intervalo.
+    portas_eixos = []
+    for idx, (px, py, _ang, w) in enumerate(portas, 1):
+        perto_h = [y for y in eixos_h if abs(py - y) <= t / 2 + 0.03]
+        perto_v = [x for x in eixos_v if abs(px - x) <= t / 2 + 0.03]
+        for y in perto_h:
+            portas_eixos.append(("h", y, px, px + w, idx))
+        for x in perto_v:
+            portas_eixos.append(("v", x, py, py + w, idx))
+    for i, a in enumerate(portas_eixos):
+        for b in portas_eixos[i + 1:]:
+            if a[0:2] == b[0:2] and a[4] != b[4] and min(a[3], b[3]) - max(a[2], b[2]) > 0.01:
+                add("portas-sobrepostas", "porta %d x porta %d" % (a[4], b[4]),
+                    "intervalos de vao se sobrepoem em %.2f m" % (min(a[3], b[3]) - max(a[2], b[2])))
+
+    # ---------------------------------------------------------- mobiliario
+    moveis = [tuple(float(v) for v in m) for m in modelo.get("moveis", []) or []]
+    for idx, movel in enumerate(moveis, 1):
+        if len(movel) != 4 or movel[2] <= movel[0] + EPS or movel[3] <= movel[1] + EPS:
+            add("moveis-invalidos", "movel %d" % idx, "retangulo invertido/degenerado")
+            continue
+        dentro = any(
+            movel[0] >= float(a["x1"]) - TOL and movel[1] >= float(a["y1"]) - TOL and
+            movel[2] <= float(a["x2"]) + TOL and movel[3] <= float(a["y2"]) + TOL
+            for a in ambientes
+        )
+        if not dentro:
+            add("movel-fora-ambiente", "movel %d" % idx,
+                "retangulo nao esta contido em nenhum ambiente")
+    for i, a in enumerate(moveis):
+        for j, b in enumerate(moveis[i + 1:], i + 1):
+            if _retangulos_sobrepostos(a, b):
+                add("moveis-sobrepostos", "movel %d x movel %d" % (i + 1, j + 1),
+                    "retangulos de mobiliario se sobrepoem")
+    for amb in ambientes:
+        cx, cy = (float(amb["x1"]) + float(amb["x2"])) / 2, (float(amb["y1"]) + float(amb["y2"])) / 2 + 0.16
+        h = float(amb.get("h", 0.26))
+        caixa_texto = (cx - _lab(amb.get("nome", ""), h) / 2, cy - h / 2,
+                       cx + _lab(amb.get("nome", ""), h) / 2, cy + h / 2)
+        for idx, movel in enumerate(moveis, 1):
+            if _retangulos_sobrepostos(caixa_texto, movel, 0.005):
+                add("texto-sobre-movel", amb.get("nome", "?"),
+                    "rotulo invade o movel %d" % idx)
 
     # ---------------------------------------------------------- selo
     if selo:

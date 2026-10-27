@@ -9,8 +9,12 @@ command_line, script, new_drawing, open, save, cancel) + extras nossos
 from __future__ import annotations
 
 import ctypes
+import asyncio
 import os
 import tempfile
+import shlex
+import math
+import uuid
 from pathlib import Path
 
 from .backend_manager import MANAGER
@@ -40,6 +44,69 @@ def _pares(v) -> dict:
 
 async def _b():
     return await MANAGER.get()
+
+
+def _autocad_window_exists() -> bool:
+    """Verifica uma instância visível antes de iniciar outra."""
+    try:
+        from .win32_bridge import find_autocad_window
+
+        return bool(find_autocad_window())
+    except Exception:
+        return False
+
+
+async def _obter_backend_autocad(abrir: bool, timeout_s: float) -> tuple[object | None, dict | None]:
+    """Obtém COM e, se autorizado, inicia o AutoCAD e espera o COM."""
+    ultimo_erro = None
+    try:
+        backend = await _b()
+        if getattr(backend, "name", "") == "autocad_com":
+            return backend, None
+        ultimo_erro = "backend ativo: %s" % getattr(backend, "name", "desconhecido")
+    except Exception as exc:
+        ultimo_erro = str(exc)
+
+    modo = getattr(MANAGER, "mode", "auto")
+    if not abrir or modo == "ezdxf":
+        return None, {
+            "code": "AUTOCAD_REQUIRED",
+            "erro": "o desenho direto exige o backend local autocad_com",
+            "backend": None,
+            "detalhe": ultimo_erro,
+        }
+
+    iniciado = False
+    if not _autocad_window_exists():
+        from .autocad_launcher import start_autocad
+
+        iniciado = start_autocad()
+        if not iniciado.get("ok"):
+            return None, iniciado
+
+    await MANAGER.reset()
+    prazo = asyncio.get_running_loop().time() + max(10.0, min(float(timeout_s), 180.0))
+    while asyncio.get_running_loop().time() < prazo:
+        try:
+            backend = await _b()
+            if getattr(backend, "name", "") == "autocad_com":
+                return backend, {
+                    "code": "AUTOCAD_READY",
+                    "iniciado": iniciado,
+                }
+            ultimo_erro = "backend ativo: %s" % getattr(backend, "name", "desconhecido")
+        except Exception as exc:
+            ultimo_erro = str(exc)
+        await MANAGER.reset()
+        await asyncio.sleep(0.75)
+
+    return None, {
+        "code": "AUTOCAD_TIMEOUT",
+        "erro": "AutoCAD não ficou disponível via COM dentro do tempo limite",
+        "detalhe": ultimo_erro,
+        "iniciado": iniciado,
+        "timeout_s": timeout_s,
+    }
 
 
 def _escape_lisp(s: str) -> str:
@@ -173,8 +240,24 @@ async def command_line(text: str) -> dict:
 
     Pontos com virgula viram coordenada; espaco separa argumentos.
     """
-    b = await _b()
-    return _r(await b.execute_lisp(f'(command "{_escape_lisp(text)}")'))
+    lexer = shlex.shlex(text, posix=True)
+    lexer.whitespace_split = True
+    lexer.commenters = ''
+    lexer.escape = ''
+    try:
+        tokens = list(lexer)
+    except ValueError as exc:
+        return {"ok":False,"error":str(exc)}
+    if not tokens:
+        return {"ok":False,"error":"comando vazio"}
+    if tokens[0].startswith('('):
+        return {"ok":False,"error":"informe um comando CAD e argumentos, nao codigo LISP"}
+    quoted = ' '.join('"%s"' % _escape_lisp(t) for t in tokens)
+    # Explicit empty token (\"\") terminates LINE/PLINE. Do not fabricate one for
+    # commands with different semantics; an incomplete command is cancelled.
+    code = ('(progn (command %s) (if (> (getvar "CMDACTIVE") 0)'
+            ' (progn (command) "MCPERRO:comando incompleto; inclua todos os argumentos e terminador") T))' % quoted)
+    return _r(await (await _b()).execute_lisp(code))
 
 
 async def script(linhas: list[str]) -> dict:
@@ -185,7 +268,9 @@ async def script(linhas: list[str]) -> dict:
         resultados.append(r)
         if not r.get("ok"):
             falhas += 1
-    return {"ok": falhas == 0, "executados": len(linhas), "falhas": falhas, "resultados": resultados}
+            break
+    return {"ok": falhas == 0, "executados": len(resultados), "pedidos":len(linhas),
+            "falhas": falhas, "resultados": resultados}
 
 
 async def cancel() -> dict:
@@ -356,11 +441,17 @@ async def draw_polyline(points: list[list[float]], closed: bool = False, layer: 
 
 async def draw_circle(cx: float, cy: float, radius: float, layer: str | None = None) -> dict:
     """Desenha um círculo."""
+    if not all(math.isfinite(v) for v in (cx,cy,radius)) or radius <= 0:
+        return {"ok":False,"error":"centro finito e raio positivo sao obrigatorios"}
     return _r(await (await _b()).create_circle(cx, cy, radius, layer=layer))
 
 
 async def draw_arc(cx: float, cy: float, radius: float, start_angle: float, end_angle: float, layer: str | None = None) -> dict:
-    """Desenha um arco (abertura de porta, por exemplo)."""
+    """Desenha arco; angulos em GRAUS anti-horarios, raio em unidades do desenho."""
+    if not all(math.isfinite(v) for v in (cx,cy,radius,start_angle,end_angle)) or radius <= 0:
+        return {"ok":False,"error":"coordenadas/angulos finitos e raio positivo sao obrigatorios"}
+    if math.isclose((end_angle-start_angle)%360,0,abs_tol=1e-9):
+        return {"ok":False,"error":"arco precisa de abertura nao nula; para volta completa use circulo"}
     return _r(await (await _b()).create_arc(cx, cy, radius, start_angle, end_angle, layer=layer))
 
 
@@ -519,6 +610,158 @@ async def desenhar_ambiente(
     return saida
 
 
+async def planta_assistida(
+    programa: dict | None = None,
+    modo: str = "preview",
+    nome: str | None = None,
+    abrir_autocad: bool = True,
+    timeout_s: float = 60.0,
+) -> dict:
+    """Gera uma planta residencial completa a partir de um programa controlado.
+
+    Esta e a ferramenta de alto nivel para agentes pequenos: o agente informa
+    apenas um programa compatível com o template; a geometria, os vãos, as
+    camadas e a validação são determinados pelo servidor. Use primeiro
+    ``modo='preview'``. Para desenhar no AutoCAD 2025 local, use
+    ``modo='desenhar'``; por padrão, esse modo abre o AutoCAD se necessário,
+    aguarda o COM ficar pronto e exige o backend ``autocad_com``. Nunca cai
+    silenciosamente para ezdxf. Use ``abrir_autocad=False`` para exigir que o
+    AutoCAD já esteja aberto.
+
+    O template inicial é a residência de 12,00 x 11,00 m, com dez ambientes,
+    paredes de 0,15 m e pé-direito de 2,80 m. Programa inválido é rejeitado
+    antes de abrir ou alterar qualquer desenho.
+    """
+    from .planta_assistida import build_assisted_model
+    from .validar_modelo import validar as validar_modelo
+
+    modo = str(modo or "preview").strip().lower()
+    if modo not in {"preview", "desenhar"}:
+        return {
+            "ok": False,
+            "code": "INVALID_MODE",
+            "erro": "modo deve ser 'preview' ou 'desenhar'",
+        }
+
+    try:
+        modelo = build_assisted_model(programa or {})
+    except (TypeError, ValueError) as exc:
+        return {"ok": False, "code": "INVALID_PROGRAM", "erro": str(exc)}
+
+    validacao = validar_modelo(modelo)
+    if validacao.get("erros"):
+        return {
+            "ok": False,
+            "code": "INVALID_LAYOUT",
+            "erro": "o template foi rejeitado pela validação geométrica",
+            "validacao": validacao,
+        }
+
+    areas = {
+        ambiente["nome"]: round((ambiente["x2"] - ambiente["x1"]) *
+                                 (ambiente["y2"] - ambiente["y1"]), 4)
+        for ambiente in modelo["ambientes"]
+    }
+    resumo = {
+        "titulo": modelo["titulo"],
+        "ambientes": len(modelo["ambientes"]),
+        "paredes": len(modelo["paredes"]),
+        "portas": len(modelo["portas"]),
+        "janelas": len(modelo["janelas"]),
+        "area_util": round(sum(areas.values()), 4),
+        "areas": areas,
+        "espessura_parede": modelo["espessura_parede"],
+        "pe_direito": modelo["pe_direito"],
+        "unidades": "metros",
+    }
+
+    if modo == "preview":
+        return {
+            "ok": True,
+            "etapa": "preview",
+            "backend": "nenhum desenho alterado",
+            "resumo": resumo,
+            "validacao": validacao,
+            "modelo": modelo,
+            "proxima_acao": "desenhar",
+            "instrucao": "chame planta_assistida novamente com modo='desenhar'",
+        }
+
+    b, preflight = await _obter_backend_autocad(abrir_autocad, timeout_s)
+    if b is None:
+        preflight = preflight or {"code": "AUTOCAD_UNAVAILABLE", "erro": "backend indisponível"}
+        return {
+            "ok": False,
+            **preflight,
+            "dica": "configure CAD_MCP_BACKEND=com; o modo desenho abre o AutoCAD automaticamente quando abrir_autocad=true",
+        }
+
+    backend = getattr(b, "name", "")
+
+    novo = await b.drawing_create(name=nome)
+    novo_dict = _r(novo)
+    if not novo.ok:
+        return {
+            "ok": False,
+            "code": "DRAWING_CREATE_FAILED",
+            "backend": backend,
+            "erro": novo.error or "não foi possível criar o desenho novo",
+            "drawing": novo_dict,
+        }
+
+    from .planta import desenhar_modelo
+
+    try:
+        desenho = await desenhar_modelo(b, modelo, validar=True)
+    except Exception as exc:
+        return {
+            "ok": False,
+            "code": "DRAW_FAILED",
+            "backend": backend,
+            "erro": str(exc),
+            "drawing": novo_dict,
+            "resumo": resumo,
+        }
+
+    sucesso = bool(desenho.get("valido")) and not desenho.get("erros")
+    return {
+        "ok": sucesso,
+        "etapa": "desenho",
+        "backend": backend,
+        "autocad": preflight,
+        "drawing": novo_dict,
+        "resumo": resumo,
+        "resultado": desenho,
+        "proxima_acao": "auditar e salvar" if sucesso else "corrigir o erro retornado",
+    }
+
+
+async def validar_planta(modelo: dict | None = None, estrito: bool = False) -> dict:
+    """Valida uma planta paramétrica sem abrir, apagar ou alterar o AutoCAD.
+
+    Esta é a barreira obrigatória para agentes pequenos: recebe o mesmo modelo
+    que seria desenhado e devolve problemas com código, entidade e coordenadas.
+    Se ``modelo`` for omitido, valida o template residencial assistido padrão.
+    """
+    from .planta_assistida import build_assisted_model
+    from .validar_modelo import validar as validar_modelo
+
+    if modelo is None:
+        modelo = build_assisted_model({})
+    if not isinstance(modelo, dict):
+        return {"ok": False, "code": "INVALID_INPUT", "erro": "modelo deve ser um objeto JSON"}
+    try:
+        resultado = validar_modelo(modelo, estrito=bool(estrito))
+    except (TypeError, ValueError, KeyError) as exc:
+        return {"ok": False, "code": "INVALID_INPUT", "erro": str(exc)}
+    return {
+        "ok": bool(resultado.get("ok")),
+        "code": "VALID_LAYOUT" if resultado.get("ok") else "INVALID_LAYOUT",
+        "validacao": resultado,
+        "proxima_acao": "desenhar" if resultado.get("ok") else "corrigir o modelo e validar novamente",
+    }
+
+
 async def quantitativo(layer: str | None = None) -> dict:
     """Lê o desenho atual e devolve quantitativos por camada (comprimentos, áreas, blocos, textos, cotas).
 
@@ -529,11 +772,14 @@ async def quantitativo(layer: str | None = None) -> dict:
     """
     b = await _b()
     info = _pares(_r(await b.drawing_info()).get("payload"))
-    tmp = os.path.join(tempfile.gettempdir(), "cad_mcp_quantitativo.dxf")
+    tmp = os.path.join(tempfile.gettempdir(), "cad_mcp_quantitativo_%s.dxf" % uuid.uuid4().hex)
     exp = await b.drawing_save_as_dxf(tmp)
     if not exp.ok:
         return {"ok": False, "erro": exp.error or "não foi possível exportar DXF para análise"}
-    dados = analisar(tmp)
+    try:
+        dados = analisar(tmp)
+    finally:
+        Path(tmp).unlink(missing_ok=True)
     lidas = int(dados.get("total_entidades") or 0)
     no_cad = info.get("entidades")
     dados["documento"] = info.get("nome")
@@ -626,7 +872,10 @@ async def arch_opening(wall: str, offset: float, width: float,
                       height: float = 2.10, tag: str | None = None,
                       opening_id: str | None = None, lang: str = "pt",
                       poche: bool = False) -> dict:
-    """Host a door or a window in a drawn wall by distance along it; the wall is cut.
+    """Corta abertura em parede retangular alinhada a X/Y, preservando espessura.
+
+    Offset desde o extremo de menor X (horizontal) ou menor Y (vertical).
+    Parede irregular/inclinada e camada com HATCH sao recusadas sem alteracao.
     
     Implementacao baseada no modulo arch.py. A parede deve ja' existir no desenho.
     
@@ -646,109 +895,9 @@ async def arch_opening(wall: str, offset: float, width: float,
     
     Retorna dict com handles das entidades criadas.
     """
-    from .arch import Parede, Abertura, primitivas, validar, trechos
-    from .com_backend import _q  # para escapar strings no LISP
-    
-    b = await _b()
-    
-    # Obter os vertices da polyline usando LISP direto
-    # Chamar _eval_lines para obter o texto bruto
-    lisp_code = '(entget (handent "%s"))' % _q(wall)
-    ok, linhas, erro = b._eval_lines(lisp_code)
-    if not ok:
-        return {"ok": False, "erro": "nao conseguiu ler vertices da parede: %s" % erro}
-    
-    if not linhas:
-        return {"ok": False, "erro": "entget nao retornou dados"}
-    
-    # Parsear manualmente a lista DXF para extrair vertices (códigos 10 e 20)
-    # A string está no formato: ((-1 . <Entity...) (0 . "LWPOLYLINE") (10 x y) (10 x2 y2) ...)
-    # Precisamos extrair todos os pares (10 x y) ou (10 x 20 y)
-    import re
-    text = linhas[0]
-    
-    # Extrair todos os padrões: (10 número número) ou (10 número) (20 número)
-    # O formato pode ser: (10 x y) ou (10 x) (20 y)
-    vertices = []
-    
-    # Encontrar todos os (10 x y) onde x e y são números
-    pattern1 = r'\(10\s+([\d.-]+)\s+([\d.-]+)\)'
-    for m in re.finditer(pattern1, text):
-        vertices.append((float(m.group(1)), float(m.group(2))))
-    
-    # Se não encontrou, tentar padrão (10 x) (20 y)
-    if not vertices:
-        coords_10 = re.findall(r'\(10\s+([\d.-]+)\)', text)
-        coords_20 = re.findall(r'\(20\s+([\d.-]+)\)', text)
-        vertices = list(zip(map(float, coords_10), map(float, coords_20)))
-    
-    if not vertices:
-        return {"ok": False, "erro": "parede sem vertices na entidade"}
-    
-    eixo = tuple(vertices)
-    
-    # Criar objetos Parede e Abertura
-    p = Parede(id="temp_wall", eixo=eixo, espessura=0.15, altura=2.70)
-    
-    # Mapear parâmetros
-    tipo_map = {"door": "porta", "window": "janela", "void": "vao"}
-    gira_map = {"left": "esquerda", "right": "direita"}
-    dob_map = {"start": "inicio", "end": "fim"}
-    
-    ab = Abertura(
-        id=opening_id or "A1",
-        parede="temp_wall",
-        tipo=tipo_map.get(kind, "porta"),
-        offset=offset,
-        largura=width,
-        altura=height,
-        peitoril=sill,
-        dobradica=dob_map.get(hand, "inicio"),
-        gira=gira_map.get(swing, "esquerda")
-    )
-    
-    # Validar
-    try:
-        validar([p], [ab])
-    except ValueError as e:
-        return {"ok": False, "erro": str(e)}
-    
-    # Obter primitivas para desenhar
-    prim = primitivas(p, ab)
-    
-    # Desenhar de acordo com o tipo
-    handles = []
-    layer = "PAREDES"
-    
-    if ab.tipo == "porta" and "arco" in prim:
-        # Desenhar arco da porta
-        cx, cy, r, a1, a2 = prim["arco"]
-        result = await b.create_arc(cx, cy, r, a1, a2, layer=layer)
-        if result.ok:
-            handles.append(result.payload)
-    elif ab.tipo == "janela" and "linhas" in prim:
-        # Desenhar linhas da janela
-        for (x1, y1), (x2, y2) in prim["linhas"]:
-            result = await b.create_line(x1, y1, x2, y2, layer=layer)
-            if result.ok:
-                handles.append(result.payload)
-    
-    # Cortar o trecho da parede onde fica a abertura
-    if ab.tipo in ("porta", "janela", "vao"):
-        # Obter os trechos da parede sem a abertura
-        trechos_parede = trechos(p, [ab])
-        
-        # Apagar a parede original
-        await b.entity_erase(wall)
-        
-        # Redesenhar a parede com os trechos como polylines
-        # Converter trechos para polylines (cada trecho é uma polyline de 2 pontos)
-        for (x1, y1), (x2, y2) in trechos_parede:
-            result = await b.create_polyline([[x1, y1], [x2, y2]], closed=False, layer="PAREDES")
-            if result.ok:
-                handles.append(result.payload)
-    
-    return {"ok": True, "payload": {"handles": handles, "opening_id": ab.id}}
+    from .openings import hosted_opening
+    return await hosted_opening(await _b(),wall,offset,width,kind,swing,hand,
+                                sill,height,tag,opening_id,lang,poche)
 
 
 async def arch_stair(x: float = 0.0, y: float = 0.0, largura: float = 1.10,
@@ -1181,7 +1330,8 @@ TOOLS = [
     draw_text, draw_mtext, draw_hatch, entity_create_table, dim_linear, dim_aligned,
     layer_create, layer_set_current, ensure_standard_layers,
     block_insert, block_attributes, block_set_attribute,
-    desenhar_ambiente, arch_wall,
+    desenhar_ambiente, planta_assistida, arch_wall,
+    validar_planta,
     trim_entity, extend_entity, fillet_entity,
     arch_opening,
     arch_stair,
@@ -1249,6 +1399,8 @@ NOMES = {
     "block_attributes": "block_get_attributes",
     "block_set_attribute": "block_set_attributes",
     "desenhar_ambiente": "arch_room",
+    "planta_assistida": "planta_assistida",
+    "validar_planta": "validar_planta",
     "trim_entity": "entity_trim",
     "extend_entity": "entity_extend",
     "fillet_entity": "entity_fillet",

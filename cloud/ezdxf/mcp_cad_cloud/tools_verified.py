@@ -64,6 +64,21 @@ def planta_assistida(programa: dict | None = None, modo: str = "preview",
     return result
 
 @_wrap
+def validar_planta(modelo: dict | None = None, estrito: bool = False) -> dict:
+    """Validate a parametric floor-plan model without changing the DXF."""
+    if modelo is None:
+        from mcp_cad_cloud.planta_assistida import build_assisted_model
+        modelo = build_assisted_model({})
+    if not isinstance(modelo, dict):
+        raise ValueError("modelo deve ser um objeto JSON")
+    from mcp_cad_cloud.validar_modelo import validar
+    result = validar(modelo, estrito=bool(estrito))
+    return {"ok": bool(result.get("ok")),
+            "code": "VALID_LAYOUT" if result.get("ok") else "INVALID_LAYOUT",
+            "validacao": result,
+            "proxima_acao": "desenhar" if result.get("ok") else "corrigir o modelo e validar novamente"}
+
+@_wrap
 def cad_status() -> dict:
     """Return capabilities, entity count and warning about temporary memory."""
     return {**state_summary(), "version_ezdxf": ezx_version(), "drawing": DRAWING_NAME,
@@ -240,4 +255,4 @@ def export_dxf() -> dict:
 TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_drawing",
          "query_entities", "draw_line", "draw_rectangle", "draw_polyline", "draw_circle",
          "draw_arc", "draw_text", "dim_aligned", "erase", "drawing_audit",
-         "quantitativo", "export_dxf", "planta_assistida")
+         "quantitativo", "export_dxf", "planta_assistida", "validar_planta")

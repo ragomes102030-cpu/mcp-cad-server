@@ -1,5 +1,6 @@
 from mcp_cad_cloud.planta_assistida import build_assisted_model, planta_assistida
 from mcp_cad_cloud import tools_verified
+from mcp_cad_cloud.validar_modelo import validar
 
 
 def test_cloud_template_has_real_window_gaps_and_back_dimensions():
@@ -27,4 +28,14 @@ def test_cloud_assisted_tool_draws_real_entities_in_expected_layers():
     assert result["backend"] == "ezdxf"
     assert result["entities"] > 100
     assert tools_verified.cad_status()["drawing"] == "planta_corrigida_cloud"
+
+
+def test_cloud_validator_is_blocking_for_overlapping_walls():
+    model = build_assisted_model()
+    model["paredes"].append(tuple(model["paredes"][0]))
+
+    result = tools_verified.validar_planta(modelo=model)
+
+    assert result["ok"] is False
+    assert any(p["chave"] == "parede-duplicada" for p in result["validacao"]["erros"])
 

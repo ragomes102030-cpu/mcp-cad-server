@@ -57,3 +57,26 @@ def test_validator_rejects_door_leaf_crossing_another_wall():
 
     assert any(p["chave"] == "porta-colide-parede" for p in result["erros"])
 
+
+def test_validator_rejects_collinear_wall_overlap_and_portal_overlap():
+    model = build_assisted_model()
+    broken = deepcopy(model)
+    broken["paredes"].append((0.0, 5.0, 2.2, 5.0))
+    broken["portas"].append((2.5, 5.0, 270.0, 0.9))
+
+    result = validar(broken)
+
+    assert any(p["chave"] == "paredes-sobrepostas" for p in result["erros"])
+    assert any(p["chave"] == "portas-sobrepostas" for p in result["erros"])
+
+
+def test_validator_rejects_furniture_collision_and_label_collision():
+    model = build_assisted_model()
+    broken = deepcopy(model)
+    broken["moveis"].extend([(1.6, 1.4, 3.0, 2.0), (2.0, 2.5, 3.5, 3.0)])
+
+    result = validar(broken)
+
+    assert any(p["chave"] == "moveis-sobrepostos" for p in result["erros"])
+    assert any(p["chave"] == "texto-sobre-movel" for p in result["erros"])
+

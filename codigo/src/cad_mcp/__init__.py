@@ -19,4 +19,5 @@ CONTRATO = [
     "undo", "redo", "zoom_extents",
     # nossos diferenciais
     "ensure_standard_layers", "desenhar_ambiente", "quantitativo",
+    "planta_assistida", "validar_planta",
 ]
