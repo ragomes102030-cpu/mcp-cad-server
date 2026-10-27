@@ -1,19 +1,34 @@
-# MCP CAD Cloud — DXF verificado (ezdxf)
+# MCP CAD Cloud — DXF headless
 
-MCP HTTP headless, privado, single-user, para Render/Linux. Não controla AutoCAD Windows, não edita DWG, não exporta PDF.
+Servidor MCP HTTP para Render/Linux, baseado em `ezdxf`. Não controla
+AutoCAD Windows, não edita DWG e não acessa arquivos do computador local.
 
-**Autenticação obrigatória:** configure a variável secreta `CAD_MCP_AUTH_TOKEN` (mínimo 24 caracteres) no Render antes do deploy. A rota `/healthz` é pública, o protocolo `/mcp` exige Bearer Token.
+## Acesso
 
-As únicas ferramentas publicadas são as de `mcp_cad_cloud.tools_verified.TOOLS`.
-O catálogo `tools.py` é histórico e experimental, porque inclui stubs que indicam sucesso sem modificar o desenho.
+Nesta versão de teste `/healthz` e `/mcp` são públicos, sem Bearer Token.
+O estado é temporário em memória e compartilhado pelo processo. Antes de
+usar dados sensíveis, adicionar autenticação e isolamento por projeto.
 
-Render (serviço Python):
-- Branch: cloud/ezdxf
-- Build command: `pip install -e ./cloud/ezdxf`
-- Start command: `python -m mcp_cad_cloud.server`
+## Deploy no Render
+
+- Branch: `cloud/ezdxf`
+- Build: `pip install -e ./cloud/ezdxf`
+- Start: `python -m mcp_cad_cloud.server`
 - Health check: `/healthz`
-- HTTP bind: `0.0.0.0:$PORT` (definido pelo Render)
+- Endpoint MCP: `/mcp`
 
-Testes: `PYTHONPATH=cloud/ezdxf pytest -q cloud/ezdxf/tests/test_verified.py`
+## Testes
 
-**Limites:** estado em memória compartilhada, sem persistência ou isolamento multiusuário. Reinício ou `new_drawing` apagam o desenho não exportado. Para uso em produção ampliada, implementar persistência por projeto, versionamento e auditoria.
+```powershell
+$env:PYTHONPATH = "cloud/ezdxf"
+python -m pytest cloud/ezdxf/tests -q
+```
+
+Verificação pós-deploy:
+
+```powershell
+python tools/verify_cloud_release.py --url https://SEU-SERVICO.onrender.com/mcp
+```
+
+O comando verifica versão, revisão, backend, transporte e uma requisição real
+de `initialize` sem Bearer Token.

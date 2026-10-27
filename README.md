@@ -26,6 +26,14 @@ Regra prática: **edite e registe só em `Desktop\Mapeamento AutoCad` (master)**
 
 ## Como atualizar sempre
 
+O MCP local e o MCP cloud são componentes diferentes, mas usam a versão
+canônica da raiz (`VERSION`) e o mesmo contrato verificável. O local usa
+`stdio`/AutoCAD COM; o cloud usa HTTP/ezdxf e não controla o AutoCAD.
+
+Antes de publicar uma alteração, rode os testes local e cloud. Depois do
+deploy, confirme `/healthz` e o handshake MCP com
+`tools/verify_cloud_release.py`.
+
 Geração dos mapas (do código para `docs\`):
 
 ```bat

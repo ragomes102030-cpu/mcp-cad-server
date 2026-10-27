@@ -133,6 +133,10 @@ class BackendManager:
                 "ok": False,
                 "backend": None,
                 "modo_configurado": self.mode,
+                "build": {"version": __import__("cad_mcp").__version__,
+                          "revision": revision(),
+                          "transport": "stdio",
+                          "backend": "autocad-or-headless"},
                 "erro": _com_erro(e),
                 "dica": ("Abra um desenho no AutoCAD e aguarde a tela inicial terminar; "
                          "depois reconecte o MCP. Se usar AutoCAD LT, configure "
