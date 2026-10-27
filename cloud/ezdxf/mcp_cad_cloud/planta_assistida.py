@@ -156,7 +156,7 @@ def _ensure_layers(doc):
             doc.layers.new(name, dxfattribs={"color": color})
 
 
-def planta_assistida(programa=None, modo="preview", nome=None):
+def planta_assistida(programa=None, modo="preview", nome=None, preview_token=None):
     programa = programa or {}
     solicitado = str(programa.get("template") or TEMPLATE_PADRAO).strip()
     if solicitado not in {TEMPLATE_PADRAO, "tiny_house_10m2"}:
@@ -178,6 +178,7 @@ def planta_assistida(programa=None, modo="preview", nome=None):
     else:
         model = build_assisted_model(programa)
     from mcp_cad_cloud.validar_modelo import validar
+    from mcp_cad_cloud.plant_workflow import consume, issue
     validacao = validar(model)
     if validacao.get("erros"):
         return {"ok": False, "code": "INVALID_LAYOUT",
@@ -186,9 +187,16 @@ def planta_assistida(programa=None, modo="preview", nome=None):
     summary = _summary(model)
     if modo == "preview":
         return {"ok": True, "etapa": "preview", "backend": "ezdxf", "resumo": summary,
-                "validacao": validacao, "modelo": model}
+                "validacao": validacao, "modelo": model,
+                "preview_token": issue(model, solicitado),
+                "proxima_acao": "desenhar"}
     if modo != "desenhar":
         return {"ok": False, "code": "INVALID_MODE", "error": "modo deve ser preview ou desenhar"}
+    if not consume(preview_token, model, solicitado):
+        return {"ok": False,
+                "code": "WORKFLOW_REQUIRED" if not preview_token else "PREVIEW_TOKEN_INVALID",
+                "error": "o desenho exige um preview aprovado para exatamente este modelo",
+                "proxima_acao": "chamar planta_criar_validada(modo='preview')"}
 
     reset_drawing()
     doc = _ensure(); _ensure_layers(doc); msp = doc.modelspace()

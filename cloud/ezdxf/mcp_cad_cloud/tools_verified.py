@@ -4,6 +4,7 @@ import base64
 from collections import Counter
 import io
 import math
+import os
 from pathlib import Path
 import tempfile
 import zipfile
@@ -51,7 +52,8 @@ def _wrap(fn):
 
 @_wrap
 def planta_assistida(programa: dict | None = None, modo: str = "preview",
-                     nome: str | None = None, template: str | None = None) -> dict:
+                     nome: str | None = None, template: str | None = None,
+                     preview_token: str | None = None) -> dict:
     """Create the deterministic residential template in headless ezdxf.
 
     The cloud variant never opens or edits AutoCAD; ``desenhar`` changes only
@@ -74,10 +76,19 @@ def planta_assistida(programa: dict | None = None, modo: str = "preview",
                 "templates": listar_templates(),
                 "proxima_acao": "escolher um template suportado"}
     from mcp_cad_cloud.planta_assistida import planta_assistida as build
-    result = build(programa=programa, modo=modo, nome=nome)
+    result = build(programa=programa, modo=modo, nome=nome,
+                   preview_token=preview_token)
     if nome and result.get("ok"):
         DRAWING_NAME = str(nome)
     return result
+
+
+@_wrap
+def planta_criar_validada(programa: dict | None = None, modo: str = "preview",
+                          nome: str | None = None, template: str | None = None,
+                          preview_token: str | None = None) -> dict:
+    """Entrada recomendada: gera preview e exige token para desenhar."""
+    return planta_assistida(programa, modo, nome, template, preview_token)
 
 
 @_wrap
@@ -89,10 +100,10 @@ def planta_templates() -> dict:
         "templates": listar_templates(),
         "fluxo_obrigatorio": [
             "planta_templates",
-            "planta_assistida(modo='preview')",
-            "planta_assistida(modo='desenhar') somente com preview.ok=true",
+            "planta_criar_validada(modo='preview')",
+            "planta_criar_validada(modo='desenhar', preview_token=preview_token)",
         ],
-        "regra": "nao usar ferramentas primitivas para contornar template ausente",
+        "regra": "nao usar ferramentas primitivas para contornar template ausente; desenho sem preview e bloqueado",
     }
 
 @_wrap
@@ -114,7 +125,8 @@ def validar_planta(modelo: dict | None = None, estrito: bool = False) -> dict:
 def cad_status() -> dict:
     """Return capabilities, entity count and warning about temporary memory."""
     return {**state_summary(), "version_ezdxf": ezx_version(), "drawing": DRAWING_NAME,
-            "capabilities": list(TOOLS),
+            "profile": "full" if PUBLIC_TOOLS == TOOLS else "planta_segura",
+            "capabilities": list(PUBLIC_TOOLS),
             "build": info(__version__, "http", "ezdxf")}
 
 @_wrap
@@ -287,4 +299,15 @@ def export_dxf() -> dict:
 TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_drawing",
          "query_entities", "draw_line", "draw_rectangle", "draw_polyline", "draw_circle",
          "draw_arc", "draw_text", "dim_aligned", "erase", "drawing_audit",
-         "quantitativo", "export_dxf", "planta_templates", "planta_assistida", "validar_planta")
+         "quantitativo", "export_dxf", "planta_templates", "planta_assistida",
+         "planta_criar_validada", "validar_planta")
+
+_PLANTA_SEGURA = {
+    "cad_status", "new_drawing", "layer_list", "inspect_drawing", "query_entities",
+    "drawing_audit", "quantitativo", "export_dxf", "planta_templates",
+    "planta_assistida", "planta_criar_validada", "validar_planta",
+}
+_perfil = os.getenv("MCP_CAD_PROFILE", "planta_segura").strip().lower()
+PUBLIC_TOOLS = TOOLS if _perfil in {"full", "livre", "avancado"} else tuple(
+    name for name in TOOLS if name in _PLANTA_SEGURA
+)

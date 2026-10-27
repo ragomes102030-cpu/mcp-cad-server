@@ -14,9 +14,13 @@ mcp = FastMCP(
     name="mcp-cad-cloud",
     instructions=("Public headless ezdxf workspace in metres. This does NOT edit desktop AutoCAD or DWG. "
                   "Changes are in volatile single-user memory. Export before reset. "
-                  "Only tools listed here are supported; check ok and entity handles."),
+                   "Only tools listed here are supported; check ok and entity handles. "
+                   "For floor plans use planta_criar_validada: preview first, then draw "
+                   "with the returned preview_token. Raw drawing primitives are hidden "
+                   "in the default planta_segura profile; set MCP_CAD_PROFILE=full only "
+                   "for explicit advanced CAD work."),
 )
-for name in verified.TOOLS:
+for name in verified.PUBLIC_TOOLS:
     mcp.tool(name=name)(getattr(verified, name))
 
 

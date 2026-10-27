@@ -39,6 +39,9 @@ mcp = FastMCP(
         "Motor CAD próprio: desenha plantas, lê desenhos e calcula quantitativos. "
         "Com o AutoCAD aberto opera no desenho vivo pelo canal COM (sem roubar foco); "
         "sem AutoCAD, opera headless (ezdxf) e usa o accoreconsole para DXF/PDF. "
+        "Para plantas, use planta_criar_validada: preview primeiro e depois desenho "
+        "com o preview_token; o perfil planta_segura oculta primitivas de desenho. "
+        "Use MCP_CAD_PROFILE=full somente para CAD avancado explicito. "
         f"versão {__version__}"
     ),
 )
@@ -53,7 +56,7 @@ def build_info() -> dict[str, str]:
         "backend": "autocad-or-headless",
     }
 
-for _fn in tools.TOOLS:
+for _fn in tools.PUBLIC_TOOLS:
     # nome publico no padrao do autocad-mcp-pro (entity_create_line, drawing_save...)
     mcp.tool(name=tools.nome_publico(_fn))(guarded(_fn))
 

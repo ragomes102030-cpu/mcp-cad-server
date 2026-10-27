@@ -1,11 +1,14 @@
 {
   "mcpServers": {
     "cad": {
-      "command": "cad-mcp",
-      "args": [],
+      "command": "C:/Users/Correta Engenharia/AppData/Local/Programs/Python/Python310/python.exe",
+      "args": [
+        "C:/Users/Correta Engenharia/Desktop/Mapeamento AutoCad/codigo/src/cad_mcp/server.py"
+      ],
       "env": {
         "MCP_CAD_TEMP": "C:/temp/mcp_cad_com",
-        "MCP_CAD_BACKEND": "auto"
+        "CAD_MCP_BACKEND": "com",
+        "MCP_CAD_PROFILE": "planta_segura"
       }
     }
   }

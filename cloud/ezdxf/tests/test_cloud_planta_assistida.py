@@ -19,6 +19,7 @@ def test_cloud_assisted_tool_preview_is_headless():
     assert result["backend"] == "ezdxf"
     assert result["resumo"]["portas"] == 11
     assert result["resumo"]["janelas"] == 10
+    assert result["preview_token"]
 
 
 def test_cloud_template_catalog_is_read_only_and_parity_ready():
@@ -55,12 +56,35 @@ def test_cloud_tiny_house_template_preview_is_validated_before_drawing():
 
 
 def test_cloud_assisted_tool_draws_real_entities_in_expected_layers():
-    result = tools_verified.planta_assistida(modo="desenhar", nome="planta_corrigida_cloud")
+    preview = tools_verified.planta_assistida(modo="preview")
+    result = tools_verified.planta_assistida(
+        modo="desenhar", nome="planta_corrigida_cloud",
+        preview_token=preview["preview_token"],
+    )
 
     assert result["ok"] is True
     assert result["backend"] == "ezdxf"
     assert result["entities"] > 100
     assert tools_verified.cad_status()["drawing"] == "planta_corrigida_cloud"
+
+
+def test_cloud_draw_requires_preview_token():
+    result = tools_verified.planta_assistida(modo="desenhar")
+
+    assert result["ok"] is False
+    assert result["code"] == "WORKFLOW_REQUIRED"
+
+
+def test_cloud_exposes_explicit_validated_creation_tool():
+    assert "planta_criar_validada" in tools_verified.TOOLS
+    assert callable(tools_verified.planta_criar_validada)
+
+
+def test_cloud_public_profile_hides_raw_primitives_by_default():
+    assert "planta_criar_validada" in tools_verified.PUBLIC_TOOLS
+    assert "planta_assistida" in tools_verified.PUBLIC_TOOLS
+    assert "draw_rectangle" not in tools_verified.PUBLIC_TOOLS
+    assert "draw_line" not in tools_verified.PUBLIC_TOOLS
 
 
 def test_cloud_validator_is_blocking_for_overlapping_walls():

@@ -618,6 +618,7 @@ async def planta_assistida(
     abrir_autocad: bool = True,
     timeout_s: float = 60.0,
     template: str | None = None,
+    preview_token: str | None = None,
 ) -> dict:
     """Gera uma planta residencial completa a partir de um programa controlado.
 
@@ -636,6 +637,7 @@ async def planta_assistida(
     """
     from .planta_assistida import build_assisted_model
     from .validar_modelo import validar as validar_modelo
+    from .plant_workflow import consume, issue
 
     modo = str(modo or "preview").strip().lower()
     if modo not in {"preview", "desenhar"}:
@@ -711,8 +713,17 @@ async def planta_assistida(
             "resumo": resumo,
             "validacao": validacao,
             "modelo": modelo,
+            "preview_token": issue(modelo, solicitado),
             "proxima_acao": "desenhar",
             "instrucao": "chame planta_assistida novamente com modo='desenhar'",
+        }
+
+    if not consume(preview_token, modelo, solicitado):
+        return {
+            "ok": False,
+            "code": "WORKFLOW_REQUIRED" if not preview_token else "PREVIEW_TOKEN_INVALID",
+            "erro": "o desenho exige um preview aprovado para exatamente este modelo",
+            "proxima_acao": "chamar planta_assistida(modo='preview')",
         }
 
     b, preflight = await _obter_backend_autocad(abrir_autocad, timeout_s)
@@ -764,6 +775,27 @@ async def planta_assistida(
     }
 
 
+async def planta_criar_validada(
+    programa: dict | None = None,
+    modo: str = "preview",
+    nome: str | None = None,
+    abrir_autocad: bool = True,
+    timeout_s: float = 60.0,
+    template: str | None = None,
+    preview_token: str | None = None,
+) -> dict:
+    """Entrada pública recomendada: preview obrigatório antes de desenhar."""
+    return await planta_assistida(
+        programa=programa,
+        modo=modo,
+        nome=nome,
+        abrir_autocad=abrir_autocad,
+        timeout_s=timeout_s,
+        template=template,
+        preview_token=preview_token,
+    )
+
+
 async def planta_templates() -> dict:
     """Lista templates de planta e o fluxo seguro para agentes."""
     return {
@@ -772,10 +804,10 @@ async def planta_templates() -> dict:
         "templates": listar_templates(),
         "fluxo_obrigatorio": [
             "planta_templates",
-            "planta_assistida(modo='preview')",
-            "planta_assistida(modo='desenhar') somente com preview.ok=true",
+            "planta_criar_validada(modo='preview')",
+            "planta_criar_validada(modo='desenhar', preview_token=preview_token)",
         ],
-        "regra": "nao usar ferramentas primitivas para contornar template ausente",
+        "regra": "nao usar ferramentas primitivas para contornar template ausente; desenho sem preview e bloqueado",
     }
 
 
@@ -1373,7 +1405,7 @@ TOOLS = [
     draw_text, draw_mtext, draw_hatch, entity_create_table, dim_linear, dim_aligned,
     layer_create, layer_set_current, ensure_standard_layers,
     block_insert, block_attributes, block_set_attribute,
-    desenhar_ambiente, planta_templates, planta_assistida, arch_wall,
+    desenhar_ambiente, planta_templates, planta_assistida, planta_criar_validada, arch_wall,
     validar_planta,
     trim_entity, extend_entity, fillet_entity,
     arch_opening,
@@ -1444,6 +1476,7 @@ NOMES = {
     "desenhar_ambiente": "arch_room",
     "planta_templates": "planta_templates",
     "planta_assistida": "planta_assistida",
+    "planta_criar_validada": "planta_criar_validada",
     "validar_planta": "validar_planta",
     "trim_entity": "entity_trim",
     "extend_entity": "entity_extend",
@@ -1494,3 +1527,17 @@ if len(set(_publicos)) != len(_publicos):
     from collections import Counter
     _dup = [n for n, c in Counter(_publicos).items() if c > 1]
     raise RuntimeError("nome publico duplicado em tools.NOMES: %s" % _dup)
+
+
+_PLANTA_SEGURA = {
+    "cad_status", "inspect_drawing", "query_entities", "layer_list",
+    "quantitativo", "new_drawing", "open", "save", "export_dxf", "plot_pdf",
+    "drawing_setup", "render_png", "screenshot", "zoom_extents", "undo", "redo",
+    "cancel", "planta_templates", "planta_assistida", "planta_criar_validada",
+    "validar_planta", "drawing_audit",
+}
+_perfil = os.getenv("MCP_CAD_PROFILE", "planta_segura").strip().lower()
+PUBLIC_TOOLS = (
+    list(TOOLS) if _perfil in {"full", "livre", "avancado"}
+    else [tool for tool in TOOLS if getattr(tool, "__name__", "") in _PLANTA_SEGURA]
+)

@@ -37,6 +37,13 @@ def test_unknown_room_is_rejected_before_drawing():
 def test_assisted_tool_is_registered_with_a_stable_public_name():
     assert tools.planta_assistida in tools.TOOLS
     assert tools.nome_publico(tools.planta_assistida) == "planta_assistida"
+    assert tools.planta_criar_validada in tools.TOOLS
+    assert tools.nome_publico(tools.planta_criar_validada) == "planta_criar_validada"
+
+
+def test_local_safe_profile_contains_validated_workflow():
+    assert tools.planta_criar_validada in tools.PUBLIC_TOOLS
+    assert tools.draw_rectangle not in tools.PUBLIC_TOOLS
 
 
 def test_template_catalog_is_registered_and_explains_supported_workflows():
@@ -88,6 +95,21 @@ def test_preview_does_not_require_autocad_or_touch_a_drawing():
     assert result["ok"] is True
     assert result["etapa"] == "preview"
     assert result["proxima_acao"] == "desenhar"
+    assert result["preview_token"]
+
+
+def test_draw_mode_requires_a_preview_token_before_touching_autocad(monkeypatch):
+    import asyncio
+
+    async def must_not_start_backend(*_args, **_kwargs):
+        raise AssertionError("o backend nao deveria ser chamado sem preview aprovado")
+
+    monkeypatch.setattr(tools, "_obter_backend_autocad", must_not_start_backend)
+    result = asyncio.run(tools.planta_assistida({}, modo="desenhar", abrir_autocad=False))
+
+    assert result["ok"] is False
+    assert result["code"] == "WORKFLOW_REQUIRED"
+    assert result["proxima_acao"] == "chamar planta_assistida(modo='preview')"
 
 
 def test_draw_mode_refuses_non_com_backend(monkeypatch):
@@ -100,7 +122,11 @@ def test_draw_mode_refuses_non_com_backend(monkeypatch):
         return HeadlessBackend()
 
     monkeypatch.setattr(tools.MANAGER, "get", fake_get)
-    result = asyncio.run(tools.planta_assistida({}, modo="desenhar", abrir_autocad=False))
+    preview = asyncio.run(tools.planta_assistida({}, modo="preview"))
+    result = asyncio.run(tools.planta_assistida(
+        {}, modo="desenhar", abrir_autocad=False,
+        preview_token=preview["preview_token"],
+    ))
 
     assert result["ok"] is False
     assert result["code"] == "AUTOCAD_REQUIRED"
