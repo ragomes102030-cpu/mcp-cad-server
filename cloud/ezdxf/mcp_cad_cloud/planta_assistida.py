@@ -5,6 +5,7 @@ import math
 from copy import deepcopy
 
 from mcp_cad_cloud.backend import _ensure, reset_drawing
+from mcp_cad_cloud.planta_catalogo import TEMPLATE_PADRAO, listar_templates
 
 
 ROOMS = (
@@ -156,6 +157,19 @@ def _ensure_layers(doc):
 
 
 def planta_assistida(programa=None, modo="preview", nome=None):
+    programa = programa or {}
+    solicitado = str(programa.get("template") or TEMPLATE_PADRAO).strip()
+    if solicitado != TEMPLATE_PADRAO:
+        return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
+                "error": f"template '{solicitado}' ainda nao esta disponivel",
+                "templates": listar_templates(),
+                "proxima_acao": "escolher um template suportado"}
+    if (("largura_externa" in programa and float(programa["largura_externa"]) != 12.0) or
+            ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != 11.0)):
+        return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
+                "error": "as dimensoes pedidas nao pertencem a um template disponivel",
+                "templates": listar_templates(),
+                "proxima_acao": "escolher um template suportado"}
     model = build_assisted_model(programa)
     from mcp_cad_cloud.validar_modelo import validar
     validacao = validar(model)

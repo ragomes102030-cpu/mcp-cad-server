@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-cad-server"
-version = "0.2.2"
+version = "0.2.3"
 description = "Servidor MCP para AutoCAD: desenha plantas, lê desenhos e calcula quantitativos"
 license = { text = "MIT" }
 requires-python = ">=3.10"

@@ -19,6 +19,8 @@ O primeiro template suporta a residência unifamiliar de 12,00 x 11,00 m, com pa
 
 ## Protocolo recomendado
 
+Antes de desenhar, chame `planta_templates`. Se o programa nao corresponder a um template com status `disponivel`, o agente deve parar e nao usar ferramentas primitivas para improvisar a planta.
+
 1. Chame `planta_assistida` com `modo="preview"`.
 2. Confira `ok`, `validacao`, `resumo.area_util` e `resumo.areas`.
 3. Só depois chame a mesma ferramenta com `modo="desenhar"`; por padrão, ela abre o AutoCAD se necessário.

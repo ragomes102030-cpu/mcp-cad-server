@@ -20,6 +20,7 @@ from pathlib import Path
 from .backend_manager import MANAGER
 from .layers import ensure_standard_layers as _ensure_layers
 from .quantitativo import analisar
+from .planta_catalogo import TEMPLATE_PADRAO, listar_templates
 from .bridge import Ponte, PonteIndisponivel as _PonteIndisponivel
 from collections import Counter as _Counter
 _PLACED = _Counter()  # simbolos colocados na sessao (contagem p/ schedule)
@@ -616,6 +617,7 @@ async def planta_assistida(
     nome: str | None = None,
     abrir_autocad: bool = True,
     timeout_s: float = 60.0,
+    template: str | None = None,
 ) -> dict:
     """Gera uma planta residencial completa a partir de um programa controlado.
 
@@ -641,6 +643,26 @@ async def planta_assistida(
             "ok": False,
             "code": "INVALID_MODE",
             "erro": "modo deve ser 'preview' ou 'desenhar'",
+        }
+
+    programa = programa or {}
+    solicitado = str(template or programa.get("template") or TEMPLATE_PADRAO).strip()
+    if solicitado != TEMPLATE_PADRAO:
+        return {
+            "ok": False,
+            "code": "TEMPLATE_NOT_SUPPORTED",
+            "erro": f"template '{solicitado}' ainda nao esta disponivel",
+            "templates": listar_templates(),
+            "proxima_acao": "escolher um template suportado",
+        }
+    if (("largura_externa" in programa and float(programa["largura_externa"]) != 12.0) or
+            ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != 11.0)):
+        return {
+            "ok": False,
+            "code": "TEMPLATE_NOT_SUPPORTED",
+            "erro": "as dimensoes pedidas nao pertencem a um template disponivel",
+            "templates": listar_templates(),
+            "proxima_acao": "escolher um template suportado",
         }
 
     try:
@@ -733,6 +755,21 @@ async def planta_assistida(
         "resumo": resumo,
         "resultado": desenho,
         "proxima_acao": "auditar e salvar" if sucesso else "corrigir o erro retornado",
+    }
+
+
+async def planta_templates() -> dict:
+    """Lista templates de planta e o fluxo seguro para agentes."""
+    return {
+        "ok": True,
+        "template_padrao": TEMPLATE_PADRAO,
+        "templates": listar_templates(),
+        "fluxo_obrigatorio": [
+            "planta_templates",
+            "planta_assistida(modo='preview')",
+            "planta_assistida(modo='desenhar') somente com preview.ok=true",
+        ],
+        "regra": "nao usar ferramentas primitivas para contornar template ausente",
     }
 
 
@@ -1330,7 +1367,7 @@ TOOLS = [
     draw_text, draw_mtext, draw_hatch, entity_create_table, dim_linear, dim_aligned,
     layer_create, layer_set_current, ensure_standard_layers,
     block_insert, block_attributes, block_set_attribute,
-    desenhar_ambiente, planta_assistida, arch_wall,
+    desenhar_ambiente, planta_templates, planta_assistida, arch_wall,
     validar_planta,
     trim_entity, extend_entity, fillet_entity,
     arch_opening,
@@ -1399,6 +1436,7 @@ NOMES = {
     "block_attributes": "block_get_attributes",
     "block_set_attribute": "block_set_attributes",
     "desenhar_ambiente": "arch_room",
+    "planta_templates": "planta_templates",
     "planta_assistida": "planta_assistida",
     "validar_planta": "validar_planta",
     "trim_entity": "entity_trim",

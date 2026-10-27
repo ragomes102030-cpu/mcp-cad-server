@@ -21,6 +21,29 @@ def test_cloud_assisted_tool_preview_is_headless():
     assert result["resumo"]["janelas"] == 10
 
 
+def test_cloud_template_catalog_is_read_only_and_parity_ready():
+    result = tools_verified.planta_templates()
+
+    assert result["ok"] is True
+    assert result["template_padrao"] == "residencia_unifamiliar_12x11"
+    assert {item["id"] for item in result["templates"]} >= {
+        "residencia_unifamiliar_12x11", "tiny_house_10m2"
+    }
+
+
+def test_cloud_rejects_unsupported_dimensions_before_drawing():
+    result = planta_assistida(programa={
+        "largura_externa": 2.5,
+        "profundidade_externa": 4.0,
+        "area_util_minima": 10,
+    }, modo="preview")
+
+    assert result["ok"] is False
+    assert result["code"] == "TEMPLATE_NOT_SUPPORTED"
+    assert result["templates"]
+    assert result["proxima_acao"] == "escolher um template suportado"
+
+
 def test_cloud_assisted_tool_draws_real_entities_in_expected_layers():
     result = tools_verified.planta_assistida(modo="desenhar", nome="planta_corrigida_cloud")
 

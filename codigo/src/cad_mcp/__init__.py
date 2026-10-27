@@ -4,7 +4,7 @@
 Contrato de ferramentas compatível com o que o CADCraft já expõe, para que
 prompts e skills do usuário continuem válidos ao trocar de motor.
 """
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 CONTRATO = [
     # núcleo compatível com CADCraft
@@ -19,5 +19,5 @@ CONTRATO = [
     "undo", "redo", "zoom_extents",
     # nossos diferenciais
     "ensure_standard_layers", "desenhar_ambiente", "quantitativo",
-    "planta_assistida", "validar_planta",
+    "planta_templates", "planta_assistida", "validar_planta",
 ]

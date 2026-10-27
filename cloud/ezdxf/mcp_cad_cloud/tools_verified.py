@@ -11,6 +11,7 @@ from functools import wraps
 from mcp_cad_cloud.backend import _ensure, _ent_count, ezx_version, reset_drawing, state_summary
 from mcp_cad_cloud import __version__
 from mcp_cad_cloud.build_identity import info
+from mcp_cad_cloud.planta_catalogo import TEMPLATE_PADRAO, listar_templates
 
 DRAWING_NAME = "planta_sem_nome"
 MAX_DXF_BYTES = 3_000_000
@@ -50,18 +51,47 @@ def _wrap(fn):
 
 @_wrap
 def planta_assistida(programa: dict | None = None, modo: str = "preview",
-                     nome: str | None = None) -> dict:
+                     nome: str | None = None, template: str | None = None) -> dict:
     """Create the deterministic residential template in headless ezdxf.
 
     The cloud variant never opens or edits AutoCAD; ``desenhar`` changes only
     the ephemeral DXF held by this HTTP session.
     """
     global DRAWING_NAME
+    programa = programa or {}
+    solicitado = str(template or programa.get("template") or TEMPLATE_PADRAO).strip()
+    if solicitado != TEMPLATE_PADRAO:
+        return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
+                "error": f"template '{solicitado}' ainda nao esta disponivel",
+                "templates": listar_templates(),
+                "proxima_acao": "escolher um template suportado"}
+    if (("largura_externa" in programa and float(programa["largura_externa"]) != 12.0) or
+            ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != 11.0)):
+        return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
+                "error": "as dimensoes pedidas nao pertencem a um template disponivel",
+                "templates": listar_templates(),
+                "proxima_acao": "escolher um template suportado"}
     from mcp_cad_cloud.planta_assistida import planta_assistida as build
     result = build(programa=programa, modo=modo, nome=nome)
     if nome and result.get("ok"):
         DRAWING_NAME = str(nome)
     return result
+
+
+@_wrap
+def planta_templates() -> dict:
+    """Lista templates e impede que o agente improvise uma tipologia."""
+    return {
+        "ok": True,
+        "template_padrao": TEMPLATE_PADRAO,
+        "templates": listar_templates(),
+        "fluxo_obrigatorio": [
+            "planta_templates",
+            "planta_assistida(modo='preview')",
+            "planta_assistida(modo='desenhar') somente com preview.ok=true",
+        ],
+        "regra": "nao usar ferramentas primitivas para contornar template ausente",
+    }
 
 @_wrap
 def validar_planta(modelo: dict | None = None, estrito: bool = False) -> dict:
@@ -255,4 +285,4 @@ def export_dxf() -> dict:
 TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_drawing",
          "query_entities", "draw_line", "draw_rectangle", "draw_polyline", "draw_circle",
          "draw_arc", "draw_text", "dim_aligned", "erase", "drawing_audit",
-         "quantitativo", "export_dxf", "planta_assistida", "validar_planta")
+         "quantitativo", "export_dxf", "planta_templates", "planta_assistida", "validar_planta")
