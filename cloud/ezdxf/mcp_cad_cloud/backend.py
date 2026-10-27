@@ -1,62 +1,36 @@
-# -*- coding: utf-8 -*-
-"""Backend ezdxf headless: desenho sem AutoCAD, sem licença, sem Windows.
-
-Estado:
-- Cada MCP session tem um desenho em memória (Pizza/PE) mantido pelo backend.
-- As ferramentas só operam sobre este contexto (átomo `MANAGER`).
-- `render()` gera PNG (via matplotlib) a partir do DXF.
-
-Uso:
-    from mcp_cad_cloud.backend import MANAGER, ezdxf
-    await MANAGER.initialize()
-    await MANAGER.new_drawing("P&Q")
-"""
-
+"""Private headless CAD backend. Process memory is ephemeral and single-user."""
 from __future__ import annotations
-
-import os
-from pathlib import Path
-
+from collections import Counter
 import ezdxf
 
-# ---------------------------------------------------------------- instância
-app = ezdxf.new_document()
-app.set_screen_size(1200, 800)
-MANAGER = None  # será setada na inicialização
+MANAGER = None
 
-
-def _ensure() -> ezdxf.document.Document:
-    """Garante que o documento está pronto (inicialização idempotente)."""
-    global MANAGER
-    if MANAGER is None:
-        raise RuntimeError("backend não inicializado: execute initialize()")
-    return MANAGER
-
+def _new_document():
+    doc = ezdxf.new("R2013", setup=True)
+    doc.header["$INSUNITS"] = 6
+    return doc
 
 def initialize() -> None:
     global MANAGER
-    MANAGER = app
-
+    if MANAGER is None:
+        MANAGER = _new_document()
 
 def reset_drawing() -> None:
-    """Sola o estado do desenho (clear + novo Document)."""
     global MANAGER
-    import ezdxf
+    MANAGER = _new_document()
 
-    MANAGER = ezdxf.new_document()
-    MANAGER.set_screen_size(1200, 800)
-
+def _ensure():
+    initialize()
+    return MANAGER
 
 def ezx_version() -> str:
     return ezdxf.__version__
 
+def state_summary() -> dict:
+    doc = _ensure()
+    return {"ok": True, "backend": "ezdxf", "entity_count": len(doc.modelspace()),
+            "layers": len(doc.layers), "units": doc.header.get("$INSUNITS"),
+            "temporary": True, "single_user": True}
 
-# ------------------------------------------------------------------ helpers
-def _ent_count(doc) -> dict:
-    from collections import Counter
-
-    c = Counter()
-    for block in doc.blocks:
-        for ent in block.query():
-            c[ent.dxftype()] += 1
-    return dict(c)
+def _ent_count(doc) -> dict[str, int]:
+    return dict(Counter(ent.dxftype() for ent in doc.modelspace()))

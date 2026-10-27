@@ -1,111 +1,38 @@
-# -*- coding: utf-8 -*-
-"""FastMCP HTTP server — mcp-cad-cloud (ezdxf headless, sem AutoCAD).
-
-Rodar:
-    python -m mcp_cad_cloud.server
-
-Saída:
-    INFO:     Uvicorn running on http://127.0.0.1:8000/mcp
-    INFO:     MCP server "mcp-cad-cloud" pronto (transport=http)
-
-O cliente MCP (Claude Code, etc.) se conecta via HTTP para o endpoint /mcp.
-
-Nota: este é o 'cloud' isolado (cloud/ezdxf). O mcp-cad-server original
-(contém COM/pywin32) fica intacto em master.
-"""
-
+"""Authenticated, single-user headless CAD MCP for Render. Desktop COM stays on Windows."""
 from __future__ import annotations
 
-import logging
 import os
-import sys
-
-# garante que o package local (mcp_cad_cloud) seja importável
-_HERE = os.path.dirname(os.path.abspath(__file__))
-if _HERE not in sys.path:
-    sys.path.insert(0, _HERE)
-
 from fastmcp import FastMCP
+from fastmcp.server.auth import StaticTokenVerifier
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from mcp_cad_cloud import __version__
+from mcp_cad_cloud.backend import initialize
+from mcp_cad_cloud import tools_verified as verified
 
-from mcp_cad_cloud import __version__, CONTRATO
-from mcp_cad_cloud.tools import TOOLS
+_token = os.environ.get("CAD_MCP_AUTH_TOKEN", "")
+if len(_token) < 24:
+    raise RuntimeError("CAD_MCP_AUTH_TOKEN must be set to a secret of at least 24 characters")
 
-# caminho e porta
-HOST = os.getenv("HOST", "127.0.0.1")
-PORT = int(os.getenv("PORT", "8000"))
-
-
-# ---------- inicialização do backend (ezdxf headless) ----------
-def _init_backend() -> None:
-    try:
-        from mcp_cad_cloud.backend import initialize
-    except Exception:
-        return
-    initialize()
-
-
-def _on_connect() -> dict:
-    """Chamado quando o cliente se conecta (informação de setup)."""
-    from mcp_cad_cloud.backend import ezx_version
-
-    try:
-        from mcp_cad_cloud.backend import _ensure, state_summary
-    except Exception:
-        return {"backend": "not_ready", "ezdxf": ezx_version()}
-    try:
-        st = state_summary()
-        return {"backend": "ezdxf", "ok": st.get("ok", False), "ezdxf": ezx_version()}
-    except Exception:
-        return {"backend": "ezdxf", "ok": False, "ezdxf": ezx_version()}
-
-
-# ---------- montagem do MCP ----------
 mcp = FastMCP(
     name="mcp-cad-cloud",
-    instructions=(
-        "MCP cloud-ready para mapeamento de plantas. "
-        "Backend: ezdxf headless (Linux, sem AutoCAD). "
-        "Use as ferramentas do CONTRATO (draw_*, layer_*, block_*, export_dxf, "
-        "plot_pdf, render_png, quantitativo, state_summary, etc.). "
-        "Todas as ferramentas atuam sobre um desenho em memória (drawing_atual). "
-        "Comece com new_drawing(), desenhe, exporte (export_dxf/plot_pdf/render_png) "
-        "e finalize com state_summary(). Invariável de nome de desenho: _drawing_name."
-    ),
+    auth=StaticTokenVerifier(tokens={_token: {"sub": "cad-owner", "client_id": "cad-private"}}),
+    instructions=("Private headless ezdxf workspace in metres. This does NOT edit desktop AutoCAD or DWG. "
+                  "Changes are in volatile single-user memory. Export before reset. "
+                  "Only tools listed here are supported; check ok and entity handles."),
 )
+for name in verified.TOOLS:
+    mcp.tool(name=name)(getattr(verified, name))
 
-# registrar todas as ferramentas do mapa
-import mcp_cad_cloud.tools as _tools_mod
-for _nome in TOOLS:
-    _fn = getattr(_tools_mod, _nome)
-    mcp.tool(_nome)(_fn)
+@mcp.custom_route("/healthz", methods=["GET"])
+async def healthz(request: Request) -> JSONResponse:
+    return JSONResponse({"ok": True, "service": "mcp-cad-cloud", "version": __version__})
 
-# relatório de estado + healthz (endpoint HTTP)
-@mcp.tool()
-def status() -> dict:
-    """Status do backend (ezdxf level, versão)."""
-    return _on_connect()
-
-
-@mcp.tool()
-def healthz() -> dict:
-    """Endpoint de healthcheck para o Render deploy."""
-    return {
-        "servico": "mcp-cad-cloud",
-        "versão": __version__,
-        "backend": "ezdxf",
-        "status": "ok",
-        "endpoint": "/mcp",
-        "transport": "http",
-    }
-
-
-# ---------- entry point ----------
 def main() -> None:
-    _init_backend()
-    print(f"[mcp-cad-cloud] FastMCP pronto (HTTP; backend ezdxf; v{__version__})", flush=True)
-    # fastmcp.run(transport="http", host=HOST, port=PORT)
-    mcp.run(transport="http", host=HOST, port=PORT)
-
+    initialize()
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8000"))
+    mcp.run(transport="http", host=host, port=port)
 
 if __name__ == "__main__":
     main()

@@ -1,74 +1,19 @@
-# mcp-cad-cloud
+# MCP CAD Cloud — DXF verificado (ezdxf)
 
-Versão **cloud-ready** do `mcp-cad-server`: expõe as ferramentas de mapeamento
-planta/quantitativo do AutoCAD via **MCP HTTP** (FastMCP), sem depender de
-AutoCAD, COM, pywin32 ou Windows.
+MCP HTTP headless, privado, single-user, para Render/Linux. Não controla AutoCAD Windows, não edita DWG, não exporta PDF.
 
-Tecnologia: `ezdxf` headless (luz, sem licença) + `FastMCP` (HTTP). Rodável
-em Linux (Render, Docker, Ubuntu, etc.).
+**Autenticação obrigatória:** configure a variável secreta `CAD_MCP_AUTH_TOKEN` (mínimo 24 caracteres) no Render antes do deploy. A rota `/healthz` é pública, o protocolo `/mcp` exige Bearer Token.
 
-## Arquitetura
+As únicas ferramentas publicadas são as de `mcp_cad_cloud.tools_verified.TOOLS`.
+O catálogo `tools.py` é histórico e experimental, porque inclui stubs que indicam sucesso sem modificar o desenho.
 
-```
-Claude Code / LibreChat / MCP client
-   │  HTTP POST http://<host>:8000/mcp
-   ▼
-mcp-cad-cloud (FastMCP, transport=http, port=8000)
-   │  chamadas das ferramentas (ex: draw_line, query_entities, quantitativo)
-   ▼
-ezdxf (headless) → desenho em memória → DXF/DWG → PDF/PNG
-```
+Render (serviço Python):
+- Branch: cloud/ezdxf
+- Build command: `pip install -e ./cloud/ezdxf`
+- Start command: `python -m mcp_cad_cloud.server`
+- Health check: `/healthz`
+- HTTP bind: `0.0.0.0:$PORT` (definido pelo Render)
 
-## Dependências
+Testes: `PYTHONPATH=cloud/ezdxf pytest -q cloud/ezdxf/tests/test_verified.py`
 
-```
-fastmcp>=2.0      # MCP HTTP server
-ezdxf>=1.0        # motor headless de leitura/escrita DXF
-```
-
-## Rodar localmente
-
-```bash
-cd mcp-cad-cloud
-python -m venv .venv
-.venv\Scripts\python.exe -m pip install -e .      # pyp사와의 설치
-.venv\Scripts\python.exe -m mcp_cad_cloud.server  # HTTP 127.0.0.1:8000
-```
-
-## Deploy no Render
-
-Arquivo `render.yaml` (Render's MCP config):
-
-```yaml
-services:
-  - type: web
-    name: mcp-cad-cloud
-    env: python
-    buildCommand: pip install -e .
-    startCommand: python -m mcp_cad_cloud.server
-    envVars:
-      - key: PORT
-        value: 8000
-      - key: CAD_BACKEND
-        value: ezdxf
-```
-
-No Render Dashboard:
-1. Criar um novo service → `mcp-cad-cloud` (Git branch: `cloud/ezdxf`).
-2. A build e o start rodam automaticamente.
-3. O MCP fica disponível em `https://mcp-cad-cloud.onrender.com/mcp`.
-
-## Ferramentas disponíveis (resumo)
-
-| Categoria | Ferramentas |
-|---|---|
-| Desenho | `draw_line`, `draw_rectangle`, `draw_polyline`, `draw_circle`, `draw_arc`, `draw_text`, `draw_mtext`, `draw_hatch` |
-| Dimensionamento | `dim_linear`, `dim_aligned` |
-| Camadas | `layer_list`, `layer_create`, `layer_set_current`, `ensure_standard_layers` |
-| Blocos | `block_list`, `block_insert`, `block_attributes`, `block_set_attribute` |
-| Estampa | `export_dxf`, `plot_pdf`, `render_png`, `screenshot` |
-| Undo/Redo | `undo`, `redo`, `zoom_extents` |
-| Quantitativo | `quantitativo` (contagem de entidades por tipo) |
-
-> O contrato completo está em `cad_mcp.CONTRATO` (versão original). Esta soma
-> mantém a compatibilidade com os prompts/stills do CADCraft.
+**Limites:** estado em memória compartilhada, sem persistência ou isolamento multiusuário. Reinício ou `new_drawing` apagam o desenho não exportado. Para uso em produção ampliada, implementar persistência por projeto, versionamento e auditoria.
