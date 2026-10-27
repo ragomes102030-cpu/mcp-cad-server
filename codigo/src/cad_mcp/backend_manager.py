@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from .build_identity import revision
 
 # o pacote vendorizado mora em src/autocad_mcp
 _SRC = Path(__file__).resolve().parents[1]
@@ -41,7 +42,9 @@ class BackendManager:
     """Mantém um backend único, inicializado sob demanda."""
 
     def __init__(self, mode: str | None = None) -> None:
-        self.mode = (mode or os.getenv("CAD_MCP_BACKEND", "auto")).lower()
+        self.mode = (mode or os.getenv("CAD_MCP_BACKEND") or os.getenv("MCP_CAD_BACKEND", "auto")).lower()
+        if self.mode not in {"auto", "com", "autocad", "file_ipc", "ezdxf"}:
+            raise ValueError("backend invalido: %s" % self.mode)
         self._backend = None
 
     # ------------------------------------------------------------------
@@ -101,8 +104,11 @@ class BackendManager:
 
     async def get(self):
         if self._backend is None:
-            self._backend, self._motivo = self._resolve()
-            await self._backend.initialize()
+            backend, motivo = self._resolve()
+            initialized = await backend.initialize()
+            if not initialized.ok:
+                raise RuntimeError(initialized.error or "falha na inicializacao do backend")
+            self._backend, self._motivo = backend, motivo
         return self._backend
 
     async def status(self) -> dict:
@@ -116,6 +122,11 @@ class BackendManager:
                 "modo_configurado": self.mode,
                 "capabilities": vars(b.capabilities),
                 "status": st.to_dict(),
+                "build": {"version": __import__("cad_mcp").__version__,
+                          "revision": revision(),
+                          "transport": "stdio",
+                          "backend": "autocad-or-headless"},
+                "codigo": {"source": str(Path(__file__).resolve())},
             }
         except Exception as e:
             return {

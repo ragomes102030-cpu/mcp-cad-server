@@ -30,6 +30,8 @@ if str(_SRC) not in sys.path:
 from fastmcp import FastMCP  # noqa: E402
 
 from cad_mcp import __version__, tools  # noqa: E402
+from cad_mcp.build_identity import revision  # noqa: E402
+from cad_mcp.tool_contract import guarded
 
 mcp = FastMCP(
     name="mcp-cad-server",
@@ -41,9 +43,19 @@ mcp = FastMCP(
     ),
 )
 
+
+def build_info() -> dict[str, str]:
+    """Return stable identity and capability boundary for this transport."""
+    return {
+        "version": __version__,
+        "revision": revision(),
+        "transport": "stdio",
+        "backend": "autocad-or-headless",
+    }
+
 for _fn in tools.TOOLS:
     # nome publico no padrao do autocad-mcp-pro (entity_create_line, drawing_save...)
-    mcp.tool(name=tools.nome_publico(_fn))(_fn)
+    mcp.tool(name=tools.nome_publico(_fn))(guarded(_fn))
 
 
 def main() -> None:

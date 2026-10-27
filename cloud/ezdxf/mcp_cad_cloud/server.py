@@ -6,6 +6,7 @@ from fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from mcp_cad_cloud import __version__
+from mcp_cad_cloud.build_identity import info
 from mcp_cad_cloud.backend import initialize
 from mcp_cad_cloud import tools_verified as verified
 
@@ -18,9 +19,14 @@ mcp = FastMCP(
 for name in verified.TOOLS:
     mcp.tool(name=name)(getattr(verified, name))
 
+
+def build_info() -> dict[str, str]:
+    """Return stable identity and capability boundary for this transport."""
+    return info(__version__, "http", "ezdxf")
+
 @mcp.custom_route("/healthz", methods=["GET"])
 async def healthz(request: Request) -> JSONResponse:
-    return JSONResponse({"ok": True, "service": "mcp-cad-cloud", "version": __version__})
+    return JSONResponse({"ok": True, "service": "mcp-cad-cloud", **build_info()})
 
 def main() -> None:
     initialize()

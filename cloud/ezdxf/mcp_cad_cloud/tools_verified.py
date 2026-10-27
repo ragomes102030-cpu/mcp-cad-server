@@ -9,6 +9,8 @@ import tempfile
 import zipfile
 from functools import wraps
 from mcp_cad_cloud.backend import _ensure, _ent_count, ezx_version, reset_drawing, state_summary
+from mcp_cad_cloud import __version__
+from mcp_cad_cloud.build_identity import info
 
 DRAWING_NAME = "planta_sem_nome"
 MAX_DXF_BYTES = 3_000_000
@@ -49,7 +51,8 @@ def _wrap(fn):
 def cad_status() -> dict:
     """Return capabilities, entity count and warning about temporary memory."""
     return {**state_summary(), "version_ezdxf": ezx_version(), "drawing": DRAWING_NAME,
-            "capabilities": list(TOOLS)}
+            "capabilities": list(TOOLS),
+            "build": info(__version__, "http", "ezdxf")}
 
 @_wrap
 def new_drawing(name: str = "planta_sem_nome") -> dict:
