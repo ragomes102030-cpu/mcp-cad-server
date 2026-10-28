@@ -38,7 +38,7 @@ BASE = {
         {"nome": "Área de serviço", "area": 5.0},
         {"nome": "Quarto 1", "area": 12.0},
         {"nome": "Quarto 2", "area": 10.0},
-        {"nome": "Banheiro social", "area": 4.0},
+        {"nome": "Banheiro social", "area": 5.0},
     ],
 }
 AMPLIADA = {
