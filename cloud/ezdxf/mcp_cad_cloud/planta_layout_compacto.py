@@ -53,37 +53,40 @@ def gerar_compacto(programa):
 
     # Profundidade é dimensionada para acomodar quartos, banheiro e hall.
     # Ajustar as duas larguras dos quartos em função das áreas líquidas exatas.
-    frente = max(4.85, sala["area"] / 3.75 + T)
-    fundo = 3.65
-    x_esquerda = quartos[0]["area"] / (fundo - T) + T
-    x_direita = largura - (quartos[1]["area"] / (fundo - T) + T)
+    # A largura e profundidade do programa são entre FACES EXTERNAS.
+    # Os eixos perimetrais ficam deslocados meia parede para dentro.
+    frente = max(4.70, sala["area"] / 4.0 + T)
+    fundo = 3.90
+    prof_quartos = fundo - 1.5 * T
+    x_esquerda = 1.5 * T + quartos[0]["area"] / prof_quartos
+    x_direita = largura - 1.5 * T - quartos[1]["area"] / prof_quartos
     largura_nucleo = x_direita - x_esquerda
     if not 2.15 <= largura_nucleo <= 2.85:
         raise ErroPrograma("hall central fora das proporções funcionais; "
                           "as áreas dos quartos exigem outro arranjo")
     h_banheiro = banheiro["area"] / (largura_nucleo - T)
-    h_hall = fundo - h_banheiro - T
+    h_hall = prof_quartos - h_banheiro
     if not 1.22 <= h_hall <= 1.65:
         raise ErroPrograma("hall de distribuição inviável para a área solicitada do banheiro")
-    for quarto, largura_livre in ((quartos[0], x_esquerda-T),
-                                  (quartos[1], largura-x_direita-T)):
-        if largura_livre < 2.70 or fundo-T < 3:
+    for quarto, largura_livre in ((quartos[0], x_esquerda-1.5*T),
+                                  (quartos[1], largura-x_direita-1.5*T)):
+        if largura_livre < 2.70 or prof_quartos < 3:
             raise ErroPrograma(f"{quarto['nome']}: quarto estreito para mobiliário de referência")
 
     lado_lav = largura-1.85
     x_lav_esq = lado_lav+T/2
-    x_lav_dir = largura-T/2
+    x_lav_dir = largura-T
     livre_lav = x_lav_dir-x_lav_esq
-    y_lav_top = T/2+lavanderia["area"]/livre_lav
+    y_lav_top = T+lavanderia["area"]/livre_lav
     y_parede_lav = y_lav_top + T/2
     if not 2.65 <= y_parede_lav <= 3.45 or frente-y_parede_lav < 1.2:
         raise ErroPrograma("lavanderia desproporcional; solicite layout com outros módulos")
-    x_cozinha_esq = 4.0
+    x_cozinha_esq = 4.20
     x_cozinha_dir = lado_lav-T/2
-    y_cozinha_top = T/2 + cozinha["area"]/(x_cozinha_dir-x_cozinha_esq)
+    y_cozinha_top = T + cozinha["area"]/(x_cozinha_dir-x_cozinha_esq)
     if not 2.55 <= y_cozinha_top <= y_parede_lav+0.35:
         raise ErroPrograma("cozinha não comporta bancada e circulação neste arranjo")
-    x_sala_dir = T/2 + sala["area"]/(frente-T)
+    x_sala_dir = T + sala["area"]/(frente - 1.5*T)
     if not 3.20 <= x_sala_dir <= x_cozinha_esq:
         raise ErroPrograma("sala fora das proporções previstas para este módulo")
 
@@ -109,15 +112,15 @@ def gerar_compacto(programa):
                 "texto_y": round(texto_y if texto_y is not None else (y1+y2)/2,8)}
 
     ambs=[
-        ambiente(sala,T/2,T/2,x_sala_dir,frente-T/2,2.85,frente-.85),
-        ambiente(cozinha,x_cozinha_esq,T/2,x_cozinha_dir,y_cozinha_top,4.62,2.45),
-        ambiente(lavanderia,x_lav_esq,T/2,x_lav_dir,y_lav_top,lado_lav+.90,y_lav_top-.45),
-        ambiente(quartos[0],T/2,frente+T/2,x_esquerda-T/2,profundidade-T/2,
+        ambiente(sala,T,T,x_sala_dir,frente-T/2,2.85,frente-.85),
+        ambiente(cozinha,x_cozinha_esq,T,x_cozinha_dir,y_cozinha_top,4.62,2.45),
+        ambiente(lavanderia,x_lav_esq,T,x_lav_dir,y_lav_top,lado_lav+.90,y_lav_top-.45),
+        ambiente(quartos[0],T,frente+T/2,x_esquerda-T/2,profundidade-T,
                  1.85,frente+1.68),
-        ambiente(quartos[1],x_direita+T/2,frente+T/2,largura-T/2,profundidade-T/2,
+        ambiente(quartos[1],x_direita+T/2,frente+T/2,largura-T,profundidade-T,
                  x_direita+1.4,frente+1.68),
         ambiente(banheiro,x_esquerda+T/2,frente+h_hall+T/2,
-                 x_direita-T/2,profundidade-T/2,
+                 x_direita-T/2,profundidade-T,
                  (x_esquerda+x_direita)/2,frente+h_hall+1.35),
         ambiente({"nome":"Hall / circulação"},x_esquerda+T/2,frente+T/2,
                  x_direita-T/2,frente+h_hall-T/2),
@@ -137,13 +140,13 @@ def gerar_compacto(programa):
         (x_esquerda+1.65,frente+h_hall+.32,x_esquerda+2.18,frente+h_hall+1.04),
     ]
     walls=[
-        ("h",0.0,0.0,largura),
+        ("h",T/2,T/2,largura-T/2),
         ("h",frente,0.0,largura),
         ("h",frente+h_hall,x_esquerda,x_direita),
-        ("h",profundidade,0.0,largura),
+        ("h",profundidade-T/2,T/2,largura-T/2),
         ("h",y_parede_lav,lado_lav,largura),
-        ("v",0.0,0.0,profundidade),
-        ("v",largura,0.0,profundidade),
+        ("v",T/2,T/2,profundidade-T/2),
+        ("v",largura-T/2,T/2,profundidade-T/2),
         ("v",lado_lav,0.0,y_parede_lav),
         ("v",x_esquerda,frente,profundidade),
         ("v",x_direita,frente,profundidade),
@@ -163,10 +166,10 @@ def gerar_compacto(programa):
                        else (coord,inicio,coord,inicio+tam))
 
     # Entrada frontal; acesso ao hall é passagem, sem folha projetada.
-    porta("h",0.0,.50,ENTRADA,0)
-    janela("h",0.0,2.05,1.45)
-    janela("h",0.0,4.75,1.40)
-    janela("h",0.0,largura-1.18,.72)
+    porta("h",T/2,.50,ENTRADA,0)
+    janela("h",T/2,2.05,1.45)
+    janela("h",T/2,4.75,1.40)
+    janela("h",T/2,largura-1.18,.72)
     # Acesso da cozinha à lavanderia, folha para a área de serviço.
     porta("v",lado_lav,1.36,.90,0)
     # Abertura contínua sem porta entre sala/cozinha e hall.
@@ -176,9 +179,9 @@ def gerar_compacto(programa):
     porta("v",x_direita,frente+.16,.90,0)
     porta("h",frente+h_hall,x_esquerda+.65,.80,0)
     # Janelas externas de dormitórios e banheiro.
-    janela("h",profundidade,.95,1.45)
-    janela("h",profundidade,(x_esquerda+x_direita)/2-.32,.64)
-    janela("h",profundidade,x_direita+.75,1.34)
+    janela("h",profundidade-T/2,.95,1.45)
+    janela("h",profundidade-T/2,(x_esquerda+x_direita)/2-.32,.64)
+    janela("h",profundidade-T/2,x_direita+.75,1.34)
 
     def cortar(a,b,coord,intervalos,horizontal):
         cursor=a
