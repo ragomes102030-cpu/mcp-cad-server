@@ -117,28 +117,46 @@ def render(model, programa, etiqueta, destino):
     # Dimensões da projeção em metros, com os MESMOS níveis do DXF.
     if compacto:
         color = "#42627a"
-        def hdim(x1,x2,yref,ydim,font=7.4):
-            ax.plot([x1,x1],[yref,ydim-.09],color=color,lw=.68)
-            ax.plot([x2,x2],[yref,ydim-.09],color=color,lw=.68)
-            ax.plot([x1,x2],[ydim,ydim],color=color,lw=.75)
-            for x in (x1,x2):
-                ax.plot([x-.055,x+.055],[ydim-.055,ydim+.055],color=color,lw=.8)
-            ax.text((x1+x2)/2,ydim-.14,f"{x2-x1:.2f} m",fontsize=font,
-                    ha="center",va="top",color=color)
-        def vdim(y1,y2,xref,xdim,font=7.4):
-            ax.plot([xref,xdim+.09],[y1,y1],color=color,lw=.68)
-            ax.plot([xref,xdim+.09],[y2,y2],color=color,lw=.68)
-            ax.plot([xdim,xdim],[y1,y2],color=color,lw=.75)
-            for y in (y1,y2):
-                ax.plot([xdim-.055,xdim+.055],[y-.055,y+.055],color=color,lw=.8)
-            ax.text(xdim+.16,(y1+y2)/2,f"{y2-y1:.2f} m",fontsize=font,
-                    ha="left",va="center",rotation=90,color=color)
-        for c in model["cotas_h_2d"]:
-            hdim(c["x1"],c["x2"],c["y_ref"],c["y_dim"],
-                 8.5 if c["nivel"]=="total" else 7.1)
-        for c in model["cotas_v_2d"]:
-            vdim(c["y1"],c["y2"],c["x_ref"],c["x_dim"],
-                 8.5 if c["nivel"]=="total" else 7.1)
+        half = float(model["espessura_parede"]) / 2
+        # Os pontos parciais são referências reais de eixos. As linhas de
+        # extensão partem das faces externas, e não entram nas paredes.
+        def tick(x, y):
+            ax.plot([x-.035,x+.035],[y-.035,y+.035],color=color,lw=.72)
+        def h_chain(cotas):
+            partials=[c for c in cotas if c["nivel"]=="parcial"]
+            total=next(c for c in cotas if c["nivel"]=="total")
+            yp=partials[0]["y_dim"]
+            yt=total["y_dim"]
+            # Uma única extensão por coordenada; sem traços duplicados.
+            stops=sorted({p["x1"] for p in partials}|{p["x2"] for p in partials})
+            for x in stops:
+                end_y=yt if x in (total["x1"],total["x2"]) else yp
+                ax.plot([x,x],[-half,end_y],color=color,lw=.62)
+            for c in cotas:
+                x1,x2,y=c["x1"],c["x2"],c["y_dim"]
+                ax.plot([x1,x2],[y,y],color=color,lw=.7)
+                for x in (x1,x2): tick(x,y)
+                ax.text((x1+x2)/2,y-.10,f"{x2-x1:.2f} m",
+                        fontsize=8.2 if c["nivel"]=="total" else 7.0,
+                        ha="center",va="top",color=color)
+        def v_chain(cotas):
+            partials=[c for c in cotas if c["nivel"]=="parcial"]
+            total=next(c for c in cotas if c["nivel"]=="total")
+            xp=partials[0]["x_dim"]
+            xt=total["x_dim"]
+            stops=sorted({p["y1"] for p in partials}|{p["y2"] for p in partials})
+            for y in stops:
+                end_x=xt if y in (total["y1"],total["y2"]) else xp
+                ax.plot([largura+half,end_x],[y,y],color=color,lw=.62)
+            for c in cotas:
+                y1,y2,x=c["y1"],c["y2"],c["x_dim"]
+                ax.plot([x,x],[y1,y2],color=color,lw=.7)
+                for y in (y1,y2): tick(x,y)
+                ax.text(x+.13,(y1+y2)/2,f"{y2-y1:.2f} m",
+                        fontsize=8.2 if c["nivel"]=="total" else 7.0,
+                        ha="left",va="center",rotation=90,color=color)
+        h_chain(model["cotas_h_2d"])
+        v_chain(model["cotas_v_2d"])
     else:
         ax.annotate("", xy=(0,-1.1), xytext=(largura,-1.1),
                     arrowprops={"arrowstyle":"|-|","lw":0.8,"color":"#334155"})
