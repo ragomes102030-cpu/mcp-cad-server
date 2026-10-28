@@ -236,6 +236,7 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
     from ezdxf.enums import TextEntityAlignment
     for amb in model["ambientes"]:
         cx, cy = (amb["x1"]+amb["x2"])/2, (amb["y1"]+amb["y2"])/2
+        cx, cy = float(amb.get("texto_x", cx)), float(amb.get("texto_y", cy))
         largura = amb["x2"] - amb["x1"]
         nome = amb["nome"]
         tamanho = max(0.10, min(0.20, float(amb["h"])))
