@@ -40,6 +40,14 @@ def _new_document():
     return doc
 
 
+def auth_mode() -> str:
+    """Authentication is OFF for the online trial; can be enabled by config."""
+    value = os.environ.get("MCP_CAD_AUTH_MODE", "off").strip().lower()
+    if value not in {"off", "required"}:
+        raise ValueError("MCP_CAD_AUTH_MODE deve ser off ou required")
+    return value
+
+
 def session_key() -> str:
     """Use MCP's verified connection header, not user-controlled tool args.
 
@@ -55,18 +63,19 @@ def session_key() -> str:
     except (RuntimeError, ImportError):
         # Direct Python calls used by tests and local offline tooling.
         return "local:default"
-    # Mandatory shared secret for cloud HTTP clients (Claude supports a
-    # configured Authorization header). Direct in-process tests stay local.
-    configured = os.environ.get("MCP_CAD_API_KEY", "")
-    if len(configured) < 32:
-        raise PermissionError("MCP_CAD_API_KEY ausente ou fraca; acesso remoto bloqueado")
-    authorization = request.headers.get("authorization", "")
-    supplied = authorization[7:] if authorization.lower().startswith("bearer ") else ""
-    # Clients that cannot use Authorization can configure X-MCP-CAD-API-KEY.
-    if not supplied:
-        supplied = request.headers.get("x-mcp-cad-api-key", "")
-    if not secrets.compare_digest(supplied, configured):
-        raise PermissionError("credenciais MCP CAD inválidas")
+    # Public trial mode: no API key until the owner opts into authentication.
+    # Session isolation, one-use preview tokens and quotas remain enforced.
+    # Set MCP_CAD_AUTH_MODE=required to enable the existing Bearer-key guard.
+    if auth_mode() == "required":
+        configured = os.environ.get("MCP_CAD_API_KEY", "")
+        if len(configured) < 32:
+            raise PermissionError("MCP_CAD_API_KEY ausente ou fraca; acesso remoto bloqueado")
+        authorization = request.headers.get("authorization", "")
+        supplied = authorization[7:] if authorization.lower().startswith("bearer ") else ""
+        if not supplied:
+            supplied = request.headers.get("x-mcp-cad-api-key", "")
+        if not secrets.compare_digest(supplied, configured):
+            raise PermissionError("credenciais MCP CAD inválidas")
     sid = request.headers.get("mcp-session-id", "").strip()
     if not sid or len(sid) > 256:
         raise RuntimeError(
