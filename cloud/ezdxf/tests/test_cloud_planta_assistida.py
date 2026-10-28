@@ -26,10 +26,22 @@ def test_cloud_template_catalog_is_read_only_and_parity_ready():
     result = tools_verified.planta_templates()
 
     assert result["ok"] is True
+    assert result["ambiente"] == "cloud_headless_ezdxf"
+    assert result["autocad"]["disponivel"] is False
     assert result["template_padrao"] == "residencia_unifamiliar_12x11"
     assert {item["id"] for item in result["templates"]} >= {
         "residencia_unifamiliar_12x11", "tiny_house_10m2"
     }
+
+
+def test_cloud_status_explicitly_forbids_desktop_autocad():
+    result = tools_verified.cad_status()
+
+    assert result["backend"] == "ezdxf"
+    assert result["execution_mode"] == "cloud_headless"
+    assert result["autocad_available"] is False
+    assert result["desktop_access"] is False
+    assert result["dwg_access"] is False
 
 
 def test_cloud_rejects_unsupported_dimensions_before_drawing():

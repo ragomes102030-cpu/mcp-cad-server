@@ -12,14 +12,18 @@ from mcp_cad_cloud import tools_verified as verified
 
 mcp = FastMCP(
     name="mcp-cad-cloud",
-    instructions=("Public headless ezdxf workspace in metres. This does NOT edit desktop AutoCAD or DWG. "
-                  "Changes are in volatile single-user memory. Export before reset. "
-                   "Only tools listed here are supported; check ok and entity handles. "
-                   "For any floor plan, call planta_templates and prefer "
-                  "planta_criar_validada: preview first, then draw with the returned "
-                  "preview_token. Raw primitives are available in full profile only "
-                  "for explicit advanced CAD or unsupported typologies; validate the "
-                  "model first, interrupt walls at openings, audit, then export."),
+    instructions=(
+        "CLOUD HEADLESS: this server runs on Render/Linux with ezdxf only. "
+        "It cannot see, open, control or save the user's AutoCAD, Windows desktop "
+        "or DWG files. Never call or request AutoCAD COM, system_status, "
+        "abrir_autocad, drawing_open for a desktop file, or an AutoCAD restart. "
+        "Start with cad_status, then planta_templates and "
+        "planta_criar_validada(preview); draw with the returned preview_token. "
+        "Use new_drawing for a volatile in-memory DXF and export_dxf before reset. "
+        "Raw primitives are available in full profile only for explicit advanced "
+        "CAD or unsupported typologies; validate the model first, interrupt walls "
+        "at openings, audit, then export."
+    ),
 )
 for name in verified.PUBLIC_TOOLS:
     mcp.tool(name=name)(getattr(verified, name))

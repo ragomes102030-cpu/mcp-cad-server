@@ -33,7 +33,24 @@ ou `draw_*` para a planta correspondente.
 
 ### Cloud
 
-Use a mesma sequência, trocando apenas os nomes de consulta/exportação:
+O cloud é **headless**: `ezdxf` em Render/Linux, sem AutoCAD, COM, ActiveX,
+janela ou acesso ao desktop/DWG local. Não chame `system_status`, não passe
+`abrir_autocad`, não peça para abrir o AutoCAD e não trate a ausência do
+AutoCAD como falha.
+
+Use a sequência cloud:
+
+1. `cad_status` — deve retornar `backend=ezdxf`, `autocad_available=false` e
+   `execution_mode=cloud_headless`.
+2. `planta_templates`.
+3. `planta_criar_validada(modo="preview")`.
+4. `planta_criar_validada(modo="desenhar", preview_token="...")`.
+5. `export_dxf`.
+
+Para edições primitivas, use `new_drawing`, `layer_create`, `draw_*`,
+`drawing_audit` e `export_dxf`. Não tente abrir um DWG do computador local.
+
+Use a mesma sequência de validação, trocando apenas os nomes de consulta/exportação:
 `cad_status`, `inspect_drawing`, `drawing_audit`, `quantitativo` e
 `export_dxf`. O cloud é headless e não abre o AutoCAD do usuário.
 

@@ -96,6 +96,8 @@ def planta_templates() -> dict:
     """Lista templates e impede que o agente improvise uma tipologia."""
     return {
         "ok": True,
+        "ambiente": "cloud_headless_ezdxf",
+        "autocad": {"disponivel": False, "acao": "nao tentar abrir, conectar ou reiniciar o AutoCAD"},
         "template_padrao": TEMPLATE_PADRAO,
         "templates": listar_templates(),
         "fluxo_obrigatorio": [
@@ -145,9 +147,15 @@ def validar_planta(modelo: dict | None = None, estrito: bool = False) -> dict:
 
 @_wrap
 def cad_status() -> dict:
-    """Return capabilities, entity count and warning about temporary memory."""
+    """Return the cloud/headless boundary before any drawing operation."""
     return {**state_summary(), "version_ezdxf": ezx_version(), "drawing": DRAWING_NAME,
             "profile": "full" if PUBLIC_TOOLS == TOOLS else "planta_segura",
+            "backend": "ezdxf",
+            "execution_mode": "cloud_headless",
+            "autocad_available": False,
+            "desktop_access": False,
+            "dwg_access": False,
+            "next_step": "use planta_templates; nao tente abrir ou controlar o AutoCAD",
             "capabilities": list(PUBLIC_TOOLS),
             "build": info(__version__, "http", "ezdxf")}
 

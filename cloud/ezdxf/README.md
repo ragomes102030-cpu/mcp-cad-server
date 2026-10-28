@@ -3,6 +3,31 @@
 Servidor MCP HTTP para Render/Linux, baseado em `ezdxf`. Não controla
 AutoCAD Windows, não edita DWG e não acessa arquivos do computador local.
 
+## Regra para agentes: este servidor nao abre AutoCAD
+
+Este servico e **cloud/headless**. O processo roda no Render/Linux e nao tem
+janela, COM/ActiveX, AutoCAD instalado, desktop Windows ou acesso a arquivos
+DWG do computador do usuario. Portanto, o agente nao deve:
+
+- chamar `system_status` esperando AutoCAD COM;
+- pedir para o usuario abrir ou reiniciar o AutoCAD;
+- usar `abrir_autocad` ou tentar controlar uma janela local;
+- tratar a ausencia do AutoCAD como erro do servico.
+
+O fluxo cloud comeca diretamente em:
+
+```text
+cad_status
+planta_templates
+planta_criar_validada(modo="preview")
+planta_criar_validada(modo="desenhar", preview_token="...")
+export_dxf
+```
+
+`new_drawing` cria um DXF em memoria temporaria. O estado e volatil; exporte
+antes de reiniciar ou quando a sessao for encerrada. Para desenhar diretamente
+no AutoCAD 2025, use o MCP local com backend `autocad_com`.
+
 ## Acesso
 
 Nesta versão de teste `/healthz` e `/mcp` são públicos, sem Bearer Token.

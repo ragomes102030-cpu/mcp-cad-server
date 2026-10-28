@@ -17,6 +17,16 @@ O perfil `full` pode expor as primitivas de CAD para atender tipologias fora dos
 templates e edicoes avancadas. A disponibilidade nao autoriza usa-las por
 padrao.
 
+### Regra de ambiente cloud
+
+Se o servidor se chamar `mcp-cad-cloud`, se a ferramenta inicial for
+`cad_status`, ou se o status retornar `backend=ezdxf`, `execution_mode` cloud ou
+`autocad_available=false`, trate a sessão como **cloud/headless**. Não tente
+abrir, reiniciar ou controlar o AutoCAD; não use COM/ActiveX; não peça ao
+usuário para abrir o CAD. Use diretamente `cad_status`, `planta_templates`,
+`planta_criar_validada` e `export_dxf`. O AutoCAD 2025 só existe no fluxo local
+quando `system_status` confirmar `autocad_com`.
+
 Antes de qualquer desenho:
 
 1. Consulte `system_status` no local ou `cad_status` no cloud.
