@@ -108,7 +108,7 @@ def _dividir(ambientes, largura):
                 f"este arranjo em duas faixas exige no mínimo {minimo:.2f} m em cada direção. "
                 "Revise áreas/largura ou use um layout com mais faixas."
             )
-        if x2 - x1 < PORTA + 2 * MARGEM:
+        if x2 - x1 < PORTA + 0.30:
             raise ErroPrograma(f"{ambiente['nome']}: largura insuficiente para porta")
     return profundidade, celulas
 
