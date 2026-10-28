@@ -226,7 +226,7 @@ def _summary(model):
 
 def _ensure_layers(doc):
     for name, color in (("TERRENO", 6), ("PAREDES", 7), ("PORTAS", 3), ("JANELAS", 5),
-                        ("MOBILIARIO", 2), ("COTAS", 1), ("TEXTOS", 7)):
+                        ("MOBILIARIO", 2), ("COTAS", 1), ("COTAS_INT", 8), ("TEXTOS", 7)):
         if name not in doc.layers:
             doc.layers.new(name, dxfattribs={"color": color})
 
@@ -349,12 +349,42 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
     dim_override = {"dimlfac":1.0, "dimdec":2, "dimzin":0,
                     "dimpost":"<> m", "dimtxt":0.18, "dimasz":0.12,
                     "dimexe":0.10, "dimexo":0.08}
-    for x1, x2, y, distance in model["cotas_h"]:
-        dim = msp.add_aligned_dim((x1,0),(x2,0),distance=distance,
-                                  override=dim_override,dxfattribs={"layer":"COTAS"}); dim.render()
-    for x, y1, y2, distance in model["cotas_v"]:
-        dim = msp.add_aligned_dim((x,y1),(x,y2),distance=distance,
-                                  override=dim_override,dxfattribs={"layer":"COTAS"}); dim.render()
+    if model.get("cotas_h_2d") and model.get("cotas_v_2d"):
+        # Cotas associadas aos limites geométricos: parciais e totais.
+        # Eixos em metros. A própria entidade DIMENSION calcula o valor.
+        partial_style = dict(dim_override, dimtxt=0.14, dimasz=0.10,
+                             dimexe=0.07, dimexo=0.06)
+        for c in model["cotas_h_2d"]:
+            style = partial_style if c["nivel"] == "parcial" else dim_override
+            dim = msp.add_aligned_dim(
+                p1=(c["x1"], c["y_ref"]), p2=(c["x2"], c["y_ref"]),
+                distance=c["y_dim"]-c["y_ref"], override=style,
+                dxfattribs={"layer":"COTAS"})
+            dim.render()
+        for c in model["cotas_v_2d"]:
+            style = partial_style if c["nivel"] == "parcial" else dim_override
+            dim = msp.add_aligned_dim(
+                p1=(c["x_ref"], c["y1"]), p2=(c["x_ref"], c["y2"]),
+                distance=c["x_ref"]-c["x_dim"], override=style,
+                dxfattribs={"layer":"COTAS"})
+            dim.render()
+        # Anotação legível das larguras e profundidades úteis de cada
+        # ambiente, também calculadas do mesmo objeto geométrico.
+        for c in model.get("cotas_ambientes", []):
+            texto = f'{c["largura"]:.2f} x {c["profundidade"]:.2f} m'
+            entidade = msp.add_text(
+                texto, dxfattribs={"height":0.115, "layer":"COTAS_INT"})
+            entidade.set_placement(
+                (c["x"], c["y"]-0.33),
+                align=TextEntityAlignment.MIDDLE_CENTER)
+    else:
+        # Preserva contratos e cotas dos templates clássicos.
+        for x1, x2, y, distance in model["cotas_h"]:
+            dim = msp.add_aligned_dim((x1,0),(x2,0),distance=distance,
+                                      override=dim_override,dxfattribs={"layer":"COTAS"}); dim.render()
+        for x, y1, y2, distance in model["cotas_v"]:
+            dim = msp.add_aligned_dim((x,y1),(x,y2),distance=distance,
+                                      override=dim_override,dxfattribs={"layer":"COTAS"}); dim.render()
     for x, y, text, height in model["selo"]:
         msp.add_text(text, dxfattribs={"height":height,"insert":(x,y),"layer":"TEXTOS"})
     return {"ok": True, "etapa": "desenho", "backend": "ezdxf", "resumo": summary,
