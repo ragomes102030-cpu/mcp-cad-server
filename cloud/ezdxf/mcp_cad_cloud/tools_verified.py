@@ -103,7 +103,29 @@ def planta_templates() -> dict:
             "planta_criar_validada(modo='preview')",
             "planta_criar_validada(modo='desenhar', preview_token=preview_token)",
         ],
-        "regra": "nao usar ferramentas primitivas para contornar template ausente; desenho sem preview e bloqueado",
+        "selecao_de_ferramentas": {
+            "template_compativel": "use planta_criar_validada; nao reconstrua com linhas e retangulos",
+            "tipologia_sem_template": "use validar_planta e depois primitivas em sequencia controlada",
+            "cad_avancado": "use primitivas somente quando o pedido exigir edicao ou geometria fora do template",
+        },
+        "ordem_primitivas": [
+            "cad_status",
+            "new_drawing",
+            "layer_create",
+            "validar_planta(modelo, estrito=true)",
+            "paredes em segmentos que respeitem os vaos",
+            "portas e janelas",
+            "mobiliario, textos e cotas",
+            "drawing_audit, inspect_drawing",
+            "export_dxf",
+        ],
+        "proibido": [
+            "desenhar uma parede continua por baixo de uma porta",
+            "colocar arco de porta sem vao correspondente",
+            "usar retangulos sobrepostos para simular encontros de paredes",
+            "entregar sem auditoria",
+        ],
+        "regra": "preview e token sao obrigatorios para template; primitivas exigem validacao, sequencia e auditoria",
     }
 
 @_wrap

@@ -39,9 +39,11 @@ mcp = FastMCP(
         "Motor CAD próprio: desenha plantas, lê desenhos e calcula quantitativos. "
         "Com o AutoCAD aberto opera no desenho vivo pelo canal COM (sem roubar foco); "
         "sem AutoCAD, opera headless (ezdxf) e usa o accoreconsole para DXF/PDF. "
-        "Para plantas, use planta_criar_validada: preview primeiro e depois desenho "
-        "com o preview_token; o perfil planta_segura oculta primitivas de desenho. "
-        "Use MCP_CAD_PROFILE=full somente para CAD avancado explicito. "
+        "Para qualquer planta, consulte planta_templates e prefira "
+        "planta_criar_validada: preview primeiro e depois desenho com o preview_token. "
+        "As primitivas ficam disponiveis no perfil full, mas so devem ser usadas "
+        "para CAD avancado ou tipologias sem template; nesse caso valide o modelo "
+        "antes, desenhe paredes interrompidas nos vaos e audite antes de exportar. "
         f"versão {__version__}"
     ),
 )

@@ -15,10 +15,11 @@ mcp = FastMCP(
     instructions=("Public headless ezdxf workspace in metres. This does NOT edit desktop AutoCAD or DWG. "
                   "Changes are in volatile single-user memory. Export before reset. "
                    "Only tools listed here are supported; check ok and entity handles. "
-                   "For floor plans use planta_criar_validada: preview first, then draw "
-                   "with the returned preview_token. Raw drawing primitives are hidden "
-                   "in the default planta_segura profile; set MCP_CAD_PROFILE=full only "
-                   "for explicit advanced CAD work."),
+                   "For any floor plan, call planta_templates and prefer "
+                  "planta_criar_validada: preview first, then draw with the returned "
+                  "preview_token. Raw primitives are available in full profile only "
+                  "for explicit advanced CAD or unsupported typologies; validate the "
+                  "model first, interrupt walls at openings, audit, then export."),
 )
 for name in verified.PUBLIC_TOOLS:
     mcp.tool(name=name)(getattr(verified, name))

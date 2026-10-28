@@ -8,7 +8,7 @@
       "env": {
         "MCP_CAD_TEMP": "C:/temp/mcp_cad_com",
         "CAD_MCP_BACKEND": "com",
-        "MCP_CAD_PROFILE": "planta_segura"
+        "MCP_CAD_PROFILE": "full"
       }
     }
   }

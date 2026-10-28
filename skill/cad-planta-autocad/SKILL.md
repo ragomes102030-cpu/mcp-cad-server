@@ -1,5 +1,5 @@
 ---
-name: cad-planta-autocad.rollback-broken
+name: cad-planta-autocad
 version: "1.0.0"
 author: Rafael Gomes
 license: MIT
@@ -10,6 +10,27 @@ hermes:
 ---
 
 # Plantas baixas no AutoCAD real (mcp-cad-server)
+
+## Politica atual de selecao de ferramentas
+
+O perfil `full` pode expor as primitivas de CAD para atender tipologias fora dos
+templates e edicoes avancadas. A disponibilidade nao autoriza usa-las por
+padrao.
+
+Antes de qualquer desenho:
+
+1. Consulte `system_status` no local ou `cad_status` no cloud.
+2. Consulte `planta_templates` para saber se existe template compatível.
+3. Se houver template, use `planta_criar_validada` em `preview` e depois em
+   `desenhar` com o `preview_token`. Nao reconstrua o template com retangulos.
+4. Se nao houver template, monte um modelo paramétrico, rode `validar_planta`
+   antes de criar entidades e use as primitivas somente em chamadas sequenciais.
+5. Depois do desenho, rode auditoria, releia entidades, gere PNG e so entao
+   exporte DXF/PDF/DWG.
+
+As regras detalhadas e a matriz local/cloud estao em
+`docs/MANUAL_AGENTE_MCP_CAD.md`. O manual deve ser tratado como contrato de
+execucao, nao como sugestao estetica.
 
 > **Regra de ouro desta skill: contagem de entidades e "0 erros" não provam nada.**
 > O AutoCAD erra em silêncio. Todo render termina com conferência de **propriedade**
@@ -45,6 +66,21 @@ devolve exit code 0/1 e imprime o relatório.
 Partida rápida: copie `assets/modelo-3-quartos.json` (119,56 m², 3 quartos, 10 portas,
 8 janelas) e mexa nos números.
 
+### Fluxo preferencial para agentes pequenos
+
+Quando o pedido for criar a planta residencial do template assistido, use a
+tool `planta_assistida` em vez de inventar coordenadas ou chamar dezenas de
+tools primitivas:
+
+1. `planta_assistida(programa={...}, modo="preview")`.
+2. Confira `ok`, `validacao`, `resumo.area_util` e `resumo.areas`.
+3. `planta_assistida(programa={...}, modo="desenhar", abrir_autocad=true, timeout_s=90)`.
+
+No MCP local, o modo `desenhar` localiza e inicia o AutoCAD 2025 quando ele não
+está aberto, aguarda o backend `autocad_com`, cria um documento novo e desenha
+a planta inteira. Nunca use o modo `desenhar` no servidor cloud e nunca aceite
+fallback silencioso para ezdxf quando o usuário pediu AutoCAD vivo.
+
 ### Desenho manual no AutoCAD via MCP
 
 Para desenhar a planta passo a passo usando os comandos MCP (quando o JSON não for suficiente), siga esta ordem:
@@ -59,7 +95,7 @@ Para desenhar a planta passo a passo usando os comandos MCP (quando o JSON não 
 
 5. **Paredes internas**: para cada separação de ambientes, desenhe retângulos de 0,10 m de espessura, dividindo o espaço conforme o spec. Cada vão de porta ou janela é um corte que deve ser respeitado, desenhando os retângulos do entorno do vão nas partes acima e abaixo (ou esquerda e direita) do vão, não preenchendo o vão. Exemplo: parede entre Sala e Cozinha no eixo x=5,25, com vão de porta y=0,80-1,60 => desenhe dois retângulos: (5,20,0,20)-(5,30,0,80) e (5,20,1,60)-(5,30,4,20). Use `layer="PAREDE_INT"`.
 
-6. **Portas**: para cada porta, desenhe um arco de 90° de raio 0,05 m no ponto de dobradiça, e uma linha (folha) que sai do canto do vão. Use `entity_create_arc` e `entity_create_line` com `layer="PORTA"`.
+6. **Portas**: arco de 90° centrado na dobradiça, com raio igual à largura da folha (não 0,05 m). Uma extremidade coincide com a folha fechada no vão; a folha aberta e a varredura ficam no ambiente de destino. Portas de correr não recebem arco.
 
 7. **Janelas**: desenhe duas linhas paralelas à parede a ±0,025 m do eixo do vão. Use `entity_create_line` com `layer="JANELA"`.
 
@@ -226,3 +262,18 @@ ferros, ancoragem NBR 6118): `skill/laje-concreto-armado`.
 - `references/mapa-autocad.md` — fronteira COM × comando (o que é método e o que só
   existe como comando), números do AutoCAD 2025 e como regerar o mapa.
 - `assets/modelo-3-quartos.json` — modelo real, validado, para clonar.
+
+## Conhecimento validado em 2026-10-27
+
+Correção R02: as faces internas ORIGINAIS somam 120,6750 m², arredondadas para
+120,68 m² com ROUND_HALF_UP; o antigo registro 120,665 estava errado. A soma
+dos valores arredondados por ambiente é 120,65 m². Calcular com Decimal.
+
+Dimensões de eixo não são dimensões externas: eixos 12 × 11 m com t=0,15 m
+ocupam 12,15 × 11,15 m por fora. No teste revisado adotaram-se faces externas
+12 × 11 m, eixos 11,85 × 10,85 m e área útil 117,6375 m².
+
+Confirmar mutações por releitura e pelo DXF exportado. Conferir o texto da cota:
+medição correta com DIMLFAC=100 mostra valor errado. No AutoLISP DIMDSEP recebe
+a string ","; no DXF recebe 44. Na geração PDF com MatplotlibBackend usar
+adjust_figure=False e conferir MediaBox e barra de escala; figsize não basta.

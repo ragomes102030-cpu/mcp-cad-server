@@ -22,3 +22,5 @@ services:
         value: ezdxf
       - key: CAD_TEMP
         value: /tmp/mcp_cad
+      - key: MCP_CAD_PROFILE
+        value: full
