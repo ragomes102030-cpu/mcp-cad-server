@@ -84,7 +84,7 @@ def test_remote_http_works_without_auth_but_still_requires_session(monkeypatch):
     assert session_key() == "mcp:session-123"
     monkeypatch.setattr(dependencies, "get_http_request", lambda: SimpleNamespace(
         headers={}))
-    with pytest.raises(RuntimeError, match="sessão MCP ausente"):
+    with pytest.raises(RuntimeError, match="workspace_token"):
         session_key()
 
 

@@ -21,6 +21,9 @@ _TTL = 3600
 _MAX = 64
 _LOCK = threading.RLock()
 _TEST_SESSION: ContextVar[str | None] = ContextVar("cad_local_test_session", default=None)
+# Newer MCP clients do not carry Mcp-Session-Id across requests.
+# A random, explicit workspace token lets them address a private volatile DXF.
+_ANON_TOKEN: ContextVar[str | None] = ContextVar("cad_anon_workspace_token", default=None)
 
 
 @dataclass
@@ -77,11 +80,54 @@ def session_key() -> str:
         if not secrets.compare_digest(supplied, configured):
             raise PermissionError("credenciais MCP CAD inválidas")
     sid = request.headers.get("mcp-session-id", "").strip()
-    if not sid or len(sid) > 256:
-        raise RuntimeError(
-            "sessão MCP ausente: reconecte usando Streamable HTTP com sessão; "
-            "nenhum desenho foi acessado")
-    return "mcp:" + sid
+    if sid:
+        if len(sid) > 256:
+            raise ValueError("identificador de sessão MCP inválido")
+        return "mcp:" + sid
+    token = _ANON_TOKEN.get()
+    if token:
+        return "anon:" + token
+    raise RuntimeError(
+        "chamada MCP sem sessão: utilize workspace_token retornado na primeira "
+        "ferramenta ou inicie um novo desenho")
+
+
+@contextmanager
+def tool_workspace(workspace_token: str | None = None):
+    """Bind a stateless HTTP tool call to a cryptographically random workspace.
+
+    If the HTTP protocol supplies a stable MCP session, preserve it unchanged.
+    On modern stateless HTTP, mint a new opaque token or require an existing one.
+    No IP address, User-Agent, public constant, or other shared fallback is used.
+    """
+    if _TEST_SESSION.get() is not None:
+        yield None
+        return
+    try:
+        from fastmcp.server.dependencies import get_http_request
+        request = get_http_request()
+    except (RuntimeError, ImportError):
+        # Direct Python calls from tests or offline tools keep local:default.
+        yield None
+        return
+    if request.headers.get("mcp-session-id", "").strip():
+        yield None
+        return
+    if workspace_token is None:
+        token = secrets.token_urlsafe(32)
+    else:
+        if not isinstance(workspace_token, str) or len(workspace_token) != 43:
+            raise ValueError("workspace_token inválido; utilize o token opaco recebido do MCP")
+        with _LOCK:
+            ws = _WORKSPACES.get("anon:" + workspace_token)
+            if ws is None or time.monotonic() - ws.last_seen >= _TTL:
+                raise ValueError("workspace_token desconhecido ou expirado; crie nova prévia")
+        token = workspace_token
+    ctx_token = _ANON_TOKEN.set(token)
+    try:
+        yield token
+    finally:
+        _ANON_TOKEN.reset(ctx_token)
 
 
 def _workspace() -> Workspace:
@@ -156,7 +202,7 @@ def state_summary() -> dict:
         "entity_count": len(doc.modelspace()),
         "layers": len(doc.layers), "units": doc.header.get("$INSUNITS"),
         "temporary": True, "single_user": True,
-        "isolation": "per_mcp_session", "session_ttl_seconds": _TTL,
+        "isolation": "mcp_session_or_workspace_token", "session_ttl_seconds": _TTL,
     }
 
 

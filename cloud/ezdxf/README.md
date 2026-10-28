@@ -157,6 +157,30 @@ a solução compacta em PNG, gerando também DXF e JSON da geometria. O GitHub
 Actions publica o pacote como artefato `plantas-previas-pr1`, para revisão
 antes do merge.
 
+## Compatibilidade com MCP HTTP moderno — sem sessão persistente
+
+Clientes ChatGPT e Claude podem usar o protocolo MCP HTTP mais recente
+(2026-07-28), que **não envia** o antigo cabeçalho `Mcp-Session-Id`.
+
+No primeiro comando, como `cad_status`, `new_drawing` ou
+`planta_criar_validada(modo="preview")`, o servidor devolve um
+`workspace_token` aleatório e temporário. Para manter o mesmo desenho
+nas chamadas posteriores, passar esse mesmo argumento a cada ferramenta:
+
+1. `planta_criar_validada(programa=..., modo="preview")`
+   -> guardar `preview_token` **e** `workspace_token`.
+2. `planta_criar_validada(programa=..., modo="desenhar",
+   preview_token=..., workspace_token=...)`.
+3. `drawing_audit(workspace_token=...)`.
+4. `export_dxf(workspace_token=...)`.
+
+Não confundir `preview_token` (autorização de uso único para transformar
+a prévia em desenho) com `workspace_token` (referência opaca ao arquivo
+DXF temporário). Não divulgar tokens nem usá-los em outros chats.
+Clientes com sessão HTTP antiga continuam funcionando sem esse parâmetro.
+O modo sem autenticação permanece experimental: quem possuir o token de
+um workspace poderá acessá-lo até ele expirar (1 h).
+
 ## Uso online temporário sem autenticação (modo de teste)
 
 Nesta PR, `MCP_CAD_AUTH_MODE` usa o valor padrão `off`. O serviço
