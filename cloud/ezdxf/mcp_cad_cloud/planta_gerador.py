@@ -133,9 +133,19 @@ def _cortar(a, b, coord, vaos, horizontal):
 
 
 def gerar_modelo(programa):
-    """Gera geometria preliminar determinística ou rejeita arranjo inviável."""
+    """Gera estudo 2D, priorizando a opção compacta para dois dormitórios.
+
+    O antigo método de duas faixas permanece disponível para regressões, mas
+    não é escolhido quando existe uma solução compacta compatível.
+    """
     if not isinstance(programa, dict):
         raise ErroPrograma("o programa deve ser um objeto JSON")
+    from mcp_cad_cloud.planta_layout_compacto import compativel, gerar_compacto
+    estrategia = programa.get("estrategia", "automatico")
+    if estrategia not in {"automatico", "duas_faixas", "compacto_2quartos"}:
+        raise ErroPrograma("estrategia deve ser automatico, compacto_2quartos ou duas_faixas")
+    if estrategia == "compacto_2quartos" or (estrategia == "automatico" and compativel(programa)):
+        return gerar_compacto(programa)
     largura = _numero(programa.get("largura", programa.get("largura_externa")), "largura", 4, 40)
     pe_direito = _numero(programa.get("pe_direito", 2.80), "pe_direito", 2.40, 4)
     if "espessura_parede" in programa:
