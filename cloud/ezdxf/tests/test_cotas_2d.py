@@ -89,10 +89,12 @@ def test_linhas_de_extensao_nao_sobram_nem_se_sobrepoem_no_dxf():
     v_total=model["cotas_v_2d"][-1]["x_dim"]
     msp=_ensure().modelspace()
     lines=[]
+    def xy(v):
+        return (float(v.x),float(v.y))
     for d in msp.query("DIMENSION"):
-        lines.extend((tuple(e.dxf.start)[:2],tuple(e.dxf.end)[:2])
+        lines.extend((xy(e.dxf.start),xy(e.dxf.end))
                      for e in d.virtual_entities() if e.dxftype()=="LINE")
-    lines.extend((tuple(e.dxf.start)[:2],tuple(e.dxf.end)[:2])
+    lines.extend((xy(e.dxf.start),xy(e.dxf.end))
                  for e in msp.query("LINE[layer=='COTAS']"))
     assert len(lines)>=16
     for (x1,y1),(x2,y2) in lines:
