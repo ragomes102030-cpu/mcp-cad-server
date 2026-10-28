@@ -96,3 +96,38 @@ def test_generico_legado_continua_disponivel_explicitamente():
     base=deepcopy(CASA)
     base["estrategia"]="duas_faixas"
     assert gerar_modelo(base)["resumo_geometria"]["corredor_livre"] == pytest.approx(1.05)
+
+
+def test_folhas_das_portas_nao_cruzam_mobiliario():
+    m=gerar_modelo(CASA)
+    assert m["portas_folhas"] == [90,0,180,0,90]
+    from math import cos, sin, radians
+    for (x,y,ang,w),angle_leaf in zip(m["portas"],m["portas_folhas"]):
+        # A zona quadrada do giro (verificação conservadora) não pode
+        # ser ocupada por nenhum mobiliário esquemático.
+        a0,a1=sorted((x,x+w*cos(radians(angle_leaf))))
+        b0,b1=sorted((y,y+w*sin(radians(angle_leaf))))
+        # Incluir a faixa do arco, não apenas o traço da folha.
+        if ang==0:
+            sx,ex=x,x+w
+            sy,ey=y,y+w
+        else:
+            sx,ex=x-w,x
+            sy,ey=y,y+w
+        for x1,y1,x2,y2 in m["moveis"]:
+            assert not (min(ex,x2)-max(sx,x1)>.01 and
+                        min(ey,y2)-max(sy,y1)>.01), ((x,y,ang,w), (x1,y1,x2,y2))
+
+
+@pytest.mark.parametrize("corromper", [
+    lambda m: m["paredes"].append([0,float("nan"),2,0]),
+    lambda m: m["janelas"].append([0,1,float("inf"),1]),
+    lambda m: m["ambientes"][0].update({"x1":float("nan")}),
+    lambda m: m["moveis"].append([0,1,2]),
+])
+def test_validador_bloqueia_geometria_nao_finita_e_tuplas_incompletas(corromper):
+    m=deepcopy(gerar_modelo(CASA))
+    corromper(m)
+    report=validar(m)
+    assert report["ok"] is False
+    assert report["erros"]
