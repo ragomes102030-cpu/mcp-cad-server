@@ -157,6 +157,30 @@ a solução compacta em PNG, gerando também DXF e JSON da geometria. O GitHub
 Actions publica o pacote como artefato `plantas-previas-pr1`, para revisão
 antes do merge.
 
+## Exportação DXF: links reais para auditoria independente
+
+`export_dxf(workspace_token="...")` devolve **dois URLs HTTPS temporários**:
+`download_url` para `desenho.dxf.zip` e `dxf_url` para `desenho.dxf`.
+Os bytes correspondem exatamente ao DXF produzido pelo `ezdxf`.
+Para conferir integridade, compare `sha256_dxf` e `sha256_zip` com os
+hashes dos arquivos baixados. Os links expiram após 15 minutos.
+
+No Claude, após gerar a planta, execute o export e **abra ou baixe o URL
+retornado** imediatamente. O download não exige reescrever base64 nem ter
+`ezdxf` instalado no ambiente do chat. Para análise geométrica independente,
+abra o DXF no programa CAD local ou em Python com `ezdxf`.
+
+Caso um cliente antigo dependa de base64, existe a opção
+`export_dxf(incluir_base64=true)`; o padrão agora é `false` para evitar
+respostas enormes que não podem ser salvas confiavelmente.
+
+O endpoint `/downloads/{token}/{fmt}` disponibiliza os arquivos somente
+em memória e limita quantidade, bytes e prazo de armazenamento. O URL é uma
+credencial temporária: **qualquer pessoa com esse link pode acessar o arquivo**
+até a expiração. Este servidor permanece sem autenticação e é **só para
+desenhos de teste**, não para projetos confidenciais. Os arquivos desaparecem
+ao reiniciar o serviço ou expirar.
+
 ## Compatibilidade com MCP HTTP moderno — sem sessão persistente
 
 Clientes ChatGPT e Claude podem usar o protocolo MCP HTTP mais recente
