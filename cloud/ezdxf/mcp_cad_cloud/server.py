@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import os
+from functools import wraps
 from fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from mcp_cad_cloud import __version__
 from mcp_cad_cloud.build_identity import info
-from mcp_cad_cloud.backend import initialize
+from mcp_cad_cloud.backend import initialize, session_lock
 from mcp_cad_cloud import tools_verified as verified
 from mcp_cad_cloud import tools as headless
 
@@ -26,12 +27,23 @@ mcp = FastMCP(
         "at openings, audit, then export."
     ),
 )
+def _serialize_session(fn):
+    """Lock the current drawing for the entire tool invocation.
+
+    functools.wraps preserves the public signature FastMCP exposes to clients.
+    """
+    @wraps(fn)
+    def invoke(*args, **kwargs):
+        with session_lock():
+            return fn(*args, **kwargs)
+    return invoke
+
+
 for name in verified.PUBLIC_TOOLS:
-    # High-level verified implementations win on name collisions.  The
-    # remaining tools come from the ezdxf headless primitive registry.
+    # High-level verified implementations win on name collisions.
     fn = getattr(verified, name, None) or getattr(headless, name, None)
     if fn is not None:
-        mcp.tool(name=name)(fn)
+        mcp.tool(name=name)(_serialize_session(fn))
 
 
 def build_info() -> dict[str, str]:
