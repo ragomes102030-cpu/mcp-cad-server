@@ -24,6 +24,14 @@ _TEMPLATES = (
         "ambientes": 2,
         "modo_desenho": "ezdxf",
     },
+    {
+        "id": "programa_sob_medida",
+        "nome": "Estudo paramétrico de residência térrea em duas faixas",
+        "status": "experimental",
+        "entrada": {"largura": "metros", "ambientes": "[{nome, area, setor?}]"},
+        "limites": "apenas duas faixas; rejeita dimensões inviáveis; sem aprovação normativa",
+        "modo_desenho": "ezdxf",
+    },
 )
 
 
