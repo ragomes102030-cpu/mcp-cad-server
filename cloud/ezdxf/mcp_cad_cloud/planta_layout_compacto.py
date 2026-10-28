@@ -225,18 +225,18 @@ def gerar_compacto(programa):
     niveis_y = [0.0, frente, frente+h_hall, profundidade]
     cotas_h_2d = [
         {"x1": niveis_x[i], "x2": niveis_x[i+1],
-         "y_ref": 0.0, "y_dim": -0.65, "nivel": "parcial"}
+         "y_ref": 0.0, "y_dim": -0.45, "nivel": "parcial"}
         for i in range(len(niveis_x)-1)
     ]
     cotas_h_2d.append({"x1": 0.0, "x2": largura,
-                        "y_ref": 0.0, "y_dim": -1.35, "nivel": "total"})
+                        "y_ref": 0.0, "y_dim": -0.95, "nivel": "total"})
     cotas_v_2d = [
         {"y1": niveis_y[i], "y2": niveis_y[i+1],
-         "x_ref": largura, "x_dim": largura+0.65, "nivel": "parcial"}
+         "x_ref": largura, "x_dim": largura+0.45, "nivel": "parcial"}
         for i in range(len(niveis_y)-1)
     ]
     cotas_v_2d.append({"y1": 0.0, "y2": profundidade,
-                        "x_ref": largura, "x_dim": largura+1.35, "nivel": "total"})
+                        "x_ref": largura, "x_dim": largura+0.95, "nivel": "total"})
     # O detalhamento dos cômodos informa as dimensões internas LIVRES,
     # não dimensões nominais de eixos ou paredes.
     cotas_ambientes = [
