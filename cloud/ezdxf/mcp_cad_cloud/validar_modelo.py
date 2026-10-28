@@ -61,8 +61,10 @@ def validar(modelo: dict, estrito: bool = False) -> dict:
         portas = [tuple(map(float, p)) for p in modelo.get("portas", []) or []]
         janelas = [tuple(map(float, p)) for p in modelo.get("janelas", []) or []]
         moveis = [tuple(map(float, p)) for p in modelo.get("moveis", []) or []]
-    except (TypeError, ValueError) as exc:
-        return {"ok": False, "problemas": [{"chave": "modelo-invalido", "onde": "modelo", "detalhe": str(exc), "severidade": "erro"}], "erros": [], "avisos": []}
+    except (TypeError, ValueError, IndexError, OverflowError) as exc:
+        erro = {"chave": "modelo-invalido", "onde": "modelo",
+                "detalhe": str(exc), "severidade": "erro"}
+        return {"ok": False, "problemas": [erro], "erros": [erro], "avisos": []}
 
     eixos_h = {}
     eixos_v = {}
