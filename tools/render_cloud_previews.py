@@ -1,0 +1,246 @@
+"""Gerar pranchas de revisão a partir do modelo E do DXF real do MCP.
+
+Uso: PYTHONPATH=cloud/ezdxf python tools/render_cloud_previews.py
+As imagens são representações técnicas não normativas para inspeção visual.
+"""
+from __future__ import annotations
+
+import base64
+import io
+import json
+import math
+from pathlib import Path
+import zipfile
+
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.patches import Arc, Rectangle
+
+from mcp_cad_cloud.planta_assistida import wall_boundary_segments
+from mcp_cad_cloud import tools_verified as cad
+from mcp_cad_cloud.validar_modelo import validar
+
+OUTPUT = Path("out/preview-cad")
+OUTPUT.mkdir(parents=True, exist_ok=True)
+
+BASE = {
+    "template": "programa_sob_medida",
+    "largura": 9.0,
+    "terreno_largura": 10.0,
+    "terreno_profundidade": 20.0,
+    "recuo_lateral": 0.50,
+    "recuo_frente": 3.0,
+    "recuo_fundo": 2.0,
+    "ambientes": [
+        {"nome": "Sala de estar", "area": 18.0},
+        {"nome": "Cozinha", "area": 9.0},
+        {"nome": "Área de serviço", "area": 5.0},
+        {"nome": "Quarto 1", "area": 12.0},
+        {"nome": "Quarto 2", "area": 10.0},
+        {"nome": "Banheiro social", "area": 5.0},
+    ],
+}
+AMPLIADA = {
+    **BASE,
+    "ambientes": [
+        {"nome": "Sala de estar", "area": 20.0},
+        {"nome": "Cozinha", "area": 10.0},
+        {"nome": "Área de serviço", "area": 5.0},
+        {"nome": "Quarto 1", "area": 13.0},
+        {"nome": "Quarto 2", "area": 11.0},
+        {"nome": "Banheiro social", "area": 5.0},
+    ],
+}
+
+
+def render(model, programa, etiqueta, destino):
+    largura = model["resumo_geometria"]["largura"]
+    profundidade = model["resumo_geometria"]["profundidade"]
+    fig = plt.figure(figsize=(15, 11.2), dpi=155, facecolor="white")
+    ax = fig.add_axes([0.045, 0.095, 0.68, 0.78])
+    ax.set_aspect("equal")
+    ax.axis("off")
+    ax.set_facecolor("white")
+
+    # Limites externos reais do estudo; os recuos são fornecidos pelo usuário,
+    # não verificados urbanisticamente.
+    minx, miny, maxx, maxy = model["terreno"]
+    compacto = model.get("estrategia") == "compacto_2quartos"
+    if compacto:
+        ax.text(largura/2,profundidade+0.7,
+                "ESTUDO 2D  •  PLANTA BAIXA COTADA EM METROS",
+                ha="center",fontsize=10,color="#566674")
+    else:
+        ax.add_patch(Rectangle((minx, miny), maxx-minx, maxy-miny,
+                               fill=False, linewidth=1.2, linestyle="--",
+                               edgecolor="#8b99a9"))
+        ax.text((minx+maxx)/2, maxy-.45, "TERRENO 10,00 × 20,00 m",
+                ha="center", fontsize=9, color="#566674")
+
+    for x1, y1, x2, y2 in wall_boundary_segments(model["paredes"]):
+        ax.plot([x1,x2], [y1,y2], lw=2.0, c="#243446", solid_capstyle="round")
+    folhas = model.get("portas_folhas", [])
+    for i, (x, y, angle, width) in enumerate(model["portas"]):
+        folha = folhas[i] if i < len(folhas) else angle
+        angle_rad = math.radians(folha)
+        ax.plot([x,x+width*math.cos(angle_rad)], [y,y+width*math.sin(angle_rad)],
+                lw=1.2, c="#206c6a")
+        ax.add_patch(Arc((x,y), 2*width, 2*width, theta1=angle,
+                         theta2=angle+90, linewidth=0.9, edgecolor="#206c6a"))
+        ax.plot(x, y, ".", ms=2.5, color="#206c6a")
+    for x1,y1,x2,y2 in model["janelas"]:
+        if abs(y2-y1) < 1e-7:
+            for delta in (-0.038, 0.038):
+                ax.plot([x1,x2], [y1+delta,y2+delta], c="#3685ae", lw=2.1)
+        else:
+            for delta in (-0.038, 0.038):
+                ax.plot([x1+delta,x2+delta], [y1,y2], c="#3685ae", lw=2.1)
+    for x1,y1,x2,y2 in model["moveis"]:
+        ax.add_patch(Rectangle((x1,y1),x2-x1,y2-y1,
+                               fill=False,linewidth=1.0,edgecolor="#96a4ae"))
+    for item in model["ambientes"]:
+        x1,y1,x2,y2=(item[k] for k in ("x1","y1","x2","y2"))
+        cx,cy=(item.get("texto_x",(x1+x2)/2),
+               item.get("texto_y",(y1+y2)/2))
+        area=(x2-x1)*(y2-y1)
+        name=item["nome"]
+        fontsize=8.0 if min(x2-x1,y2-y1)>=1.8 else 6.8
+        ax.text(cx,cy+.13,name,ha="center",va="center",fontsize=fontsize,
+                color="#1e2f3f",fontweight="medium")
+        ax.text(cx,cy-.18,f"{area:.2f} m²",ha="center",va="center",fontsize=7.0,
+                color="#3e6577")
+        if compacto:
+            # Corresponde ao campo cotas_ambientes exportado no DXF.
+            ax.text(cx,cy-.42,f"{x2-x1:.2f} x {y2-y1:.2f} m",
+                    ha="center",va="center",fontsize=6.4,color="#6a596f")
+    # Dimensões da projeção em metros, com os MESMOS níveis do DXF.
+    if compacto:
+        color = "#42627a"
+        half = float(model["espessura_parede"]) / 2
+        # Os pontos parciais são referências reais de eixos. As linhas de
+        # extensão partem das faces externas, e não entram nas paredes.
+        def tick(x, y):
+            ax.plot([x-.035,x+.035],[y-.035,y+.035],color=color,lw=.72)
+        def h_chain(cotas):
+            partials=[c for c in cotas if c["nivel"]=="parcial"]
+            total=next(c for c in cotas if c["nivel"]=="total")
+            yp=partials[0]["y_dim"]
+            yt=total["y_dim"]
+            # Uma única extensão por coordenada; sem traços duplicados.
+            stops=sorted({p["x1"] for p in partials}|{p["x2"] for p in partials})
+            for x in stops:
+                end_y=yt if x in (total["x1"],total["x2"]) else yp
+                ax.plot([x,x],[-half,end_y],color=color,lw=.62)
+            for c in cotas:
+                x1,x2,y=c["x1"],c["x2"],c["y_dim"]
+                ax.plot([x1,x2],[y,y],color=color,lw=.7)
+                for x in (x1,x2): tick(x,y)
+                ax.text((x1+x2)/2,y-.10,f"{x2-x1:.2f} m",
+                        fontsize=8.2 if c["nivel"]=="total" else 7.0,
+                        ha="center",va="top",color=color)
+        def v_chain(cotas):
+            partials=[c for c in cotas if c["nivel"]=="parcial"]
+            total=next(c for c in cotas if c["nivel"]=="total")
+            xp=partials[0]["x_dim"]
+            xt=total["x_dim"]
+            stops=sorted({p["y1"] for p in partials}|{p["y2"] for p in partials})
+            for y in stops:
+                end_x=xt if y in (total["y1"],total["y2"]) else xp
+                ax.plot([largura+half,end_x],[y,y],color=color,lw=.62)
+            for c in cotas:
+                y1,y2,x=c["y1"],c["y2"],c["x_dim"]
+                ax.plot([x,x],[y1,y2],color=color,lw=.7)
+                for y in (y1,y2): tick(x,y)
+                ax.text(x+.13,(y1+y2)/2,f"{y2-y1:.2f} m",
+                        fontsize=8.2 if c["nivel"]=="total" else 7.0,
+                        ha="left",va="center",rotation=90,color=color)
+        h_chain(model["cotas_h_2d"])
+        v_chain(model["cotas_v_2d"])
+    else:
+        ax.annotate("", xy=(0,-1.1), xytext=(largura,-1.1),
+                    arrowprops={"arrowstyle":"|-|","lw":0.8,"color":"#334155"})
+        ax.text(largura/2,-1.35,f"{largura:.2f} m",ha="center",va="top",fontsize=9)
+        ax.annotate("", xy=(largura+0.85,0), xytext=(largura+0.85,profundidade),
+                    arrowprops={"arrowstyle":"|-|","lw":0.8,"color":"#334155"})
+        ax.text(largura+1.02,profundidade/2,f"{profundidade:.2f} m",
+                rotation=90,va="center",fontsize=9)
+
+    if compacto:
+        ax.set_xlim(-1.45,largura+2.25)
+        ax.set_ylim(-2.0,profundidade+1.4)
+    else:
+        ax.set_xlim(minx-1.3,maxx+3.1)
+        ax.set_ylim(miny-1.0,maxy+1.25)
+
+    # Informações de auditoria à direita, sem sobrepor o desenho.
+    right=fig.add_axes([0.75,0.12,0.225,0.74])
+    right.axis("off")
+    right.text(0.0,1.0,"QUADRO DE ÁREAS",fontsize=12,weight="bold",
+               color="#192b3e",va="top",transform=right.transAxes)
+    for i,a in enumerate(programa["ambientes"]):
+        y=.935-i*.069
+        right.text(0,y,a["nome"],fontsize=8.3,va="top",transform=right.transAxes)
+        right.text(1,y,f'{a["area"]:.2f} m²',ha="right",fontsize=8.3,va="top",
+                   transform=right.transAxes)
+    g=model["resumo_geometria"]
+    yy=.47
+    for label,number in (
+        ("Ambientes", f'{g["area_ambientes"]:.2f} m²'),
+        ("Área mapeada" if compacto else "Útil total", f'{g["area_util_total"]:.2f} m²'),
+        ("Projeção", f'{g["area_construida"]:.2f} m²'),
+        ("Circulação livre", f'{g.get("hall_livre", g.get("corredor_livre", 0)):.2f} m'),
+        ("Espessura parede", "0.15 m"),
+    ):
+        right.text(0,yy,label,fontsize=9,va="top",transform=right.transAxes)
+        right.text(1,yy,number,fontsize=9,ha="right",va="top",weight="medium",
+                   transform=right.transAxes)
+        yy-=.06
+    right.text(0,.075,"PAREDES     PORTAS     JANELAS",fontsize=7.8,
+               va="top",transform=right.transAxes)
+    right.text(0,.03,"mobiliário esquemático para conferência",fontsize=8.0,
+               color="#6d7885",va="top",transform=right.transAxes)
+
+    fig.text(.05,.945,f"PRÉVIA {etiqueta}  |  RESIDÊNCIA TÉRREA",
+             fontsize=18,weight="bold",color="#142a3d")
+    fig.text(.05,.91,"Gerada pelo MCP CAD Cloud — modelo paramétrico real da PR #1",
+             fontsize=11,color="#476275")
+    fig.text(.05,.032,
+             "ESTUDO PRELIMINAR  •  Sem validação urbanística, acessibilidade, ventilação ou aprovação técnica",
+             fontsize=9,color="#954b2b")
+    fig.savefig(destino, bbox_inches="tight", pad_inches=.20)
+    plt.close(fig)
+
+
+def executar(programa, etiqueta, slug):
+    preview = cad.planta_criar_validada(programa=programa, modo="preview",
+                                        template="programa_sob_medida")
+    assert preview["ok"], preview
+    model=preview["modelo"]
+    audit=validar(model)
+    assert audit["ok"], audit
+    drawn=cad.planta_criar_validada(programa=programa, modo="desenhar",
+                                   preview_token=preview["preview_token"],
+                                   template="programa_sob_medida",nome=slug)
+    assert drawn["ok"], drawn
+    exported=cad.export_dxf()
+    assert exported["ok"], exported
+    # ZIP com o DXF real produzido pelo MCP, para conferência cruzada.
+    (OUTPUT / f"{slug}.zip").write_bytes(base64.b64decode(exported["data_base64"]))
+    (OUTPUT / f"{slug}.json").write_text(
+        json.dumps({"programa": programa, "modelo": model,
+                    "validacao": audit, "desenho": drawn},ensure_ascii=False,indent=2),
+        encoding="utf-8")
+    render(model,programa,etiqueta, OUTPUT / f"{slug}.png")
+    print("PREVIEW_OK",slug, "area_util",model["resumo_geometria"]["area_util_total"],
+          "dimensoes_externas",model["resumo_geometria"]["largura"],
+          model["resumo_geometria"]["profundidade"],
+          "paredes",len(model["paredes"]),"portas",len(model["portas"]),
+          "janelas",len(model["janelas"]))
+    print("PREVIEW_MODEL_JSON_"+slug.upper()+"="+json.dumps(model,ensure_ascii=False,separators=(",",":")))
+
+
+if __name__=="__main__":
+    executar({**BASE,"estrategia":"duas_faixas"},"A — duas faixas (legado)","planta_a")
+    executar({**AMPLIADA,"estrategia":"duas_faixas"},"B — duas faixas ampliadas (legado)","planta_b")
+    executar(BASE,"C — layout compacto 2D","planta_c_compacta")

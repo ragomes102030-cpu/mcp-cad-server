@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import os
+from functools import wraps
 from fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from mcp_cad_cloud import __version__
 from mcp_cad_cloud.build_identity import info
-from mcp_cad_cloud.backend import initialize
+from mcp_cad_cloud.backend import initialize, session_lock, auth_mode
 from mcp_cad_cloud import tools_verified as verified
 from mcp_cad_cloud import tools as headless
 
@@ -26,12 +27,23 @@ mcp = FastMCP(
         "at openings, audit, then export."
     ),
 )
+def _serialize_session(fn):
+    """Lock the current drawing for the entire tool invocation.
+
+    functools.wraps preserves the public signature FastMCP exposes to clients.
+    """
+    @wraps(fn)
+    def invoke(*args, **kwargs):
+        with session_lock():
+            return fn(*args, **kwargs)
+    return invoke
+
+
 for name in verified.PUBLIC_TOOLS:
-    # High-level verified implementations win on name collisions.  The
-    # remaining tools come from the ezdxf headless primitive registry.
+    # High-level verified implementations win on name collisions.
     fn = getattr(verified, name, None) or getattr(headless, name, None)
     if fn is not None:
-        mcp.tool(name=name)(fn)
+        mcp.tool(name=name)(_serialize_session(fn))
 
 
 def build_info() -> dict[str, str]:
@@ -47,6 +59,12 @@ async def healthz(request: Request) -> JSONResponse:
     return JSONResponse({"ok": True, "service": "mcp-cad-cloud", **build_info()})
 
 def main() -> None:
+    # Test mode is intentionally public. Set MCP_CAD_AUTH_MODE=required to
+    # restore Bearer authentication; the API key is not needed while off.
+    mode = auth_mode()
+    if mode == "required" and len(os.environ.get("MCP_CAD_API_KEY", "")) < 32:
+        raise RuntimeError(
+            "MCP_CAD_API_KEY de 32+ caracteres é obrigatória com autenticação requerida.")
     initialize()
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", "8000"))

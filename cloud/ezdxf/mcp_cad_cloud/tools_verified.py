@@ -9,12 +9,12 @@ from pathlib import Path
 import tempfile
 import zipfile
 from functools import wraps
-from mcp_cad_cloud.backend import _ensure, _ent_count, ezx_version, reset_drawing, state_summary
+from mcp_cad_cloud.backend import _ensure, _ent_count, ezx_version, reset_drawing, state_summary, drawing_name, set_drawing_name
 from mcp_cad_cloud import __version__
 from mcp_cad_cloud.build_identity import info
 from mcp_cad_cloud.planta_catalogo import TEMPLATE_PADRAO, listar_templates
 
-DRAWING_NAME = "planta_sem_nome"
+
 MAX_DXF_BYTES = 3_000_000
 
 def _point(value, label):
@@ -59,27 +59,31 @@ def planta_assistida(programa: dict | None = None, modo: str = "preview",
     The cloud variant never opens or edits AutoCAD; ``desenhar`` changes only
     the ephemeral DXF held by this HTTP session.
     """
-    global DRAWING_NAME
-    programa = programa or {}
-    solicitado = str(template or programa.get("template") or TEMPLATE_PADRAO).strip()
-    if solicitado not in {TEMPLATE_PADRAO, "tiny_house_10m2"}:
+    if programa is not None and not isinstance(programa, dict):
+        return {"ok": False, "code": "INVALID_INPUT", "error": "programa deve ser JSON"}
+    programa = dict(programa or {})
+    solicitado = str(template or programa.get("template") or
+                     ("programa_sob_medida" if "ambientes" in programa else TEMPLATE_PADRAO)).strip()
+    if solicitado not in {TEMPLATE_PADRAO, "tiny_house_10m2", "programa_sob_medida"}:
         return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
                 "error": f"template '{solicitado}' ainda nao esta disponivel",
                 "templates": listar_templates(),
                 "proxima_acao": "escolher um template suportado"}
-    largura_padrao = 12.0 if solicitado == TEMPLATE_PADRAO else 2.5
-    profundidade_padrao = 11.0 if solicitado == TEMPLATE_PADRAO else 4.0
-    if (("largura_externa" in programa and float(programa["largura_externa"]) != largura_padrao) or
-            ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != profundidade_padrao)):
-        return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
-                "error": "as dimensoes pedidas nao pertencem a um template disponivel",
-                "templates": listar_templates(),
-                "proxima_acao": "escolher um template suportado"}
+    if solicitado != "programa_sob_medida":
+        largura_padrao = 12.0 if solicitado == TEMPLATE_PADRAO else 2.5
+        profundidade_padrao = 11.0 if solicitado == TEMPLATE_PADRAO else 4.0
+        if (("largura_externa" in programa and float(programa["largura_externa"]) != largura_padrao) or
+                ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != profundidade_padrao)):
+            return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
+                    "error": "as dimensoes pedidas nao pertencem a um template disponivel",
+                    "templates": listar_templates(),
+                    "proxima_acao": "escolher um template suportado"}
+    programa["template"] = solicitado
     from mcp_cad_cloud.planta_assistida import planta_assistida as build
     result = build(programa=programa, modo=modo, nome=nome,
                    preview_token=preview_token)
     if nome and result.get("ok"):
-        DRAWING_NAME = str(nome)
+        set_drawing_name(str(nome))
     return result
 
 
@@ -148,8 +152,8 @@ def validar_planta(modelo: dict | None = None, estrito: bool = False) -> dict:
 @_wrap
 def cad_status() -> dict:
     """Return the cloud/headless boundary before any drawing operation."""
-    return {**state_summary(), "version_ezdxf": ezx_version(), "drawing": DRAWING_NAME,
-            "profile": "full" if PUBLIC_TOOLS == TOOLS else "planta_segura",
+    return {**state_summary(), "version_ezdxf": ezx_version(), "drawing": drawing_name(),
+            "profile": PROFILE,
             "backend": "ezdxf",
             "execution_mode": "cloud_headless",
             "autocad_available": False,
@@ -162,12 +166,11 @@ def cad_status() -> dict:
 @_wrap
 def new_drawing(name: str = "planta_sem_nome") -> dict:
     """Reset to a new empty metric DXF, discarding previously unsaved work."""
-    global DRAWING_NAME
     if not isinstance(name, str) or not name.strip() or len(name) > 120:
         raise ValueError("nome de desenho inválido")
     reset_drawing()
-    DRAWING_NAME = name
-    return {"ok": True, "drawing": DRAWING_NAME, "entities": 0}
+    set_drawing_name(name)
+    return {"ok": True, "drawing": drawing_name(), "entities": 0}
 
 @_wrap
 def layer_list() -> dict:
@@ -191,7 +194,7 @@ def layer_create(nome: str, cor: int = 7) -> dict:
 def inspect_drawing() -> dict:
     """Inspect a drawing, counting real modelspace entities."""
     doc = _ensure()
-    return {"ok": True, "drawing": DRAWING_NAME, "entities": len(doc.modelspace()),
+    return {"ok": True, "drawing": drawing_name(), "entities": len(doc.modelspace()),
             "by_type": _ent_count(doc), "layers": [x.dxf.name for x in doc.layers],
             "units": doc.header.get("$INSUNITS")}
 
@@ -332,16 +335,11 @@ TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_dra
          "quantitativo", "export_dxf", "planta_templates", "planta_assistida",
          "planta_criar_validada", "validar_planta")
 
-# The cloud implementation also contains the headless equivalents of the
-# lower-level CAD operations.  Keep the verified floor-plan functions as the
-# canonical implementation for overlapping names, and add the primitive
-# registry only when the caller explicitly selects the full profile.
-from mcp_cad_cloud import tools as _headless_tools
-
-_HEADLESS_TOOLS = tuple(
-    name for name in _headless_tools.TOOLS
-    if name != "nome_publico" and hasattr(_headless_tools, name)
-)
+# Only the tools with real, verified DXF effects may be exposed.
+# The legacy headless registry includes no-op success placeholders; advertising
+# those would make an agent believe it had modified a drawing when it had not.
+# Keep those modules on disk for incremental implementation and tests, but do
+# not make them callable over the public HTTP MCP endpoint.
 
 _PLANTA_SEGURA = {
     "cad_status", "new_drawing", "layer_list", "inspect_drawing", "query_entities",
@@ -350,8 +348,6 @@ _PLANTA_SEGURA = {
 }
 _perfil = os.getenv("MCP_CAD_PROFILE", "full").strip().lower()
 PROFILE = "full" if _perfil in {"full", "livre", "avancado"} else "planta_segura"
-PUBLIC_TOOLS = tuple(dict.fromkeys(
-    (*TOOLS, *_HEADLESS_TOOLS)
-)) if PROFILE == "full" else tuple(
+PUBLIC_TOOLS = TOOLS if PROFILE == "full" else tuple(
     name for name in TOOLS if name in _PLANTA_SEGURA
 )

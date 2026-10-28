@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from copy import deepcopy
 
-from mcp_cad_cloud.backend import _ensure, reset_drawing
+from mcp_cad_cloud.backend import _ensure, reset_drawing, drawing_name, set_drawing_name
 from mcp_cad_cloud.planta_catalogo import TEMPLATE_PADRAO, listar_templates
 
 
@@ -112,33 +112,108 @@ def build_assisted_model(programa=None):
 
 
 def wall_boundary_segments(walls, t=.15):
-    half, out, seen = float(t) / 2, [], set()
-    def add(a, b):
-        key = tuple(round(v, 8) for v in (*a, *b))
-        rev = tuple(round(v, 8) for v in (*b, *a))
-        if key not in seen and rev not in seen:
-            seen.update((key, rev)); out.append((*a, *b))
-    def connected(x, y, current):
-        for other in walls:
-            if other == current: continue
-            x1, y1, x2, y2 = other
-            if abs(y2-y1) < 1e-9 and abs(y-y1) < 1e-9 and min(x1,x2)-1e-7 <= x <= max(x1,x2)+1e-7:
-                return True
-            if abs(x2-x1) < 1e-9 and abs(x-x1) < 1e-9 and min(y1,y2)-1e-7 <= y <= max(y1,y2)+1e-7:
-                return True
-        return False
-    for current in walls:
-        x1, y1, x2, y2 = current
-        if abs(y2-y1) < 1e-9:
-            lo, hi = sorted((x1, x2)); add((lo, y1-half), (hi, y1-half)); add((lo, y1+half), (hi, y1+half))
-            if not connected(lo, y1, current): add((lo, y1-half), (lo, y1+half))
-            if not connected(hi, y1, current): add((hi, y1-half), (hi, y1+half))
-        else:
-            lo, hi = sorted((y1, y2)); add((x1-half, lo), (x1-half, hi)); add((x1+half, lo), (x1+half, hi))
-            if not connected(x1, lo, current): add((x1-half, lo), (x1+half, lo))
-            if not connected(x1, hi, current): add((x1-half, hi), (x1+half, hi))
-    return out
+    """Contorno VISÍVEL da união das paredes, sem faces internas sobrepostas.
 
+    Cada trecho axial origina um retângulo de espessura `t`. Em ligações
+    perpendiculares, o eixo é prolongado por meia espessura somente na ponta
+    conectada, para fechar os cantos sem fechar vãos de portas e janelas.
+    Uma malha ortogonal limitada extrai apenas faces que separam parede de
+    vazio. Segmentos colineares vizinhos são fundidos no resultado.
+    As unidades são metros; o resultado contém LINEs 2D.
+    """
+    if not math.isfinite(float(t)) or t <= 0:
+        raise ValueError("espessura da parede deve ser positiva e finita")
+    half = t / 2.0
+    axes = []
+    for index, p in enumerate(walls, 1):
+        if len(p) != 4:
+            raise ValueError(f"parede {index}: são necessárias quatro coordenadas")
+        x1, y1, x2, y2 = (float(v) for v in p)
+        if not all(math.isfinite(v) for v in (x1, y1, x2, y2)):
+            raise ValueError(f"parede {index}: coordenadas inválidas")
+        if abs(y1 - y2) < 1e-8 and abs(x1 - x2) > 1e-8:
+            axes.append(("h", y1, min(x1, x2), max(x1, x2)))
+        elif abs(x1 - x2) < 1e-8 and abs(y1 - y2) > 1e-8:
+            axes.append(("v", x1, min(y1, y2), max(y1, y2)))
+        else:
+            raise ValueError(f"parede {index}: segmento inválido (usar eixos ortogonais)")
+
+    if not axes:
+        return []
+
+    def conectado(kind, coordinate, endpoint):
+        for other_kind, other_coord, lo, hi in axes:
+            if other_kind != kind and abs(other_coord - endpoint) <= 1e-7:
+                if lo - 1e-7 <= coordinate <= hi + 1e-7:
+                    return True
+        return False
+
+    # União espacial dos retângulos efetivos, com cantos alinhados.
+    rectangles = []
+    for kind, coordinate, lo, hi in axes:
+        if kind == "h":
+            a = lo - (half if conectado(kind, coordinate, lo) else 0)
+            b = hi + (half if conectado(kind, coordinate, hi) else 0)
+            rectangles.append((a, coordinate - half, b, coordinate + half))
+        else:
+            a = lo - (half if conectado(kind, coordinate, lo) else 0)
+            b = hi + (half if conectado(kind, coordinate, hi) else 0)
+            rectangles.append((coordinate - half, a, coordinate + half, b))
+
+    # Remover ruído de ponto flutuante: paredes que coincidem compartilham
+    # as mesmas coordenadas de grade (precisão 10 nm no DXF em metros).
+    rectangles = [tuple(round(v, 8) for v in r) for r in rectangles]
+    xs = sorted({v for x1, _, x2, _ in rectangles for v in (x1, x2)})
+    ys = sorted({v for _, y1, _, y2 in rectangles for v in (y1, y2)})
+    nx, ny = len(xs) - 1, len(ys) - 1
+    if nx * ny > 200_000:
+        raise ValueError("planta excede limite de complexidade da malha de paredes")
+    xi = {v: i for i, v in enumerate(xs)}
+    yi = {v: i for i, v in enumerate(ys)}
+    inside = [[False] * nx for _ in range(ny)]
+    for x1, y1, x2, y2 in rectangles:
+        left, right, bottom, top = xi[x1], xi[x2], yi[y1], yi[y2]
+        for j in range(bottom, top):
+            row = inside[j]
+            for i in range(left, right):
+                row[i] = True
+
+    horizontal, vertical = {}, {}
+    for j in range(ny):
+        for i in range(nx):
+            if not inside[j][i]:
+                continue
+            if j == 0 or not inside[j - 1][i]:
+                horizontal.setdefault(j, []).append(i)
+            if j == ny - 1 or not inside[j + 1][i]:
+                horizontal.setdefault(j + 1, []).append(i)
+            if i == 0 or not inside[j][i - 1]:
+                vertical.setdefault(i, []).append(j)
+            if i == nx - 1 or not inside[j][i + 1]:
+                vertical.setdefault(i + 1, []).append(j)
+
+    def runs(indices):
+        """Consolida células contíguas para não criar LINEs duplicadas."""
+        values = sorted(set(indices))
+        if not values:
+            return
+        lo, hi = values[0], values[0] + 1
+        for value in values[1:]:
+            if value == hi:
+                hi += 1
+            else:
+                yield lo, hi
+                lo, hi = value, value + 1
+        yield lo, hi
+
+    output = []
+    for j, values in sorted(horizontal.items()):
+        for lo, hi in runs(values):
+            output.append((xs[lo], ys[j], xs[hi], ys[j]))
+    for i, values in sorted(vertical.items()):
+        for lo, hi in runs(values):
+            output.append((xs[i], ys[lo], xs[i], ys[hi]))
+    return output
 
 def _summary(model):
     areas = {a["nome"]: round((a["x2"]-a["x1"])*(a["y2"]-a["y1"]), 4) for a in model["ambientes"]}
@@ -151,32 +226,43 @@ def _summary(model):
 
 def _ensure_layers(doc):
     for name, color in (("TERRENO", 6), ("PAREDES", 7), ("PORTAS", 3), ("JANELAS", 5),
-                        ("MOBILIARIO", 2), ("COTAS", 1), ("TEXTOS", 7)):
+                        ("MOBILIARIO", 2), ("COTAS", 1), ("COTAS_INT", 8), ("TEXTOS", 7)):
         if name not in doc.layers:
             doc.layers.new(name, dxfattribs={"color": color})
 
 
 def planta_assistida(programa=None, modo="preview", nome=None, preview_token=None):
     programa = programa or {}
-    solicitado = str(programa.get("template") or TEMPLATE_PADRAO).strip()
-    if solicitado not in {TEMPLATE_PADRAO, "tiny_house_10m2"}:
+    if not isinstance(programa, dict):
+        return {"ok": False, "code": "PROGRAMA_INVALIDO", "error": "programa deve ser JSON"}
+    solicitado = str(programa.get("template") or
+                    ("programa_sob_medida" if "ambientes" in programa else TEMPLATE_PADRAO)).strip()
+    if solicitado not in {TEMPLATE_PADRAO, "tiny_house_10m2", "programa_sob_medida"}:
         return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
                 "error": f"template '{solicitado}' ainda nao esta disponivel",
                 "templates": listar_templates(),
                 "proxima_acao": "escolher um template suportado"}
-    largura_padrao = 12.0 if solicitado == TEMPLATE_PADRAO else 2.5
-    profundidade_padrao = 11.0 if solicitado == TEMPLATE_PADRAO else 4.0
-    if (("largura_externa" in programa and float(programa["largura_externa"]) != largura_padrao) or
-            ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != profundidade_padrao)):
-        return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
-                "error": "as dimensoes pedidas nao pertencem a um template disponivel",
-                "templates": listar_templates(),
-                "proxima_acao": "escolher um template suportado"}
-    if solicitado == "tiny_house_10m2":
-        from mcp_cad_cloud.tiny_house_assistida import build_tiny_house_model
-        model = build_tiny_house_model(programa)
+    if solicitado == "programa_sob_medida":
+        from mcp_cad_cloud.planta_gerador import gerar_modelo, ErroPrograma
+        try:
+            model = gerar_modelo(programa)
+        except ErroPrograma as exc:
+            return {"ok": False, "code": "PROGRAMA_INVALIDO", "error": str(exc),
+                    "proxima_acao": "revisar programa, áreas e dimensões"}
     else:
-        model = build_assisted_model(programa)
+        largura_padrao = 12.0 if solicitado == TEMPLATE_PADRAO else 2.5
+        profundidade_padrao = 11.0 if solicitado == TEMPLATE_PADRAO else 4.0
+        if (("largura_externa" in programa and float(programa["largura_externa"]) != largura_padrao) or
+                ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != profundidade_padrao)):
+            return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
+                    "error": "as dimensoes pedidas nao pertencem a um template disponivel",
+                    "templates": listar_templates(),
+                    "proxima_acao": "escolher um template suportado"}
+        if solicitado == "tiny_house_10m2":
+            from mcp_cad_cloud.tiny_house_assistida import build_tiny_house_model
+            model = build_tiny_house_model(programa)
+        else:
+            model = build_assisted_model(programa)
     from mcp_cad_cloud.validar_modelo import validar
     from mcp_cad_cloud.plant_workflow import consume, issue
     validacao = validar(model)
@@ -188,6 +274,8 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
     if modo == "preview":
         return {"ok": True, "etapa": "preview", "backend": "ezdxf", "resumo": summary,
                 "validacao": validacao, "modelo": model,
+                "avisos": model.get("avisos", []),
+                "resumo_geometria": model.get("resumo_geometria"),
                 "preview_token": issue(model, solicitado),
                 "proxima_acao": "desenhar"}
     if modo != "desenhar":
@@ -200,14 +288,21 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
 
     reset_drawing()
     doc = _ensure(); _ensure_layers(doc); msp = doc.modelspace()
-    if nome: global DRAWING_NAME; DRAWING_NAME = str(nome)
+    if nome:
+        set_drawing_name(str(nome))
     for x1, y1, x2, y2 in wall_boundary_segments(model["paredes"]):
         msp.add_line((x1, y1), (x2, y2), dxfattribs={"layer": "PAREDES"})
     x1, y1, x2, y2 = model["terreno"]
     msp.add_lwpolyline([(x1,y1),(x2,y1),(x2,y2),(x1,y2)], close=True, dxfattribs={"layer":"TERRENO"})
-    for px, py, ang, width in model["portas"]:
+    folhas = model.get("portas_folhas", [])
+    for i, (px, py, ang, width) in enumerate(model["portas"]):
         msp.add_arc((px, py), width, ang, ang + 90, dxfattribs={"layer":"PORTAS"})
-        r = math.radians(ang); msp.add_line((px,py),(px+width*math.cos(r),py+width*math.sin(r)), dxfattribs={"layer":"PORTAS"})
+        # O desenho compacto informa a direção da folha aberta, separadamente
+        # do início do arco. Os templates antigos mantêm seu contrato original.
+        ang_folha = folhas[i] if i < len(folhas) else ang
+        r = math.radians(ang_folha)
+        msp.add_line((px,py),(px+width*math.cos(r),py+width*math.sin(r)),
+                     dxfattribs={"layer":"PORTAS"})
     half = .15 / 2
     for a, b, c, d in model["janelas"]:
         if abs(d-b) < 1e-9:
@@ -218,17 +313,105 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
             msp.add_line((a+half/2,b),(c+half/2,d), dxfattribs={"layer":"JANELAS"})
     for x1, y1, x2, y2 in model["moveis"]:
         msp.add_lwpolyline([(x1,y1),(x2,y1),(x2,y2),(x1,y2)], close=True, dxfattribs={"layer":"MOBILIARIO"})
+    # Texto técnico centrado nos ambientes; quebra rótulos extensos para
+    # evitar a invasão de paredes em cômodos estreitos.
+    from ezdxf.enums import TextEntityAlignment
     for amb in model["ambientes"]:
         cx, cy = (amb["x1"]+amb["x2"])/2, (amb["y1"]+amb["y2"])/2
-        msp.add_text(amb["nome"], dxfattribs={"height":amb["h"],"insert":(cx,cy+.16),"layer":"TEXTOS"})
-    for x1, x2, y, distance in model["cotas_h"]:
-        dim = msp.add_aligned_dim((x1,0),(x2,0),distance=distance,dxfattribs={"layer":"COTAS"}); dim.render()
-    for x, y1, y2, distance in model["cotas_v"]:
-        dim = msp.add_aligned_dim((x,y1),(x,y2),distance=distance,dxfattribs={"layer":"COTAS"}); dim.render()
+        cx, cy = float(amb.get("texto_x", cx)), float(amb.get("texto_y", cy))
+        largura = amb["x2"] - amb["x1"]
+        nome = amb["nome"]
+        tamanho = max(0.10, min(0.20, float(amb["h"])))
+        max_chars = max(4, int((largura - 0.18) / (tamanho * 0.85)))
+        palavras = nome.split()
+        linhas, atual = [], ""
+        for palavra in palavras:
+            tentativa = (atual + " " + palavra).strip()
+            if atual and len(tentativa) > max_chars:
+                linhas.append(atual)
+                atual = palavra
+            else:
+                atual = tentativa
+        if atual:
+            linhas.append(atual)
+        if not linhas:
+            linhas = [nome]
+        comprimento_maior = max(len(linha) for linha in linhas)
+        if comprimento_maior * tamanho * 0.85 > largura - 0.16:
+            tamanho = max(0.05, (largura - 0.16) / max(1, comprimento_maior) / 0.85)
+        espacamento = tamanho * 1.40
+        for i, linha in enumerate(linhas):
+            y_texto = cy + (len(linhas) - 1 - 2*i) * espacamento / 2
+            entidade = msp.add_text(linha, dxfattribs={"height":tamanho,"layer":"TEXTOS"})
+            entidade.set_placement((cx,y_texto), align=TextEntityAlignment.MIDDLE_CENTER)
+
+    # EZDXF possui DIMLFAC=100 por padrão, gerando '900' para 9 metros.
+    # Esta planta é desenhada em metros (INSUNITS=6); escrever 9,00 m.
+    dim_override = {"dimlfac":1.0, "dimdec":2, "dimzin":0,
+                    "dimpost":"<> m", "dimtxt":0.18, "dimasz":0.12,
+                    "dimexe":0.10, "dimexo":0.08}
+    if model.get("cotas_h_2d") and model.get("cotas_v_2d"):
+        # Cotas associadas aos limites geométricos: parciais e totais.
+        # Eixos em metros. A própria entidade DIMENSION calcula o valor.
+        # Afastamento a partir da FACE EXTERNA de 7,5 cm (parede 15 cm).
+        # Não prolongar linhas de extensão além das linhas de cota.
+        wall_half = float(model["espessura_parede"]) / 2
+        partial_style = dict(dim_override, dimtxt=0.14, dimasz=0.10,
+                             dimexe=0.0, dimexo=wall_half)
+        # No nível total, as linhas de extensão já existem no primeiro
+        # nível parcial: suprimi-las na DIMENSION evita duplicação.
+        total_style = dict(dim_override, dimexe=0.0, dimexo=wall_half,
+                           dimse1=1, dimse2=1)
+        for idx, c in enumerate(model["cotas_h_2d"]):
+            style = dict(partial_style, dimse1=1) if (c["nivel"] == "parcial" and idx > 0) else (
+                partial_style if c["nivel"] == "parcial" else total_style)
+            dim = msp.add_aligned_dim(
+                p1=(c["x1"], c["y_ref"]), p2=(c["x2"], c["y_ref"]),
+                distance=c["y_dim"]-c["y_ref"], override=style,
+                dxfattribs={"layer":"COTAS"})
+            dim.render()
+        for idx, c in enumerate(model["cotas_v_2d"]):
+            style = dict(partial_style, dimse1=1) if (c["nivel"] == "parcial" and idx > 0) else (
+                partial_style if c["nivel"] == "parcial" else total_style)
+            dim = msp.add_aligned_dim(
+                p1=(c["x_ref"], c["y1"]), p2=(c["x_ref"], c["y2"]),
+                distance=c["x_ref"]-c["x_dim"], override=style,
+                dxfattribs={"layer":"COTAS"})
+            dim.render()
+        # Continuação ÚNICA das extensões extremas entre o primeiro e o
+        # segundo níveis, sem repetir os segmentos da parede até a 1a cota.
+        h_partials = [c for c in model["cotas_h_2d"] if c["nivel"] == "parcial"]
+        h_total = next(c for c in model["cotas_h_2d"] if c["nivel"] == "total")
+        v_partials = [c for c in model["cotas_v_2d"] if c["nivel"] == "parcial"]
+        v_total = next(c for c in model["cotas_v_2d"] if c["nivel"] == "total")
+        for x_coord in (h_total["x1"], h_total["x2"]):
+            msp.add_line((x_coord, h_partials[0]["y_dim"]),
+                         (x_coord, h_total["y_dim"]),
+                         dxfattribs={"layer":"COTAS"})
+        for y_coord in (v_total["y1"], v_total["y2"]):
+            msp.add_line((v_partials[0]["x_dim"], y_coord),
+                         (v_total["x_dim"], y_coord),
+                         dxfattribs={"layer":"COTAS"})
+        # Anotação legível das larguras e profundidades úteis de cada
+        # ambiente, também calculadas do mesmo objeto geométrico.
+        for c in model.get("cotas_ambientes", []):
+            texto = f'{c["largura"]:.2f} x {c["profundidade"]:.2f} m'
+            entidade = msp.add_text(
+                texto, dxfattribs={"height":0.115, "layer":"COTAS_INT"})
+            entidade.set_placement(
+                (c["x"], c["y"]-0.33),
+                align=TextEntityAlignment.MIDDLE_CENTER)
+    else:
+        # Preserva contratos e cotas dos templates clássicos.
+        for x1, x2, y, distance in model["cotas_h"]:
+            dim = msp.add_aligned_dim((x1,0),(x2,0),distance=distance,
+                                      override=dim_override,dxfattribs={"layer":"COTAS"}); dim.render()
+        for x, y1, y2, distance in model["cotas_v"]:
+            dim = msp.add_aligned_dim((x,y1),(x,y2),distance=distance,
+                                      override=dim_override,dxfattribs={"layer":"COTAS"}); dim.render()
     for x, y, text, height in model["selo"]:
         msp.add_text(text, dxfattribs={"height":height,"insert":(x,y),"layer":"TEXTOS"})
     return {"ok": True, "etapa": "desenho", "backend": "ezdxf", "resumo": summary,
-            "validacao": validacao, "entities": len(msp), "drawing": DRAWING_NAME}
+            "validacao": validacao, "entities": len(msp), "drawing": drawing_name()}
 
 
-DRAWING_NAME = "planta_sem_nome"

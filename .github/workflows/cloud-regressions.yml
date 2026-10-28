@@ -1,0 +1,37 @@
+name: MCP CAD Cloud — regressões
+on:
+  push:
+    branches:
+      - cloud/ezdxf
+      - 'feat/cloud-programa-*'
+  pull_request:
+    branches:
+      - cloud/ezdxf
+permissions:
+  contents: read
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install cloud MCP and pytest
+        run: python -m pip install -e ./cloud/ezdxf pytest matplotlib
+      - name: Run cloud geometry, interface and DXF regressions
+        env:
+          PYTHONPATH: cloud/ezdxf
+          MCP_CAD_PROFILE: full
+        run: python -m pytest cloud/ezdxf/tests -q
+      - name: Generate review previews and DXF
+        env:
+          PYTHONPATH: cloud/ezdxf
+          MCP_CAD_PROFILE: full
+        run: python tools/render_cloud_previews.py
+      - name: Upload review previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: plantas-previas-pr1
+          path: out/preview-cad/
+          retention-days: 30

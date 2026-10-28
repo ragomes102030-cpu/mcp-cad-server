@@ -61,8 +61,32 @@ def validar(modelo: dict, estrito: bool = False) -> dict:
         portas = [tuple(map(float, p)) for p in modelo.get("portas", []) or []]
         janelas = [tuple(map(float, p)) for p in modelo.get("janelas", []) or []]
         moveis = [tuple(map(float, p)) for p in modelo.get("moveis", []) or []]
-    except (TypeError, ValueError) as exc:
-        return {"ok": False, "problemas": [{"chave": "modelo-invalido", "onde": "modelo", "detalhe": str(exc), "severidade": "erro"}], "erros": [], "avisos": []}
+    except (TypeError, ValueError, IndexError, OverflowError) as exc:
+        erro = {"chave": "modelo-invalido", "onde": "modelo",
+                "detalhe": str(exc), "severidade": "erro"}
+        return {"ok": False, "problemas": [erro], "erros": [erro], "avisos": []}
+
+    # A rejeição deve acontecer ANTES de operações geométricas com NaN,
+    # dimensões inválidas ou tuplas incompletas, inclusive em chamadas MCP.
+    if not math.isfinite(t) or t <= 0:
+        add("espessura-invalida", "modelo", "espessura deve ser positiva e finita")
+    for tipo, grupos in (("parede", paredes), ("porta", portas),
+                         ("janela", janelas), ("movel", moveis)):
+        for indice, item in enumerate(grupos, 1):
+            if len(item) != 4 or not all(math.isfinite(v) for v in item):
+                add("modelo-invalido", f"{tipo} {indice}",
+                    "geometria deve conter quatro números finitos")
+    for indice, ambiente in enumerate(ambientes, 1):
+        try:
+            coordenadas = [float(ambiente[k]) for k in ("x1","y1","x2","y2")]
+            if not all(math.isfinite(v) for v in coordenadas):
+                raise ValueError("coordenadas não finitas")
+        except (KeyError, ValueError, TypeError, OverflowError):
+            add("ambiente-invalido", f"ambiente {indice}",
+                "limites devem ser quatro números finitos")
+    if problemas:
+        return {"ok": False, "problemas": problemas,
+                "erros": problemas, "avisos": []}
 
     eixos_h = {}
     eixos_v = {}
