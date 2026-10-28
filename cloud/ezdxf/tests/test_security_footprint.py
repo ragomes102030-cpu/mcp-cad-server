@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from mcp_cad_cloud.backend import _ensure, reset_drawing, test_session, state_summary
+from mcp_cad_cloud.backend import _ensure, reset_drawing, test_session as session_scope, state_summary
 from mcp_cad_cloud import tools_verified as cad
 from mcp_cad_cloud.planta_assistida import wall_boundary_segments
 from mcp_cad_cloud.planta_gerador import gerar_modelo
@@ -32,14 +32,14 @@ def test_exterior_dimensions_area_and_recuos_are_real_not_axis_based():
 
 def test_narrow_lot_rejected_using_exterior_faces():
     params=deepcopy(CASA)
-    params["largura"]=9.30
+    params["terreno_largura"]=9.5
     params["recuo_lateral"]=0.5
     with pytest.raises(ValueError, match="largura do terreno"):
         gerar_modelo(params)
 
 
 def test_two_sessions_own_distinct_docs_names_and_tokens():
-    with test_session("alice-session"):
+    with session_scope("alice-session"):
         reset_drawing()
         cad.new_drawing("ALICE")
         cad.layer_create("PAREDES", 1)
@@ -48,7 +48,7 @@ def test_two_sessions_own_distinct_docs_names_and_tokens():
         alice_preview=cad.planta_criar_validada(
             programa=CASA, template="programa_sob_medida", modo="preview")
         assert alice_preview["ok"]
-    with test_session("bob-session"):
+    with session_scope("bob-session"):
         reset_drawing()
         cad.new_drawing("BOB")
         assert cad.inspect_drawing()["entities"] == 0
@@ -58,7 +58,7 @@ def test_two_sessions_own_distinct_docs_names_and_tokens():
             preview_token=alice_preview["preview_token"])
         assert not unauthorized["ok"]
         assert cad.inspect_drawing()["entities"] == 0
-    with test_session("alice-session"):
+    with session_scope("alice-session"):
         assert cad.inspect_drawing()["entities"] == 1
         assert cad.inspect_drawing()["drawing"] == "ALICE"
         preview=cad.planta_criar_validada(
@@ -68,7 +68,7 @@ def test_two_sessions_own_distinct_docs_names_and_tokens():
             programa=CASA, template="programa_sob_medida", modo="desenhar",
             preview_token=preview["preview_token"])
         assert drew["ok"]
-    with test_session("bob-session"):
+    with session_scope("bob-session"):
         assert cad.inspect_drawing()["entities"] == 0
         assert cad.inspect_drawing()["drawing"] == "BOB"
 
