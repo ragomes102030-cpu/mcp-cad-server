@@ -114,6 +114,17 @@ def test_fluxo_mcp_publico_preview_desenhar_exportar():
         nome="teste_programa_custom", preview_token=preview["preview_token"])
     assert desenho["ok"], desenho
     assert desenho["entities"] > 30
+    from mcp_cad_cloud.backend import _ensure
+    desenho_dxf = _ensure()
+    rotulos = list(desenho_dxf.modelspace().query("TEXT"))
+    # Os textos de ambiente precisam estar realmente centrados no DXF.
+    nomes = {a["nome"] for a in preview["modelo"]["ambientes"]}
+    assert any(e.dxf.get("halign", 0) == 1 and e.dxf.get("valign", 0) == 2
+               for e in rotulos if e.dxf.text in nomes)
+    cotas = list(desenho_dxf.modelspace().query("DIMENSION"))
+    textos_cotas = [ent.text for dim in cotas for ent in dim.virtual_entities()
+                    if ent.dxftype() == "MTEXT"]
+    assert any("9,00 m" in valor for valor in textos_cotas), textos_cotas
     assert tools_verified.export_dxf()["ok"]
 
 
