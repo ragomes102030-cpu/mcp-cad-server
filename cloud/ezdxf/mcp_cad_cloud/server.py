@@ -8,7 +8,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from mcp_cad_cloud import __version__
 from mcp_cad_cloud.build_identity import info
-from mcp_cad_cloud.backend import initialize, session_lock
+from mcp_cad_cloud.backend import initialize, session_lock, auth_mode
 from mcp_cad_cloud import tools_verified as verified
 from mcp_cad_cloud import tools as headless
 
@@ -59,10 +59,12 @@ async def healthz(request: Request) -> JSONResponse:
     return JSONResponse({"ok": True, "service": "mcp-cad-cloud", **build_info()})
 
 def main() -> None:
-    if len(os.environ.get("MCP_CAD_API_KEY", "")) < 32:
+    # Test mode is intentionally public. Set MCP_CAD_AUTH_MODE=required to
+    # restore Bearer authentication; the API key is not needed while off.
+    mode = auth_mode()
+    if mode == "required" and len(os.environ.get("MCP_CAD_API_KEY", "")) < 32:
         raise RuntimeError(
-            "MCP_CAD_API_KEY de 32+ caracteres é obrigatória no Render. "
-            "O servidor não inicia sem proteção HTTP.")
+            "MCP_CAD_API_KEY de 32+ caracteres é obrigatória com autenticação requerida.")
     initialize()
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", "8000"))
