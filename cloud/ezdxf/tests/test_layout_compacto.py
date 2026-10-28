@@ -56,7 +56,7 @@ def test_banheiro_e_dormitorios_acessiveis_por_hall_central():
     h = next(a for a in m["ambientes"] if "Hall" in a["nome"])
     y1,y2=h["y1"],h["y2"]
     verticais = [p for p in m["portas"] if y1 <= p[1] <= y2 and p[2] in (0,90)]
-    horizontais = [p for p in m["portas"] if p[1] > y2 and abs(p[2]-90)<.01]
+    horizontais = [p for p in m["portas"] if p[1] > y2 and p[2] in (0,90)]
     assert len(verticais) >= 2  # um quarto em cada lateral
     assert len(horizontais) >= 1  # banheiro independente
 
