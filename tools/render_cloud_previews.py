@@ -130,7 +130,7 @@ def render(model, programa, etiqueta, destino):
         ("Ambientes", f'{g["area_ambientes"]:.2f} m²'),
         ("Útil total", f'{g["area_util_total"]:.2f} m²'),
         ("Projeção", f'{g["area_construida"]:.2f} m²'),
-        ("Circulação livre", f'{g["corredor_livre"]:.2f} m'),
+        ("Circulação livre", f'{g.get("hall_livre", g.get("corredor_livre", 0)):.2f} m'),
         ("Espessura parede", "0.15 m"),
     ):
         right.text(0,yy,label,fontsize=9,va="top",transform=right.transAxes)
