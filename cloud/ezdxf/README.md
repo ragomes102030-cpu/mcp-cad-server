@@ -156,3 +156,40 @@ O script `tools/render_cloud_previews.py` compara as duas soluções antigas e
 a solução compacta em PNG, gerando também DXF e JSON da geometria. O GitHub
 Actions publica o pacote como artefato `plantas-previas-pr1`, para revisão
 antes do merge.
+
+## Segurança e isolamento — requisitos antes do deploy
+
+A versão desta PR rejeita chamadas remotas quando a variável
+`MCP_CAD_API_KEY` não existe ou tem menos de 32 caracteres.
+O servidor também falha ao iniciar sem essa configuração.
+O Render **ainda não recebeu** essa credencial: não mesclar a PR até
+configurar o segredo e confirmar a compatibilidade do cliente.
+
+- Gerar chave criptograficamente aleatória (32+ caracteres), guardar em
+  Render > Environment > `MCP_CAD_API_KEY`; nunca versionar no GitHub.
+- No Claude Online, em *Customize > Connectors*, configurar um cabeçalho
+  `Authorization: Bearer <chave>` (ou `X-MCP-CAD-API-KEY`).
+  Não compartilhar o valor no chat.
+- No ChatGPT, validar previamente se o conector MCP oferece envio de
+  credenciais HTTP; se não oferecer, integrar um provedor OAuth compatível
+  antes de publicar. Não desabilitar a proteção para contornar essa etapa.
+- Recriar/reconectar o cliente após deploy, garantindo `Mcp-Session-Id`
+  para todos os comandos que consultam ou editam desenhos.
+- O token de prévia e as entidades DXF estão vinculados à sessão MCP.
+  `new_drawing` em uma sessão não deve afetar outra. Os desenhos em
+  memória expiram após uma hora, ou são descartados em reinicialização;
+  exportar DXF é obrigatório para preservá-los.
+- Para reduzir a superfície de ataque, o perfil `full` publica somente
+  as **21 operações CAD verificadas**, não as dezenas de placeholders
+  legados que respondiam sucesso sem editar o DXF.
+- `/healthz` informa saúde do processo, não libera acesso ao desenho.
+
+### Convenção geométrica do layout compacto
+
+Os parâmetros de `largura` e `profundidade` representam **faces
+externas** da edificação. As paredes perimetrais têm eixo deslocado
+para dentro em meia espessura. As cadeias de cotas externas, a área
+de projeção e os recuos referenciam o contorno construído, não eixos
+de paredes. As áreas internas referenciam as faces livres. A estratégia
+antiga `duas_faixas` permanece experimental e deve ser tratada como
+estudo geométrico não aprovado, sem promessa de dimensões externas.
