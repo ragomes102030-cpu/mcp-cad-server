@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from copy import deepcopy
 
-from mcp_cad_cloud.backend import _ensure, reset_drawing
+from mcp_cad_cloud.backend import _ensure, reset_drawing, drawing_name, set_drawing_name
 from mcp_cad_cloud.planta_catalogo import TEMPLATE_PADRAO, listar_templates
 
 
@@ -288,7 +288,8 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
 
     reset_drawing()
     doc = _ensure(); _ensure_layers(doc); msp = doc.modelspace()
-    if nome: global DRAWING_NAME; DRAWING_NAME = str(nome)
+    if nome:
+        set_drawing_name(str(nome))
     for x1, y1, x2, y2 in wall_boundary_segments(model["paredes"]):
         msp.add_line((x1, y1), (x2, y2), dxfattribs={"layer": "PAREDES"})
     x1, y1, x2, y2 = model["terreno"]
@@ -411,7 +412,6 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
     for x, y, text, height in model["selo"]:
         msp.add_text(text, dxfattribs={"height":height,"insert":(x,y),"layer":"TEXTOS"})
     return {"ok": True, "etapa": "desenho", "backend": "ezdxf", "resumo": summary,
-            "validacao": validacao, "entities": len(msp), "drawing": DRAWING_NAME}
+            "validacao": validacao, "entities": len(msp), "drawing": drawing_name()}
 
 
-DRAWING_NAME = "planta_sem_nome"
