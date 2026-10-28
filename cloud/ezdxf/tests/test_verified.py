@@ -20,7 +20,7 @@ def test_create_export_roundtrip():
     assert before["entities"] == 6
     assert before["by_type"]["DIMENSION"] == 1
     assert cad.drawing_audit()["ok"]
-    result = cad.export_dxf()
+    result = cad.export_dxf(incluir_base64=True)
     assert result["ok"]
     with zipfile.ZipFile(io.BytesIO(base64.b64decode(result["data_base64"]))) as z:
         dxf_bytes = z.read("desenho.dxf")

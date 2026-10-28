@@ -313,8 +313,14 @@ def quantitativo() -> dict:
             "warning": "Contagem de entidades; não mede paredes nem portas"}
 
 @_wrap
-def export_dxf() -> dict:
-    """Export real DXF as zip/base64; refuses files larger than 3 MB."""
+def export_dxf(incluir_base64: bool = False) -> dict:
+    """Export exact DXF bytes through HTTPS downloads; optional legacy base64.
+
+    The links are 15-minute bearer capabilities. This public test server must
+    never be used for private or sensitive CAD documents.
+    """
+    import hashlib
+    from mcp_cad_cloud.downloads import publish
     doc = _ensure()
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "desenho.dxf"
@@ -326,8 +332,19 @@ def export_dxf() -> dict:
     with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("desenho.dxf", raw)
     payload = buf.getvalue()
-    return {"ok": True, "filename": "desenho.dxf.zip", "format": "zip/base64",
-            "bytes": len(payload), "data_base64": base64.b64encode(payload).decode()}
+    links = publish(raw, payload)
+    result = {
+        "ok": True, "filename": "desenho.dxf.zip",
+        "format": "direct_https_download",
+        "bytes": len(payload), "dxf_bytes": len(raw),
+        "sha256_dxf": hashlib.sha256(raw).hexdigest(),
+        "sha256_zip": hashlib.sha256(payload).hexdigest(),
+        **links,
+        "warning": "Link publico temporario; nao usar para desenhos sigilosos.",
+    }
+    if incluir_base64:
+        result["data_base64"] = base64.b64encode(payload).decode()
+    return result
 
 TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_drawing",
          "query_entities", "draw_line", "draw_rectangle", "draw_polyline", "draw_circle",

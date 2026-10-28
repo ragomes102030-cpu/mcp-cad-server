@@ -6,7 +6,7 @@ from functools import wraps
 from inspect import signature, Parameter
 from fastmcp import FastMCP
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response, PlainTextResponse
 from mcp_cad_cloud import __version__
 from mcp_cad_cloud.build_identity import info
 from mcp_cad_cloud.backend import initialize, session_lock, auth_mode, tool_workspace
@@ -24,6 +24,7 @@ mcp = FastMCP(
         "planta_criar_validada(preview); draw with preview_token. "
         "On stateless HTTP clients, always pass workspace_token returned by "
         "the previous tool call when drawing, auditing or exporting DXF. "
+        "export_dxf now returns temporary direct HTTPS DXF and ZIP download links. "
         "Use new_drawing for a volatile in-memory DXF and export_dxf before reset. "
         "Raw primitives are available in full profile only for explicit advanced "
         "CAD or unsupported typologies; validate the model first, interrupt walls "
@@ -94,6 +95,27 @@ def build_info() -> dict[str, str]:
 @mcp.custom_route("/healthz", methods=["GET"])
 async def healthz(request: Request) -> JSONResponse:
     return JSONResponse({"ok": True, "service": "mcp-cad-cloud", **build_info()})
+
+@mcp.custom_route("/downloads/{token}/{fmt}", methods=["GET"])
+async def download_dxf(request: Request) -> Response:
+    """Serve the actual DXF/ZIP bytes; no JSON/base64 or fake file path."""
+    from mcp_cad_cloud.downloads import retrieve
+    token = request.path_params.get("token", "")
+    fmt = request.path_params.get("fmt", "")
+    record = retrieve(token, fmt)
+    if record is None:
+        return PlainTextResponse("Arquivo expirado ou nao encontrado", status_code=404,
+                                 headers={"Cache-Control": "no-store"})
+    content, mime, filename = record
+    return Response(
+        content, media_type=mime,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
 
 def main() -> None:
     # Test mode is intentionally public. Set MCP_CAD_AUTH_MODE=required to
