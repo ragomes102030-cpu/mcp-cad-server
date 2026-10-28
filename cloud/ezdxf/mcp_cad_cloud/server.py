@@ -9,6 +9,7 @@ from mcp_cad_cloud import __version__
 from mcp_cad_cloud.build_identity import info
 from mcp_cad_cloud.backend import initialize
 from mcp_cad_cloud import tools_verified as verified
+from mcp_cad_cloud import tools as headless
 
 mcp = FastMCP(
     name="mcp-cad-cloud",
@@ -26,12 +27,20 @@ mcp = FastMCP(
     ),
 )
 for name in verified.PUBLIC_TOOLS:
-    mcp.tool(name=name)(getattr(verified, name))
+    # High-level verified implementations win on name collisions.  The
+    # remaining tools come from the ezdxf headless primitive registry.
+    fn = getattr(verified, name, None) or getattr(headless, name, None)
+    if fn is not None:
+        mcp.tool(name=name)(fn)
 
 
 def build_info() -> dict[str, str]:
     """Return stable identity and capability boundary for this transport."""
-    return info(__version__, "http", "ezdxf")
+    return {
+        **info(__version__, "http", "ezdxf"),
+        "profile": verified.PROFILE,
+        "tool_count": str(len(verified.PUBLIC_TOOLS)),
+    }
 
 @mcp.custom_route("/healthz", methods=["GET"])
 async def healthz(request: Request) -> JSONResponse:

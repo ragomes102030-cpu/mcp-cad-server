@@ -332,12 +332,26 @@ TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_dra
          "quantitativo", "export_dxf", "planta_templates", "planta_assistida",
          "planta_criar_validada", "validar_planta")
 
+# The cloud implementation also contains the headless equivalents of the
+# lower-level CAD operations.  Keep the verified floor-plan functions as the
+# canonical implementation for overlapping names, and add the primitive
+# registry only when the caller explicitly selects the full profile.
+from mcp_cad_cloud import tools as _headless_tools
+
+_HEADLESS_TOOLS = tuple(
+    name for name in _headless_tools.TOOLS
+    if name != "nome_publico" and hasattr(_headless_tools, name)
+)
+
 _PLANTA_SEGURA = {
     "cad_status", "new_drawing", "layer_list", "inspect_drawing", "query_entities",
     "drawing_audit", "quantitativo", "export_dxf", "planta_templates",
     "planta_assistida", "planta_criar_validada", "validar_planta",
 }
-_perfil = os.getenv("MCP_CAD_PROFILE", "planta_segura").strip().lower()
-PUBLIC_TOOLS = TOOLS if _perfil in {"full", "livre", "avancado"} else tuple(
+_perfil = os.getenv("MCP_CAD_PROFILE", "full").strip().lower()
+PROFILE = "full" if _perfil in {"full", "livre", "avancado"} else "planta_segura"
+PUBLIC_TOOLS = tuple(dict.fromkeys(
+    (*TOOLS, *_HEADLESS_TOOLS)
+)) if PROFILE == "full" else tuple(
     name for name in TOOLS if name in _PLANTA_SEGURA
 )

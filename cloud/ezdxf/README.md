@@ -50,6 +50,19 @@ cria entidades somente na sessão ezdxf temporária. Ele usa paredes por faces
 sem sobreposição, vãos reais para portas/janelas e cotas do fundo. Não abre o
 AutoCAD e não gera DWG nativo.
 
+## Perfil de ferramentas cloud
+
+O servico publicado usa `MCP_CAD_PROFILE=full` e expoe as ferramentas
+verificadas de planta mais as primitivas headless do pacote `tools.py`.
+Assim, o catalogo publico inclui `planta_templates`, `planta_criar_validada`,
+`validar_planta` e tambem comandos como `draw_line`, `draw_rectangle`,
+`arch_wall` e `entity_create_ellipse`.
+
+Para restringir deliberadamente o catalogo ao fluxo seguro de planta, defina
+`MCP_CAD_PROFILE=planta_segura`. O perfil padrao do servico cloud e `full`,
+mas o agente deve continuar priorizando preview, validacao e auditoria antes
+de usar primitivas.
+
 ## Testes
 
 ```powershell

@@ -92,11 +92,11 @@ def test_cloud_exposes_explicit_validated_creation_tool():
     assert callable(tools_verified.planta_criar_validada)
 
 
-def test_cloud_public_profile_hides_raw_primitives_by_default():
+def test_cloud_full_profile_exposes_raw_primitives():
     assert "planta_criar_validada" in tools_verified.PUBLIC_TOOLS
     assert "planta_assistida" in tools_verified.PUBLIC_TOOLS
-    assert "draw_rectangle" not in tools_verified.PUBLIC_TOOLS
-    assert "draw_line" not in tools_verified.PUBLIC_TOOLS
+    assert "draw_rectangle" in tools_verified.PUBLIC_TOOLS
+    assert "draw_line" in tools_verified.PUBLIC_TOOLS
 
 
 def test_cloud_validator_is_blocking_for_overlapping_walls():
