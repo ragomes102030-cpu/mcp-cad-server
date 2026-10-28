@@ -9,12 +9,12 @@ from pathlib import Path
 import tempfile
 import zipfile
 from functools import wraps
-from mcp_cad_cloud.backend import _ensure, _ent_count, ezx_version, reset_drawing, state_summary
+from mcp_cad_cloud.backend import _ensure, _ent_count, ezx_version, reset_drawing, state_summary, drawing_name, set_drawing_name
 from mcp_cad_cloud import __version__
 from mcp_cad_cloud.build_identity import info
 from mcp_cad_cloud.planta_catalogo import TEMPLATE_PADRAO, listar_templates
 
-DRAWING_NAME = "planta_sem_nome"
+
 MAX_DXF_BYTES = 3_000_000
 
 def _point(value, label):
@@ -59,7 +59,6 @@ def planta_assistida(programa: dict | None = None, modo: str = "preview",
     The cloud variant never opens or edits AutoCAD; ``desenhar`` changes only
     the ephemeral DXF held by this HTTP session.
     """
-    global DRAWING_NAME
     if programa is not None and not isinstance(programa, dict):
         return {"ok": False, "code": "INVALID_INPUT", "error": "programa deve ser JSON"}
     programa = dict(programa or {})
@@ -84,7 +83,7 @@ def planta_assistida(programa: dict | None = None, modo: str = "preview",
     result = build(programa=programa, modo=modo, nome=nome,
                    preview_token=preview_token)
     if nome and result.get("ok"):
-        DRAWING_NAME = str(nome)
+        set_drawing_name(str(nome))
     return result
 
 
@@ -153,7 +152,7 @@ def validar_planta(modelo: dict | None = None, estrito: bool = False) -> dict:
 @_wrap
 def cad_status() -> dict:
     """Return the cloud/headless boundary before any drawing operation."""
-    return {**state_summary(), "version_ezdxf": ezx_version(), "drawing": DRAWING_NAME,
+    return {**state_summary(), "version_ezdxf": ezx_version(), "drawing": drawing_name(),
             "profile": PROFILE,
             "backend": "ezdxf",
             "execution_mode": "cloud_headless",
@@ -167,12 +166,11 @@ def cad_status() -> dict:
 @_wrap
 def new_drawing(name: str = "planta_sem_nome") -> dict:
     """Reset to a new empty metric DXF, discarding previously unsaved work."""
-    global DRAWING_NAME
     if not isinstance(name, str) or not name.strip() or len(name) > 120:
         raise ValueError("nome de desenho inválido")
     reset_drawing()
-    DRAWING_NAME = name
-    return {"ok": True, "drawing": DRAWING_NAME, "entities": 0}
+    set_drawing_name(name)
+    return {"ok": True, "drawing": drawing_name(), "entities": 0}
 
 @_wrap
 def layer_list() -> dict:
@@ -196,7 +194,7 @@ def layer_create(nome: str, cor: int = 7) -> dict:
 def inspect_drawing() -> dict:
     """Inspect a drawing, counting real modelspace entities."""
     doc = _ensure()
-    return {"ok": True, "drawing": DRAWING_NAME, "entities": len(doc.modelspace()),
+    return {"ok": True, "drawing": drawing_name(), "entities": len(doc.modelspace()),
             "by_type": _ent_count(doc), "layers": [x.dxf.name for x in doc.layers],
             "units": doc.header.get("$INSUNITS")}
 
