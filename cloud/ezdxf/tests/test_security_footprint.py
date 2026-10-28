@@ -102,3 +102,29 @@ def test_mcp_does_not_expose_unimplemented_noop_headless_commands():
     assert "move_entity" not in advertised
     assert "plot_pdf" not in advertised
     assert "arch_wall" not in advertised
+
+
+def test_parallel_sessions_cannot_mix_cad_entities():
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+    sync=Barrier(2)
+
+    def make_doc(sid, count):
+        with session_scope(sid):
+            cad.new_drawing(sid)
+            cad.layer_create("QA", 1)
+            sync.wait(timeout=5)
+            for i in range(count):
+                assert cad.draw_line([i,0],[i,1],"QA")["ok"]
+            return cad.inspect_drawing()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        left=pool.submit(make_doc,"parallel-alice",3)
+        right=pool.submit(make_doc,"parallel-bob",7)
+        result_a,result_b=left.result(timeout=10),right.result(timeout=10)
+    assert (result_a["drawing"],result_a["entities"])==("parallel-alice",3)
+    assert (result_b["drawing"],result_b["entities"])==("parallel-bob",7)
+    with session_scope("parallel-alice"):
+        assert cad.inspect_drawing()["entities"]==3
+    with session_scope("parallel-bob"):
+        assert cad.inspect_drawing()["entities"]==7
