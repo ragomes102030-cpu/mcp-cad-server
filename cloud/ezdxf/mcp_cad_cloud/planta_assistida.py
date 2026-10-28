@@ -112,33 +112,108 @@ def build_assisted_model(programa=None):
 
 
 def wall_boundary_segments(walls, t=.15):
-    half, out, seen = float(t) / 2, [], set()
-    def add(a, b):
-        key = tuple(round(v, 8) for v in (*a, *b))
-        rev = tuple(round(v, 8) for v in (*b, *a))
-        if key not in seen and rev not in seen:
-            seen.update((key, rev)); out.append((*a, *b))
-    def connected(x, y, current):
-        for other in walls:
-            if other == current: continue
-            x1, y1, x2, y2 = other
-            if abs(y2-y1) < 1e-9 and abs(y-y1) < 1e-9 and min(x1,x2)-1e-7 <= x <= max(x1,x2)+1e-7:
-                return True
-            if abs(x2-x1) < 1e-9 and abs(x-x1) < 1e-9 and min(y1,y2)-1e-7 <= y <= max(y1,y2)+1e-7:
-                return True
-        return False
-    for current in walls:
-        x1, y1, x2, y2 = current
-        if abs(y2-y1) < 1e-9:
-            lo, hi = sorted((x1, x2)); add((lo, y1-half), (hi, y1-half)); add((lo, y1+half), (hi, y1+half))
-            if not connected(lo, y1, current): add((lo, y1-half), (lo, y1+half))
-            if not connected(hi, y1, current): add((hi, y1-half), (hi, y1+half))
-        else:
-            lo, hi = sorted((y1, y2)); add((x1-half, lo), (x1-half, hi)); add((x1+half, lo), (x1+half, hi))
-            if not connected(x1, lo, current): add((x1-half, lo), (x1+half, lo))
-            if not connected(x1, hi, current): add((x1-half, hi), (x1+half, hi))
-    return out
+    """Contorno VISÍVEL da união das paredes, sem faces internas sobrepostas.
 
+    Cada trecho axial origina um retângulo de espessura `t`. Em ligações
+    perpendiculares, o eixo é prolongado por meia espessura somente na ponta
+    conectada, para fechar os cantos sem fechar vãos de portas e janelas.
+    Uma malha ortogonal limitada extrai apenas faces que separam parede de
+    vazio. Segmentos colineares vizinhos são fundidos no resultado.
+    As unidades são metros; o resultado contém LINEs 2D.
+    """
+    if not math.isfinite(float(t)) or t <= 0:
+        raise ValueError("espessura da parede deve ser positiva e finita")
+    half = t / 2.0
+    axes = []
+    for index, p in enumerate(walls, 1):
+        if len(p) != 4:
+            raise ValueError(f"parede {index}: são necessárias quatro coordenadas")
+        x1, y1, x2, y2 = (float(v) for v in p)
+        if not all(math.isfinite(v) for v in (x1, y1, x2, y2)):
+            raise ValueError(f"parede {index}: coordenadas inválidas")
+        if abs(y1 - y2) < 1e-8 and abs(x1 - x2) > 1e-8:
+            axes.append(("h", y1, min(x1, x2), max(x1, x2)))
+        elif abs(x1 - x2) < 1e-8 and abs(y1 - y2) > 1e-8:
+            axes.append(("v", x1, min(y1, y2), max(y1, y2)))
+        else:
+            raise ValueError(f"parede {index}: segmento inválido (usar eixos ortogonais)")
+
+    if not axes:
+        return []
+
+    def conectado(kind, coordinate, endpoint):
+        for other_kind, other_coord, lo, hi in axes:
+            if other_kind != kind and abs(other_coord - endpoint) <= 1e-7:
+                if lo - 1e-7 <= coordinate <= hi + 1e-7:
+                    return True
+        return False
+
+    # União espacial dos retângulos efetivos, com cantos alinhados.
+    rectangles = []
+    for kind, coordinate, lo, hi in axes:
+        if kind == "h":
+            a = lo - (half if conectado(kind, coordinate, lo) else 0)
+            b = hi + (half if conectado(kind, coordinate, hi) else 0)
+            rectangles.append((a, coordinate - half, b, coordinate + half))
+        else:
+            a = lo - (half if conectado(kind, coordinate, lo) else 0)
+            b = hi + (half if conectado(kind, coordinate, hi) else 0)
+            rectangles.append((coordinate - half, a, coordinate + half, b))
+
+    # Remover ruído de ponto flutuante: paredes que coincidem compartilham
+    # as mesmas coordenadas de grade (precisão 10 nm no DXF em metros).
+    rectangles = [tuple(round(v, 8) for v in r) for r in rectangles]
+    xs = sorted({v for x1, _, x2, _ in rectangles for v in (x1, x2)})
+    ys = sorted({v for _, y1, _, y2 in rectangles for v in (y1, y2)})
+    nx, ny = len(xs) - 1, len(ys) - 1
+    if nx * ny > 200_000:
+        raise ValueError("planta excede limite de complexidade da malha de paredes")
+    xi = {v: i for i, v in enumerate(xs)}
+    yi = {v: i for i, v in enumerate(ys)}
+    inside = [[False] * nx for _ in range(ny)]
+    for x1, y1, x2, y2 in rectangles:
+        left, right, bottom, top = xi[x1], xi[x2], yi[y1], yi[y2]
+        for j in range(bottom, top):
+            row = inside[j]
+            for i in range(left, right):
+                row[i] = True
+
+    horizontal, vertical = {}, {}
+    for j in range(ny):
+        for i in range(nx):
+            if not inside[j][i]:
+                continue
+            if j == 0 or not inside[j - 1][i]:
+                horizontal.setdefault(j, []).append(i)
+            if j == ny - 1 or not inside[j + 1][i]:
+                horizontal.setdefault(j + 1, []).append(i)
+            if i == 0 or not inside[j][i - 1]:
+                vertical.setdefault(i, []).append(j)
+            if i == nx - 1 or not inside[j][i + 1]:
+                vertical.setdefault(i + 1, []).append(j)
+
+    def runs(indices):
+        """Consolida células contíguas para não criar LINEs duplicadas."""
+        values = sorted(set(indices))
+        if not values:
+            return
+        lo, hi = values[0], values[0] + 1
+        for value in values[1:]:
+            if value == hi:
+                hi += 1
+            else:
+                yield lo, hi
+                lo, hi = value, value + 1
+        yield lo, hi
+
+    output = []
+    for j, values in sorted(horizontal.items()):
+        for lo, hi in runs(values):
+            output.append((xs[lo], ys[j], xs[hi], ys[j]))
+    for i, values in sorted(vertical.items()):
+        for lo, hi in runs(values):
+            output.append((xs[i], ys[lo], xs[i], ys[hi]))
+    return output
 
 def _summary(model):
     areas = {a["nome"]: round((a["x2"]-a["x1"])*(a["y2"]-a["y1"]), 4) for a in model["ambientes"]}
