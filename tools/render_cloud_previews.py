@@ -110,18 +110,47 @@ def render(model, programa, etiqueta, destino):
                 color="#1e2f3f",fontweight="medium")
         ax.text(cx,cy-.18,f"{area:.2f} m²",ha="center",va="center",fontsize=7.0,
                 color="#3e6577")
-    # Dimensões da projeção externa
-    ax.annotate("", xy=(0,-1.1), xytext=(largura,-1.1),
-                arrowprops={"arrowstyle":"|-|","lw":0.8,"color":"#334155"})
-    ax.text(largura/2,-1.35,f"{largura:.2f} m",ha="center",va="top",fontsize=9)
-    ax.annotate("", xy=(largura+0.85,0), xytext=(largura+0.85,profundidade),
-                arrowprops={"arrowstyle":"|-|","lw":0.8,"color":"#334155"})
-    ax.text(largura+1.02,profundidade/2,f"{profundidade:.2f} m",
-            rotation=90,va="center",fontsize=9)
+        if compacto:
+            # Corresponde ao campo cotas_ambientes exportado no DXF.
+            ax.text(cx,cy-.42,f"{x2-x1:.2f} x {y2-y1:.2f} m",
+                    ha="center",va="center",fontsize=6.4,color="#6a596f")
+    # Dimensões da projeção em metros, com os MESMOS níveis do DXF.
+    if compacto:
+        color = "#42627a"
+        def hdim(x1,x2,yref,ydim,font=7.4):
+            ax.plot([x1,x1],[yref,ydim-.09],color=color,lw=.68)
+            ax.plot([x2,x2],[yref,ydim-.09],color=color,lw=.68)
+            ax.plot([x1,x2],[ydim,ydim],color=color,lw=.75)
+            for x in (x1,x2):
+                ax.plot([x-.055,x+.055],[ydim-.055,ydim+.055],color=color,lw=.8)
+            ax.text((x1+x2)/2,ydim-.14,f"{x2-x1:.2f} m",fontsize=font,
+                    ha="center",va="top",color=color)
+        def vdim(y1,y2,xref,xdim,font=7.4):
+            ax.plot([xref,xdim+.09],[y1,y1],color=color,lw=.68)
+            ax.plot([xref,xdim+.09],[y2,y2],color=color,lw=.68)
+            ax.plot([xdim,xdim],[y1,y2],color=color,lw=.75)
+            for y in (y1,y2):
+                ax.plot([xdim-.055,xdim+.055],[y-.055,y+.055],color=color,lw=.8)
+            ax.text(xdim+.16,(y1+y2)/2,f"{y2-y1:.2f} m",fontsize=font,
+                    ha="left",va="center",rotation=90,color=color)
+        for c in model["cotas_h_2d"]:
+            hdim(c["x1"],c["x2"],c["y_ref"],c["y_dim"],
+                 8.5 if c["nivel"]=="total" else 7.1)
+        for c in model["cotas_v_2d"]:
+            vdim(c["y1"],c["y2"],c["x_ref"],c["x_dim"],
+                 8.5 if c["nivel"]=="total" else 7.1)
+    else:
+        ax.annotate("", xy=(0,-1.1), xytext=(largura,-1.1),
+                    arrowprops={"arrowstyle":"|-|","lw":0.8,"color":"#334155"})
+        ax.text(largura/2,-1.35,f"{largura:.2f} m",ha="center",va="top",fontsize=9)
+        ax.annotate("", xy=(largura+0.85,0), xytext=(largura+0.85,profundidade),
+                    arrowprops={"arrowstyle":"|-|","lw":0.8,"color":"#334155"})
+        ax.text(largura+1.02,profundidade/2,f"{profundidade:.2f} m",
+                rotation=90,va="center",fontsize=9)
 
     if compacto:
-        ax.set_xlim(-1.30,largura+2.0)
-        ax.set_ylim(-1.8,profundidade+1.4)
+        ax.set_xlim(-1.45,largura+2.25)
+        ax.set_ylim(-2.0,profundidade+1.4)
     else:
         ax.set_xlim(minx-1.3,maxx+3.1)
         ax.set_ylim(miny-1.0,maxy+1.25)
