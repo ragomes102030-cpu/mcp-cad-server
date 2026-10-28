@@ -124,7 +124,7 @@ def test_fluxo_mcp_publico_preview_desenhar_exportar():
     cotas = list(desenho_dxf.modelspace().query("DIMENSION"))
     textos_cotas = [ent.text for dim in cotas for ent in dim.virtual_entities()
                     if ent.dxftype() == "MTEXT"]
-    assert any("9,00 m" in valor for valor in textos_cotas), textos_cotas
+    assert any(f"{PROGRAMA['largura']:.2f} m" in valor.replace(",", ".") for valor in textos_cotas), textos_cotas
     assert tools_verified.export_dxf()["ok"]
 
 
