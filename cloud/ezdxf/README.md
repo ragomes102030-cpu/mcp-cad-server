@@ -128,3 +128,31 @@ seguido de `drawing_audit` e `export_dxf`.
 
 Rode os testes com `python -m pip install -e ./cloud/ezdxf pytest` e
 `PYTHONPATH=cloud/ezdxf python -m pytest cloud/ezdxf/tests -q`.
+
+### Evolução 2D: disposição compacta de dois quartos
+
+Para programas com exatamente dois quartos, sala, cozinha, lavanderia e
+banheiro, e largura externa entre 8,70 e 9,30 m, a estratégia
+`automatico` seleciona o layout `compacto_2quartos`. A solução usa sala
+e cozinha integradas, lavanderia delimitada, hall curto e acessos diretos
+a dois dormitórios e ao banheiro. Cada área solicitada continua identificada
+no modelo e o DXF inclui mobiliário esquemático, vãos e arcos de portas.
+Layouts incompatíveis não devem receber declarações de conformidade.
+
+Estratégias de `programa`:
+- `automatico`: selecionar o compacto apenas quando houver compatibilidade;
+  caso contrário, usa o arranjo experimental anterior;
+- `compacto_2quartos`: exigir o algoritmo compacto, com erro explícito
+  quando o programa não for viável;
+- `duas_faixas`: preservar a distribuição histórica apenas para testes.
+
+As duas estratégias são **estudos preliminares**, não plantas prontas para
+obra. Área de ambientes cadastrados, área mapeada, projeção construída e área
+total efetiva têm definições distintas. A planta não prova legalidade,
+acessibilidade, ventilação, implantação, posicionamento de equipamentos
+hidrossanitários, distâncias de uso ou segurança contra incêndio.
+
+O script `tools/render_cloud_previews.py` compara as duas soluções antigas e
+a solução compacta em PNG, gerando também DXF e JSON da geometria. O GitHub
+Actions publica o pacote como artefato `plantas-previas-pr1`, para revisão
+antes do merge.
