@@ -12,6 +12,8 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 import threading
 import time
+import os
+import secrets
 import ezdxf
 
 # In-memory, per-session quotas prevent unbounded workspaces on free Render.
@@ -53,6 +55,18 @@ def session_key() -> str:
     except (RuntimeError, ImportError):
         # Direct Python calls used by tests and local offline tooling.
         return "local:default"
+    # Mandatory shared secret for cloud HTTP clients (Claude supports a
+    # configured Authorization header). Direct in-process tests stay local.
+    configured = os.environ.get("MCP_CAD_API_KEY", "")
+    if len(configured) < 32:
+        raise PermissionError("MCP_CAD_API_KEY ausente ou fraca; acesso remoto bloqueado")
+    authorization = request.headers.get("authorization", "")
+    supplied = authorization[7:] if authorization.lower().startswith("bearer ") else ""
+    # Clients that cannot use Authorization can configure X-MCP-CAD-API-KEY.
+    if not supplied:
+        supplied = request.headers.get("x-mcp-cad-api-key", "")
+    if not secrets.compare_digest(supplied, configured):
+        raise PermissionError("credenciais MCP CAD inválidas")
     sid = request.headers.get("mcp-session-id", "").strip()
     if not sid or len(sid) > 256:
         raise RuntimeError(
