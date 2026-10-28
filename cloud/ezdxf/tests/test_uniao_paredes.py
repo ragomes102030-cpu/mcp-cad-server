@@ -82,7 +82,8 @@ def test_linhas_no_dxf_iguais_ao_contorno_fisico_sem_duplicacao():
     result=tools_verified.planta_criar_validada(programa=CASA,modo="desenhar",
                             template="programa_sob_medida",preview_token=preview["preview_token"])
     assert result["ok"],result
-    real=[tuple(float(v) for xy in (line.dxf.start,line.dxf.end) for v in xy[:2])
+    real=[(float(line.dxf.start.x),float(line.dxf.start.y),
+           float(line.dxf.end.x),float(line.dxf.end.y))
           for line in _ensure().modelspace().query("LINE[layer=='PAREDES']")]
     _assert_sem_sobreposicao(real)
     expected=wall_boundary_segments(preview["modelo"]["paredes"])
