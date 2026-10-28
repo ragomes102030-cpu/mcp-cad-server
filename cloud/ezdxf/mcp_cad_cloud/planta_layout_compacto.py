@@ -133,8 +133,8 @@ def gerar_compacto(programa):
         (x_direita+.35,frente+1.48,x_direita+1.30,frente+3.38),
         (x_direita+1.75,frente+1.35,x_direita+2.24,frente+3.35),
         (x_esquerda+.20,profundidade-1.00,x_esquerda+1.04,profundidade-.20),
-        (x_esquerda+.25,frente+h_hall+.20,x_esquerda+.83,frente+h_hall+.56),
-        (x_esquerda+1.35,frente+h_hall+.32,x_esquerda+1.96,frente+h_hall+1.04),
+        (x_esquerda+.18,frente+h_hall+.25,x_esquerda+.60,frente+h_hall+.83),
+        (x_esquerda+1.65,frente+h_hall+.32,x_esquerda+2.18,frente+h_hall+1.04),
     ]
     walls=[
         ("h",0.0,0.0,largura),
@@ -163,7 +163,7 @@ def gerar_compacto(programa):
                        else (coord,inicio,coord,inicio+tam))
 
     # Entrada frontal; acesso ao hall é passagem, sem folha projetada.
-    porta("h",0.0,.50,ENTRADA,90)
+    porta("h",0.0,.50,ENTRADA,0)
     janela("h",0.0,2.05,1.45)
     janela("h",0.0,4.75,1.40)
     janela("h",0.0,largura-1.18,.72)
@@ -174,7 +174,7 @@ def gerar_compacto(programa):
     # Portas para os dormitórios e banheiro sempre orientadas ao hall.
     porta("v",x_esquerda,frente+.16,.90,90)
     porta("v",x_direita,frente+.16,.90,0)
-    porta("h",frente+h_hall,x_esquerda+.65,.80,90)
+    porta("h",frente+h_hall,x_esquerda+.65,.80,0)
     # Janelas externas de dormitórios e banheiro.
     janela("h",profundidade,.95,1.45)
     janela("h",profundidade,(x_esquerda+x_direita)/2-.32,.64)
@@ -222,7 +222,7 @@ def gerar_compacto(programa):
         "titulo":str(programa.get("titulo") or "RESIDÊNCIA TÉRREA 2 QUARTOS - ESTUDO 2D"),
         "espessura_parede":T,"pe_direito":pe_direito,"terreno":terreno,
         "paredes":paredes, "parede_sem_sobreposicao":True,
-        "ambientes":ambs, "portas":portas, "janelas":janelas,
+        "ambientes":ambs, "portas":portas, "portas_folhas":[90,0,180,0,90], "janelas":janelas,
         "moveis":[list(m) for m in moveis],
         "cotas_h":[(0.0,largura,-1.0,-1.0)],
         "cotas_v":[(largura+.8,0.0,profundidade,largura+.8)],
