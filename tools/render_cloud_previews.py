@@ -182,5 +182,6 @@ def executar(programa, etiqueta, slug):
 
 
 if __name__=="__main__":
-    executar(BASE,"A — distribuição de referência","planta_a")
-    executar(AMPLIADA,"B — ambientes ampliados","planta_b")\n    executar(BASE,"C — layout compacto 2D","planta_c_compacta")
+    executar({**BASE,"estrategia":"duas_faixas"},"A — duas faixas (legado)","planta_a")
+    executar({**AMPLIADA,"estrategia":"duas_faixas"},"B — duas faixas ampliadas (legado)","planta_b")
+    executar(BASE,"C — layout compacto 2D","planta_c_compacta")
