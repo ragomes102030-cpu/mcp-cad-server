@@ -157,32 +157,34 @@ a solução compacta em PNG, gerando também DXF e JSON da geometria. O GitHub
 Actions publica o pacote como artefato `plantas-previas-pr1`, para revisão
 antes do merge.
 
-## Segurança e isolamento — requisitos antes do deploy
+## Uso online temporário sem autenticação (modo de teste)
 
-A versão desta PR rejeita chamadas remotas quando a variável
-`MCP_CAD_API_KEY` não existe ou tem menos de 32 caracteres.
-O servidor também falha ao iniciar sem essa configuração.
-O Render **ainda não recebeu** essa credencial: não mesclar a PR até
-configurar o segredo e confirmar a compatibilidade do cliente.
+Nesta PR, `MCP_CAD_AUTH_MODE` usa o valor padrão `off`. O serviço
+**não exige usuário, senha, token Bearer nem `MCP_CAD_API_KEY`** no
+modo de teste. Isso simplifica a conexão ao ChatGPT/Claude Online.
 
-- Gerar chave criptograficamente aleatória (32+ caracteres), guardar em
-  Render > Environment > `MCP_CAD_API_KEY`; nunca versionar no GitHub.
-- No Claude Online, em *Customize > Connectors*, configurar um cabeçalho
-  `Authorization: Bearer <chave>` (ou `X-MCP-CAD-API-KEY`).
-  Não compartilhar o valor no chat.
-- No ChatGPT, validar previamente se o conector MCP oferece envio de
-  credenciais HTTP; se não oferecer, integrar um provedor OAuth compatível
-  antes de publicar. Não desabilitar a proteção para contornar essa etapa.
-- Recriar/reconectar o cliente após deploy, garantindo `Mcp-Session-Id`
-  para todos os comandos que consultam ou editam desenhos.
-- O token de prévia e as entidades DXF estão vinculados à sessão MCP.
-  `new_drawing` em uma sessão não deve afetar outra. Os desenhos em
-  memória expiram após uma hora, ou são descartados em reinicialização;
-  exportar DXF é obrigatório para preservá-los.
-- Para reduzir a superfície de ataque, o perfil `full` publica somente
-  as **21 operações CAD verificadas**, não as dezenas de placeholders
-  legados que respondiam sucesso sem editar o DXF.
-- `/healthz` informa saúde do processo, não libera acesso ao desenho.
+- No Render, deixar `MCP_CAD_AUTH_MODE=off` (ou não definir a variável).
+- Manter o perfil `MCP_CAD_PROFILE=planta_segura`, quando possível.
+- O acesso não é privado: **qualquer pessoa com a URL pode chamar o MCP**.
+  Não colocar desenhos confidenciais ou dados pessoais no serviço público.
+- O isolamento de desenhos por `Mcp-Session-Id`, tokens de aprovação
+  de uso único, TTL 1 h, limite de 64 sessões e bloqueio das operações
+  não implementadas continuam ativos. Esses controles não substituem
+  autenticação nem impedem todo abuso ou negação de serviço.
+- Caso o cliente não envie identificador de sessão estável, o comando
+  recusa manipular o desenho remoto para impedir mistura entre usuários.
+- Desenhos são voláteis: sempre exportar DXF antes de desconectar.
+
+Para reativar autenticação futuramente **sem alterar código**:
+
+1. Definir `MCP_CAD_AUTH_MODE=required` no Render.
+2. Configurar `MCP_CAD_API_KEY` com 32+ caracteres aleatórios.
+3. Conectar Claude/ChatGPT com cabeçalho
+   `Authorization: Bearer <chave>` ou `X-MCP-CAD-API-KEY`, se suportado.
+
+Não publicar dados privados em modo `off`. A validação real dos
+conectores e a revisão de segurança ainda são pré-requisitos antes de
+declarar o sistema pronto para produção.
 
 ### Convenção geométrica do layout compacto
 
