@@ -361,15 +361,17 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
         # nível parcial: suprimi-las na DIMENSION evita duplicação.
         total_style = dict(dim_override, dimexe=0.0, dimexo=wall_half,
                            dimse1=1, dimse2=1)
-        for c in model["cotas_h_2d"]:
-            style = partial_style if c["nivel"] == "parcial" else total_style
+        for idx, c in enumerate(model["cotas_h_2d"]):
+            style = dict(partial_style, dimse1=1) if (c["nivel"] == "parcial" and idx > 0) else (
+                partial_style if c["nivel"] == "parcial" else total_style)
             dim = msp.add_aligned_dim(
                 p1=(c["x1"], c["y_ref"]), p2=(c["x2"], c["y_ref"]),
                 distance=c["y_dim"]-c["y_ref"], override=style,
                 dxfattribs={"layer":"COTAS"})
             dim.render()
-        for c in model["cotas_v_2d"]:
-            style = partial_style if c["nivel"] == "parcial" else total_style
+        for idx, c in enumerate(model["cotas_v_2d"]):
+            style = dict(partial_style, dimse1=1) if (c["nivel"] == "parcial" and idx > 0) else (
+                partial_style if c["nivel"] == "parcial" else total_style)
             dim = msp.add_aligned_dim(
                 p1=(c["x_ref"], c["y1"]), p2=(c["x_ref"], c["y2"]),
                 distance=c["x_ref"]-c["x_dim"], override=style,
