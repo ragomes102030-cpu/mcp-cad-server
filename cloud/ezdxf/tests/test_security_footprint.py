@@ -73,24 +73,55 @@ def test_two_sessions_own_distinct_docs_names_and_tokens():
         assert cad.inspect_drawing()["drawing"] == "BOB"
 
 
-def test_remote_http_requires_long_api_key_and_session(monkeypatch):
+def test_remote_http_works_without_auth_but_still_requires_session(monkeypatch):
     from fastmcp.server import dependencies
-    from mcp_cad_cloud.backend import session_key
+    from mcp_cad_cloud.backend import session_key, auth_mode
+    monkeypatch.setenv("MCP_CAD_AUTH_MODE", "off")
+    monkeypatch.delenv("MCP_CAD_API_KEY", raising=False)
     monkeypatch.setattr(dependencies, "get_http_request", lambda: SimpleNamespace(
         headers={"mcp-session-id": "session-123"}))
-    monkeypatch.delenv("MCP_CAD_API_KEY", raising=False)
-    with pytest.raises(PermissionError,match="MCP_CAD_API_KEY"):
-        session_key()
-    monkeypatch.setenv("MCP_CAD_API_KEY","A"*40)
-    with pytest.raises(PermissionError,match="credenciais"):
-        session_key()
-    monkeypatch.setattr(dependencies, "get_http_request", lambda: SimpleNamespace(
-        headers={"mcp-session-id": "session-123", "authorization": "Bearer "+"A"*40}))
+    assert auth_mode() == "off"
     assert session_key() == "mcp:session-123"
     monkeypatch.setattr(dependencies, "get_http_request", lambda: SimpleNamespace(
-        headers={"authorization": "Bearer "+"A"*40}))
-    with pytest.raises(RuntimeError,match="sessão MCP ausente"):
+        headers={}))
+    with pytest.raises(RuntimeError, match="sessão MCP ausente"):
         session_key()
+
+
+def test_bearer_auth_can_be_reenabled_without_code_changes(monkeypatch):
+    from fastmcp.server import dependencies
+    from mcp_cad_cloud.backend import session_key, auth_mode
+    monkeypatch.setenv("MCP_CAD_AUTH_MODE", "required")
+    monkeypatch.delenv("MCP_CAD_API_KEY", raising=False)
+    monkeypatch.setattr(dependencies, "get_http_request", lambda: SimpleNamespace(
+        headers={"mcp-session-id": "session-123"}))
+    with pytest.raises(PermissionError, match="MCP_CAD_API_KEY"):
+        session_key()
+    monkeypatch.setenv("MCP_CAD_API_KEY", "A" * 40)
+    with pytest.raises(PermissionError, match="credenciais"):
+        session_key()
+    monkeypatch.setattr(dependencies, "get_http_request", lambda: SimpleNamespace(
+        headers={"mcp-session-id": "session-123", "authorization": "Bearer " + "A" * 40}))
+    assert auth_mode() == "required"
+    assert session_key() == "mcp:session-123"
+    monkeypatch.setenv("MCP_CAD_AUTH_MODE", "invalid")
+    with pytest.raises(ValueError, match="off ou required"):
+        auth_mode()
+
+
+def test_server_startup_allows_no_key_only_when_auth_is_off(monkeypatch):
+    from mcp_cad_cloud import server
+    called = []
+    monkeypatch.setattr(server, "initialize", lambda: called.append("init"))
+    monkeypatch.setattr(server.mcp, "run", lambda **kwargs: called.append("run"))
+    monkeypatch.delenv("MCP_CAD_API_KEY", raising=False)
+    monkeypatch.setenv("MCP_CAD_AUTH_MODE", "off")
+    server.main()
+    assert called == ["init", "run"]
+    monkeypatch.setenv("MCP_CAD_AUTH_MODE", "required")
+    with pytest.raises(RuntimeError, match="MCP_CAD_API_KEY"):
+        server.main()
+    assert called == ["init", "run"]
 
 
 def test_mcp_does_not_expose_unimplemented_noop_headless_commands():
