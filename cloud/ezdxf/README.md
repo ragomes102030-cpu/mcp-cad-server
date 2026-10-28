@@ -78,3 +78,53 @@ python tools/verify_cloud_release.py --url https://SEU-SERVICO.onrender.com/mcp
 
 O comando verifica versão, revisão, backend, transporte e uma requisição real
 de `initialize` sem Bearer Token.
+
+## Programa residencial sob medida — experimental
+
+O MCP oferece o template `programa_sob_medida` para um estudo preliminar
+de **residências térreas em duas faixas** (social à frente, íntima ao fundo).
+Não é um algoritmo geral de arquitetura e não entrega projeto legal/executivo.
+
+Use `planta_templates` para descobrir os recursos e `planta_criar_validada`:
+
+```json
+{
+  "modo": "preview",
+  "template": "programa_sob_medida",
+  "programa": {
+    "largura": 10,
+    "terreno_largura": 12,
+    "terreno_profundidade": 20,
+    "recuo_frente": 3,
+    "recuo_fundo": 2,
+    "recuo_lateral": 1,
+    "ambientes": [
+      {"nome": "Sala de estar", "area": 18},
+      {"nome": "Cozinha", "area": 9},
+      {"nome": "Área de serviço", "area": 4},
+      {"nome": "Quarto 1", "area": 12},
+      {"nome": "Quarto 2", "area": 10},
+      {"nome": "Banheiro social", "area": 4}
+    ]
+  }
+}
+```
+
+Analise `resumo`, `avisos`, `modelo` e `validacao`. Somente depois,
+chame o mesmo comando com `modo="desenhar"` e o `preview_token` retornado,
+seguido de `drawing_audit` e `export_dxf`.
+
+- `area` é área livre do ambiente, não projeção externa;
+  corredores e paredes são contabilizados separadamente.
+- O gerador exige sala com entrada externa, corredor para os demais cômodos,
+  paredes de 15 cm e dimensões internas mínimas preliminares configuradas no
+  código. Rejeita geometria inviável em vez de desenhá-la silenciosamente.
+- Os recuos indicados pelo usuário são **dados de entrada**, não confirmação
+  de permissibilidade urbanística. Sem dados do lote, o contorno é ilustrativo.
+- A geometria não certifica acessibilidade, desempenho, segurança, iluminação,
+  ventilação, aprovação legal ou atendimento a normas municipais.
+- O backend usa um estado DXF efêmero compartilhado no processo; **não use
+  concorrência de usuários/projetos em produção** antes do isolamento de sessão.
+
+Rode os testes com `python -m pip install -e ./cloud/ezdxf pytest` e
+`PYTHONPATH=cloud/ezdxf python -m pytest cloud/ezdxf/tests -q`.
