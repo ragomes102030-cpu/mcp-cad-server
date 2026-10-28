@@ -158,25 +158,36 @@ def _ensure_layers(doc):
 
 def planta_assistida(programa=None, modo="preview", nome=None, preview_token=None):
     programa = programa or {}
-    solicitado = str(programa.get("template") or TEMPLATE_PADRAO).strip()
-    if solicitado not in {TEMPLATE_PADRAO, "tiny_house_10m2"}:
+    if not isinstance(programa, dict):
+        return {"ok": False, "code": "PROGRAMA_INVALIDO", "error": "programa deve ser JSON"}
+    solicitado = str(programa.get("template") or
+                    ("programa_sob_medida" if "ambientes" in programa else TEMPLATE_PADRAO)).strip()
+    if solicitado not in {TEMPLATE_PADRAO, "tiny_house_10m2", "programa_sob_medida"}:
         return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
                 "error": f"template '{solicitado}' ainda nao esta disponivel",
                 "templates": listar_templates(),
                 "proxima_acao": "escolher um template suportado"}
-    largura_padrao = 12.0 if solicitado == TEMPLATE_PADRAO else 2.5
-    profundidade_padrao = 11.0 if solicitado == TEMPLATE_PADRAO else 4.0
-    if (("largura_externa" in programa and float(programa["largura_externa"]) != largura_padrao) or
-            ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != profundidade_padrao)):
-        return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
-                "error": "as dimensoes pedidas nao pertencem a um template disponivel",
-                "templates": listar_templates(),
-                "proxima_acao": "escolher um template suportado"}
-    if solicitado == "tiny_house_10m2":
-        from mcp_cad_cloud.tiny_house_assistida import build_tiny_house_model
-        model = build_tiny_house_model(programa)
+    if solicitado == "programa_sob_medida":
+        from mcp_cad_cloud.planta_gerador import gerar_modelo, ErroPrograma
+        try:
+            model = gerar_modelo(programa)
+        except ErroPrograma as exc:
+            return {"ok": False, "code": "PROGRAMA_INVALIDO", "error": str(exc),
+                    "proxima_acao": "revisar programa, áreas e dimensões"}
     else:
-        model = build_assisted_model(programa)
+        largura_padrao = 12.0 if solicitado == TEMPLATE_PADRAO else 2.5
+        profundidade_padrao = 11.0 if solicitado == TEMPLATE_PADRAO else 4.0
+        if (("largura_externa" in programa and float(programa["largura_externa"]) != largura_padrao) or
+                ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != profundidade_padrao)):
+            return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
+                    "error": "as dimensoes pedidas nao pertencem a um template disponivel",
+                    "templates": listar_templates(),
+                    "proxima_acao": "escolher um template suportado"}
+        if solicitado == "tiny_house_10m2":
+            from mcp_cad_cloud.tiny_house_assistida import build_tiny_house_model
+            model = build_tiny_house_model(programa)
+        else:
+            model = build_assisted_model(programa)
     from mcp_cad_cloud.validar_modelo import validar
     from mcp_cad_cloud.plant_workflow import consume, issue
     validacao = validar(model)
@@ -188,6 +199,8 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
     if modo == "preview":
         return {"ok": True, "etapa": "preview", "backend": "ezdxf", "resumo": summary,
                 "validacao": validacao, "modelo": model,
+                "avisos": model.get("avisos", []),
+                "resumo_geometria": model.get("resumo_geometria"),
                 "preview_token": issue(model, solicitado),
                 "proxima_acao": "desenhar"}
     if modo != "desenhar":
