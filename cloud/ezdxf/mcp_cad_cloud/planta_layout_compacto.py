@@ -218,6 +218,35 @@ def gerar_compacto(programa):
         "Mobiliário esquemático; não comprova acessibilidade nem espaço para todos os equipamentos.",
         "Recuos fornecidos são hipóteses, não regras legais verificadas.",
     ]
+    # Cotamento físico: primeiro nível = segmentos construtivos,
+    # segundo nível = dimensões externas totais. Todas as distâncias são
+    # derivadas dos eixos reais, em metros, sem números digitados no desenho.
+    niveis_x = [0.0, x_esquerda, x_direita, largura]
+    niveis_y = [0.0, frente, frente+h_hall, profundidade]
+    cotas_h_2d = [
+        {"x1": niveis_x[i], "x2": niveis_x[i+1],
+         "y_ref": 0.0, "y_dim": -0.65, "nivel": "parcial"}
+        for i in range(len(niveis_x)-1)
+    ]
+    cotas_h_2d.append({"x1": 0.0, "x2": largura,
+                        "y_ref": 0.0, "y_dim": -1.35, "nivel": "total"})
+    cotas_v_2d = [
+        {"y1": niveis_y[i], "y2": niveis_y[i+1],
+         "x_ref": largura, "x_dim": largura+0.65, "nivel": "parcial"}
+        for i in range(len(niveis_y)-1)
+    ]
+    cotas_v_2d.append({"y1": 0.0, "y2": profundidade,
+                        "x_ref": largura, "x_dim": largura+1.35, "nivel": "total"})
+    # O detalhamento dos cômodos informa as dimensões internas LIVRES,
+    # não dimensões nominais de eixos ou paredes.
+    cotas_ambientes = [
+        {"nome": amb["nome"],
+         "largura": round(amb["x2"]-amb["x1"], 4),
+         "profundidade": round(amb["y2"]-amb["y1"], 4),
+         "area": round((amb["x2"]-amb["x1"])*(amb["y2"]-amb["y1"]), 4),
+         "x": amb["texto_x"], "y": amb["texto_y"]}
+        for amb in ambs
+    ]
     return {
         "titulo":str(programa.get("titulo") or "RESIDÊNCIA TÉRREA 2 QUARTOS - ESTUDO 2D"),
         "espessura_parede":T,"pe_direito":pe_direito,"terreno":terreno,
@@ -226,6 +255,8 @@ def gerar_compacto(programa):
         "moveis":[list(m) for m in moveis],
         "cotas_h":[(0.0,largura,-1.0,-1.0)],
         "cotas_v":[(largura+.8,0.0,profundidade,largura+.8)],
+        "cotas_h_2d":cotas_h_2d, "cotas_v_2d":cotas_v_2d,
+        "cotas_ambientes":cotas_ambientes,
         "selo":[(-.95,-4.2-.25*i,text,.16) for i,text in enumerate(selos)],
         "area_pedida":area_ambientes,
         "estrategia":"compacto_2quartos",
