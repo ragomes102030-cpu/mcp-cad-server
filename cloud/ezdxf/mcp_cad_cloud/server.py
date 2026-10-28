@@ -59,6 +59,10 @@ async def healthz(request: Request) -> JSONResponse:
     return JSONResponse({"ok": True, "service": "mcp-cad-cloud", **build_info()})
 
 def main() -> None:
+    if len(os.environ.get("MCP_CAD_API_KEY", "")) < 32:
+        raise RuntimeError(
+            "MCP_CAD_API_KEY de 32+ caracteres é obrigatória no Render. "
+            "O servidor não inicia sem proteção HTTP.")
     initialize()
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", "8000"))
