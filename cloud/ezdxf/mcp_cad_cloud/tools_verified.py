@@ -60,21 +60,26 @@ def planta_assistida(programa: dict | None = None, modo: str = "preview",
     the ephemeral DXF held by this HTTP session.
     """
     global DRAWING_NAME
-    programa = programa or {}
-    solicitado = str(template or programa.get("template") or TEMPLATE_PADRAO).strip()
-    if solicitado not in {TEMPLATE_PADRAO, "tiny_house_10m2"}:
+    if programa is not None and not isinstance(programa, dict):
+        return {"ok": False, "code": "INVALID_INPUT", "error": "programa deve ser JSON"}
+    programa = dict(programa or {})
+    solicitado = str(template or programa.get("template") or
+                     ("programa_sob_medida" if "ambientes" in programa else TEMPLATE_PADRAO)).strip()
+    if solicitado not in {TEMPLATE_PADRAO, "tiny_house_10m2", "programa_sob_medida"}:
         return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
                 "error": f"template '{solicitado}' ainda nao esta disponivel",
                 "templates": listar_templates(),
                 "proxima_acao": "escolher um template suportado"}
-    largura_padrao = 12.0 if solicitado == TEMPLATE_PADRAO else 2.5
-    profundidade_padrao = 11.0 if solicitado == TEMPLATE_PADRAO else 4.0
-    if (("largura_externa" in programa and float(programa["largura_externa"]) != largura_padrao) or
-            ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != profundidade_padrao)):
-        return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
-                "error": "as dimensoes pedidas nao pertencem a um template disponivel",
-                "templates": listar_templates(),
-                "proxima_acao": "escolher um template suportado"}
+    if solicitado != "programa_sob_medida":
+        largura_padrao = 12.0 if solicitado == TEMPLATE_PADRAO else 2.5
+        profundidade_padrao = 11.0 if solicitado == TEMPLATE_PADRAO else 4.0
+        if (("largura_externa" in programa and float(programa["largura_externa"]) != largura_padrao) or
+                ("profundidade_externa" in programa and float(programa["profundidade_externa"]) != profundidade_padrao)):
+            return {"ok": False, "code": "TEMPLATE_NOT_SUPPORTED",
+                    "error": "as dimensoes pedidas nao pertencem a um template disponivel",
+                    "templates": listar_templates(),
+                    "proxima_acao": "escolher um template suportado"}
+    programa["template"] = solicitado
     from mcp_cad_cloud.planta_assistida import planta_assistida as build
     result = build(programa=programa, modo=modo, nome=nome,
                    preview_token=preview_token)
