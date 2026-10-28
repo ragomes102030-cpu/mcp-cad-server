@@ -352,22 +352,43 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
     if model.get("cotas_h_2d") and model.get("cotas_v_2d"):
         # Cotas associadas aos limites geométricos: parciais e totais.
         # Eixos em metros. A própria entidade DIMENSION calcula o valor.
+        # Afastamento a partir da FACE EXTERNA de 7,5 cm (parede 15 cm).
+        # Não prolongar linhas de extensão além das linhas de cota.
+        wall_half = float(model["espessura_parede"]) / 2
         partial_style = dict(dim_override, dimtxt=0.14, dimasz=0.10,
-                             dimexe=0.07, dimexo=0.06)
+                             dimexe=0.0, dimexo=wall_half)
+        # No nível total, as linhas de extensão já existem no primeiro
+        # nível parcial: suprimi-las na DIMENSION evita duplicação.
+        total_style = dict(dim_override, dimexe=0.0, dimexo=wall_half,
+                           dimse1=1, dimse2=1)
         for c in model["cotas_h_2d"]:
-            style = partial_style if c["nivel"] == "parcial" else dim_override
+            style = partial_style if c["nivel"] == "parcial" else total_style
             dim = msp.add_aligned_dim(
                 p1=(c["x1"], c["y_ref"]), p2=(c["x2"], c["y_ref"]),
                 distance=c["y_dim"]-c["y_ref"], override=style,
                 dxfattribs={"layer":"COTAS"})
             dim.render()
         for c in model["cotas_v_2d"]:
-            style = partial_style if c["nivel"] == "parcial" else dim_override
+            style = partial_style if c["nivel"] == "parcial" else total_style
             dim = msp.add_aligned_dim(
                 p1=(c["x_ref"], c["y1"]), p2=(c["x_ref"], c["y2"]),
                 distance=c["x_ref"]-c["x_dim"], override=style,
                 dxfattribs={"layer":"COTAS"})
             dim.render()
+        # Continuação ÚNICA das extensões extremas entre o primeiro e o
+        # segundo níveis, sem repetir os segmentos da parede até a 1a cota.
+        h_partials = [c for c in model["cotas_h_2d"] if c["nivel"] == "parcial"]
+        h_total = next(c for c in model["cotas_h_2d"] if c["nivel"] == "total")
+        v_partials = [c for c in model["cotas_v_2d"] if c["nivel"] == "parcial"]
+        v_total = next(c for c in model["cotas_v_2d"] if c["nivel"] == "total")
+        for x_coord in (h_total["x1"], h_total["x2"]):
+            msp.add_line((x_coord, h_partials[0]["y_dim"]),
+                         (x_coord, h_total["y_dim"]),
+                         dxfattribs={"layer":"COTAS"})
+        for y_coord in (v_total["y1"], v_total["y2"]):
+            msp.add_line((v_partials[0]["x_dim"], y_coord),
+                         (v_total["x_dim"], y_coord),
+                         dxfattribs={"layer":"COTAS"})
         # Anotação legível das larguras e profundidades úteis de cada
         # ambiente, também calculadas do mesmo objeto geométrico.
         for c in model.get("cotas_ambientes", []):
