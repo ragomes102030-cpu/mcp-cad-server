@@ -223,7 +223,7 @@ def executar(programa, etiqueta, slug):
                                    preview_token=preview["preview_token"],
                                    template="programa_sob_medida",nome=slug)
     assert drawn["ok"], drawn
-    exported=cad.export_dxf()
+    exported=cad.export_dxf(incluir_base64=True)
     assert exported["ok"], exported
     # ZIP com o DXF real produzido pelo MCP, para conferência cruzada.
     (OUTPUT / f"{slug}.zip").write_bytes(base64.b64decode(exported["data_base64"]))
