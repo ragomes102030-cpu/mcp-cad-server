@@ -88,9 +88,13 @@ def render(model, programa, etiqueta, destino):
         else:
             for delta in (-0.038, 0.038):
                 ax.plot([x1+delta,x2+delta], [y1,y2], c="#3685ae", lw=2.1)
+    for x1,y1,x2,y2 in model["moveis"]:
+        ax.add_patch(Rectangle((x1,y1),x2-x1,y2-y1,
+                               fill=False,linewidth=1.0,edgecolor="#96a4ae"))
     for item in model["ambientes"]:
         x1,y1,x2,y2=(item[k] for k in ("x1","y1","x2","y2"))
-        cx,cy=(x1+x2)/2,(y1+y2)/2
+        cx,cy=(item.get("texto_x",(x1+x2)/2),
+               item.get("texto_y",(y1+y2)/2))
         area=(x2-x1)*(y2-y1)
         name=item["nome"]
         fontsize=8.0 if min(x2-x1,y2-y1)>=1.8 else 6.8
@@ -135,7 +139,7 @@ def render(model, programa, etiqueta, destino):
         yy-=.06
     right.text(0,.075,"PAREDES     PORTAS     JANELAS",fontsize=7.8,
                va="top",transform=right.transAxes)
-    right.text(0,.03,"sem mobiliário nesta versão",fontsize=8.5,
+    right.text(0,.03,"mobiliário esquemático para conferência",fontsize=8.0,
                color="#6d7885",va="top",transform=right.transAxes)
 
     fig.text(.05,.945,f"PRÉVIA {etiqueta}  |  RESIDÊNCIA TÉRREA",
@@ -179,4 +183,4 @@ def executar(programa, etiqueta, slug):
 
 if __name__=="__main__":
     executar(BASE,"A — distribuição de referência","planta_a")
-    executar(AMPLIADA,"B — ambientes ampliados","planta_b")
+    executar(AMPLIADA,"B — ambientes ampliados","planta_b")\n    executar(BASE,"C — layout compacto 2D","planta_c_compacta")
