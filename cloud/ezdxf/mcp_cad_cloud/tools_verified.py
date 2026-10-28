@@ -154,7 +154,7 @@ def validar_planta(modelo: dict | None = None, estrito: bool = False) -> dict:
 def cad_status() -> dict:
     """Return the cloud/headless boundary before any drawing operation."""
     return {**state_summary(), "version_ezdxf": ezx_version(), "drawing": DRAWING_NAME,
-            "profile": "full" if PUBLIC_TOOLS == TOOLS else "planta_segura",
+            "profile": PROFILE,
             "backend": "ezdxf",
             "execution_mode": "cloud_headless",
             "autocad_available": False,
