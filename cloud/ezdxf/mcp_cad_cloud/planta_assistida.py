@@ -218,9 +218,15 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
         msp.add_line((x1, y1), (x2, y2), dxfattribs={"layer": "PAREDES"})
     x1, y1, x2, y2 = model["terreno"]
     msp.add_lwpolyline([(x1,y1),(x2,y1),(x2,y2),(x1,y2)], close=True, dxfattribs={"layer":"TERRENO"})
-    for px, py, ang, width in model["portas"]:
+    folhas = model.get("portas_folhas", [])
+    for i, (px, py, ang, width) in enumerate(model["portas"]):
         msp.add_arc((px, py), width, ang, ang + 90, dxfattribs={"layer":"PORTAS"})
-        r = math.radians(ang); msp.add_line((px,py),(px+width*math.cos(r),py+width*math.sin(r)), dxfattribs={"layer":"PORTAS"})
+        # O desenho compacto informa a direção da folha aberta, separadamente
+        # do início do arco. Os templates antigos mantêm seu contrato original.
+        ang_folha = folhas[i] if i < len(folhas) else ang
+        r = math.radians(ang_folha)
+        msp.add_line((px,py),(px+width*math.cos(r),py+width*math.sin(r)),
+                     dxfattribs={"layer":"PORTAS"})
     half = .15 / 2
     for a, b, c, d in model["janelas"]:
         if abs(d-b) < 1e-9:
