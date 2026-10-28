@@ -231,13 +231,48 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
             msp.add_line((a+half/2,b),(c+half/2,d), dxfattribs={"layer":"JANELAS"})
     for x1, y1, x2, y2 in model["moveis"]:
         msp.add_lwpolyline([(x1,y1),(x2,y1),(x2,y2),(x1,y2)], close=True, dxfattribs={"layer":"MOBILIARIO"})
+    # Texto técnico centrado nos ambientes; quebra rótulos extensos para
+    # evitar a invasão de paredes em cômodos estreitos.
+    from ezdxf.enums import TextEntityAlignment
     for amb in model["ambientes"]:
         cx, cy = (amb["x1"]+amb["x2"])/2, (amb["y1"]+amb["y2"])/2
-        msp.add_text(amb["nome"], dxfattribs={"height":amb["h"],"insert":(cx,cy+.16),"layer":"TEXTOS"})
+        largura = amb["x2"] - amb["x1"]
+        nome = amb["nome"]
+        tamanho = max(0.10, min(0.20, float(amb["h"])))
+        max_chars = max(4, int((largura - 0.18) / (tamanho * 0.85)))
+        palavras = nome.split()
+        linhas, atual = [], ""
+        for palavra in palavras:
+            tentativa = (atual + " " + palavra).strip()
+            if atual and len(tentativa) > max_chars:
+                linhas.append(atual)
+                atual = palavra
+            else:
+                atual = tentativa
+        if atual:
+            linhas.append(atual)
+        if not linhas:
+            linhas = [nome]
+        comprimento_maior = max(len(linha) for linha in linhas)
+        if comprimento_maior * tamanho * 0.85 > largura - 0.16:
+            tamanho = max(0.05, (largura - 0.16) / max(1, comprimento_maior) / 0.85)
+        espacamento = tamanho * 1.40
+        for i, linha in enumerate(linhas):
+            y_texto = cy + (len(linhas) - 1 - 2*i) * espacamento / 2
+            entidade = msp.add_text(linha, dxfattribs={"height":tamanho,"layer":"TEXTOS"})
+            entidade.set_placement((cx,y_texto), align=TextEntityAlignment.MIDDLE_CENTER)
+
+    # EZDXF possui DIMLFAC=100 por padrão, gerando '900' para 9 metros.
+    # Esta planta é desenhada em metros (INSUNITS=6); escrever 9,00 m.
+    dim_override = {"dimlfac":1.0, "dimdec":2, "dimzin":0,
+                    "dimpost":"<> m", "dimtxt":0.18, "dimasz":0.12,
+                    "dimexe":0.10, "dimexo":0.08}
     for x1, x2, y, distance in model["cotas_h"]:
-        dim = msp.add_aligned_dim((x1,0),(x2,0),distance=distance,dxfattribs={"layer":"COTAS"}); dim.render()
+        dim = msp.add_aligned_dim((x1,0),(x2,0),distance=distance,
+                                  override=dim_override,dxfattribs={"layer":"COTAS"}); dim.render()
     for x, y1, y2, distance in model["cotas_v"]:
-        dim = msp.add_aligned_dim((x,y1),(x,y2),distance=distance,dxfattribs={"layer":"COTAS"}); dim.render()
+        dim = msp.add_aligned_dim((x,y1),(x,y2),distance=distance,
+                                  override=dim_override,dxfattribs={"layer":"COTAS"}); dim.render()
     for x, y, text, height in model["selo"]:
         msp.add_text(text, dxfattribs={"height":height,"insert":(x,y),"layer":"TEXTOS"})
     return {"ok": True, "etapa": "desenho", "backend": "ezdxf", "resumo": summary,
