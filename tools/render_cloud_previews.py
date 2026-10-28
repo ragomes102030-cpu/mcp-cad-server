@@ -66,16 +66,24 @@ def render(model, programa, etiqueta, destino):
     # Limites externos reais do estudo; os recuos são fornecidos pelo usuário,
     # não verificados urbanisticamente.
     minx, miny, maxx, maxy = model["terreno"]
-    ax.add_patch(Rectangle((minx, miny), maxx-minx, maxy-miny,
-                           fill=False, linewidth=1.2, linestyle="--",
-                           edgecolor="#8b99a9"))
-    ax.text((minx+maxx)/2, maxy-.45, "TERRENO 10,00 × 20,00 m",
-            ha="center", fontsize=9, color="#566674")
+    compacto = model.get("estrategia") == "compacto_2quartos"
+    if compacto:
+        ax.text(largura/2,profundidade+0.7,
+                "ESTUDO 2D  •  PLANTA BAIXA COTADA EM METROS",
+                ha="center",fontsize=10,color="#566674")
+    else:
+        ax.add_patch(Rectangle((minx, miny), maxx-minx, maxy-miny,
+                               fill=False, linewidth=1.2, linestyle="--",
+                               edgecolor="#8b99a9"))
+        ax.text((minx+maxx)/2, maxy-.45, "TERRENO 10,00 × 20,00 m",
+                ha="center", fontsize=9, color="#566674")
 
     for x1, y1, x2, y2 in wall_boundary_segments(model["paredes"]):
         ax.plot([x1,x2], [y1,y2], lw=2.0, c="#243446", solid_capstyle="round")
-    for x, y, angle, width in model["portas"]:
-        angle_rad = math.radians(angle)
+    folhas = model.get("portas_folhas", [])
+    for i, (x, y, angle, width) in enumerate(model["portas"]):
+        folha = folhas[i] if i < len(folhas) else angle
+        angle_rad = math.radians(folha)
         ax.plot([x,x+width*math.cos(angle_rad)], [y,y+width*math.sin(angle_rad)],
                 lw=1.2, c="#206c6a")
         ax.add_patch(Arc((x,y), 2*width, 2*width, theta1=angle,
@@ -111,8 +119,12 @@ def render(model, programa, etiqueta, destino):
     ax.text(largura+1.02,profundidade/2,f"{profundidade:.2f} m",
             rotation=90,va="center",fontsize=9)
 
-    ax.set_xlim(minx-1.3,maxx+3.1)
-    ax.set_ylim(miny-1.0,maxy+1.25)
+    if compacto:
+        ax.set_xlim(-1.30,largura+2.0)
+        ax.set_ylim(-1.8,profundidade+1.4)
+    else:
+        ax.set_xlim(minx-1.3,maxx+3.1)
+        ax.set_ylim(miny-1.0,maxy+1.25)
 
     # Informações de auditoria à direita, sem sobrepor o desenho.
     right=fig.add_axes([0.75,0.12,0.225,0.74])
@@ -128,7 +140,7 @@ def render(model, programa, etiqueta, destino):
     yy=.47
     for label,number in (
         ("Ambientes", f'{g["area_ambientes"]:.2f} m²'),
-        ("Útil total", f'{g["area_util_total"]:.2f} m²'),
+        ("Área mapeada" if compacto else "Útil total", f'{g["area_util_total"]:.2f} m²'),
         ("Projeção", f'{g["area_construida"]:.2f} m²'),
         ("Circulação livre", f'{g.get("hall_livre", g.get("corredor_livre", 0)):.2f} m'),
         ("Espessura parede", "0.15 m"),
