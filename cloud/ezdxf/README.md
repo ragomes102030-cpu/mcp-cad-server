@@ -59,6 +59,29 @@ layout (dependente das areas dos quartos).
 "Sala e Cozinha integradas" precisa continuar como dois ambientes nomeados
 separadamente no modelo, ainda que abertos fisicamente no desenho.
 
+## Auditoria de circulacao e interferencias — candidata v0.3.3
+
+Na ferramenta `projetar_residencia`, apos a verificacao geométrica de
+correspondencia modelo/DXF, uma segunda auditoria cruza:
+- abertura de portas representada por `ARC` real no DXF;
+- retangulos de mobiliario lidos de `LWPOLYLINE`;
+- eixos de parede ja confrontados com as faces do DXF;
+- alcance a partir da porta de entrada por malha de 0,10 m, evitando
+  paredes e mobiliario;
+- verificacao de todos os sete ambientes do modelo compacto.
+
+**Erros comprovados** (sem entrada, ambiente sem conexao, colisao da
+area de giro com mobiliario) bloqueiam DXF, PDF e PNG no fluxo automatico.
+**Avisos preliminares** (setores de giro de portas sobrepostos,
+aproximacao de folga, proximidade entre giro e parede) nao bloqueiam.
+A malha de 0,10 m e raio de folga de 0,25 m sao parametros internos
+para diagnostico, **nao declaracoes de conformidade NBR 9050**.
+Nao verifica operabilidade de esquadrias, ventilacao, iluminacao,
+seguranca contra incendio nem legislacao municipal.
+A verificacao depende da concordancia previo-auditada entre o modelo e
+as entidades DXF; erros compartilhados pelo algoritmo do gerador e
+auditor precisam de testes adicionais.
+
 ## Auditoria geometrica de DXF serializado (v0.3.2)
 
 No fluxo `projetar_residencia`, apos o desenho e antes de gerar PDF/PNG
