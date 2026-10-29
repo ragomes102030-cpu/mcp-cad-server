@@ -92,12 +92,6 @@ def test_mcp_http_exposes_and_executes_licensing_package(tmp_path):
         "window_sill_m": .9, "window_head_m": 2.2, "roof_type": "gable",
         "roof_pitch_degrees": 25, "roof_overhang_m": .45, "ridge_axis": "x",
     }
-    sheets = [{
-        "paper_format": "A3", "orientation": "landscape", "scale": 50,
-        "margin_mm": 10, "sheet_id": "ARQ-01",
-        "viewports": [{"view_id": "ARQ-PLANTA", "x_mm": 20, "y_mm": 70,
-                       "width_mm": 220, "height_mm": 200}],
-    }]
     title_block = {
         "project_name": context["project_name"], "municipality": None,
         "state": None, "owner": "", "designer": "",
@@ -122,7 +116,7 @@ def test_mcp_http_exposes_and_executes_licensing_package(tmp_path):
             "jsonrpc": "2.0", "id": 13, "method": "tools/call",
             "params": {"name": "projetar_pacote_licenciamento", "arguments": {
                 "programa": CASA, "contexto": context, "envelope": envelope,
-                "folhas": sheets, "carimbo": title_block,
+                "carimbo": title_block,
             }},
         })
         assert call.status_code == 200
@@ -132,11 +126,15 @@ def test_mcp_http_exposes_and_executes_licensing_package(tmp_path):
                                  if item.get("type") == "text"))
         assert result["ok"] is True, result
         assert result["licensing_readiness"] == "review_required"
+        assert result["arquivos"]["folhas"] == ["ARQ-01", "ARQ-02", "ARQ-03", "ARQ-04"]
+        assert result["resultados_requisitos"]
+        assert {item["status"] for item in result["resultados_requisitos"]} == {"não testável"}
         zip_path = urlparse(result["arquivos"]["zip_url"]).path
         response = client.get(zip_path)
         assert response.status_code == 200
         archive = zipfile.ZipFile(io.BytesIO(response.content))
-        assert {"ARQ-01.dxf", "ARQ-01.pdf", "ARQ-01.png", "report.json"} <= set(archive.namelist())
+        assert {"ARQ-01.dxf", "ARQ-04.dxf", "ARQ-04.pdf", "ARQ-04.png",
+                "report.json", "report.md"} <= set(archive.namelist())
         dxf_path = tmp_path / "ARQ-01.dxf"
         dxf_path.write_bytes(archive.read("ARQ-01.dxf"))
         reopened = ezdxf.readfile(dxf_path)

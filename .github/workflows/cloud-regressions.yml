@@ -29,6 +29,18 @@ jobs:
           PYTHONPATH: cloud/ezdxf
           MCP_CAD_PROFILE: full
         run: python tools/run_plant_lab.py --output out/plant-lab
+      - name: Run architectural licensing package corpus
+        env:
+          PYTHONPATH: cloud/ezdxf
+          MCP_CAD_PROFILE: full
+        run: python tools/run_licensing_corpus.py --output out/licensing-corpus
+      - name: Upload licensing package evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: residential-licensing-corpus
+          path: out/licensing-corpus/
+          retention-days: 30
       - name: Upload plant lab reports and visual evidence
         if: always()
         uses: actions/upload-artifact@v4

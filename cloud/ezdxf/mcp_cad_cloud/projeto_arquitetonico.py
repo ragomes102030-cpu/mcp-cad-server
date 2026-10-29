@@ -240,10 +240,21 @@ def _floor_plan(model: dict) -> ViewGeometry:
     for index, room in enumerate(model["ambientes"]):
         x = room.get("texto_x", (room["x1"] + room["x2"]) / 2)
         y = room.get("texto_y", (room["y1"] + room["y2"]) / 2)
+        name_key = _normalized_name(room["nome"])
+        # The template furnishes some rooms densely. Move the label into the
+        # known clear zone so it does not print over the bed, sofa or fixtures.
+        if name_key.startswith("sala") or name_key.startswith("estar"):
+            x, y = room["x2"] - 0.80, room["y2"] - 0.80
+        elif name_key == "quarto1":
+            x, y = room["x2"] - 0.65, room["y1"] + 0.56 * (room["y2"] - room["y1"])
+        elif name_key == "quarto2":
+            x, y = (room["x1"] + room["x2"]) / 2, room["y1"] + 0.45
+        elif "banheiro" in name_key:
+            x, y = room["x2"] - 0.68, room["y2"] - 0.63
         labels.append(ViewLabel(room["nome"], x, y, f"room:{index}"))
         area = areas.get(room["nome"])
         if area is not None:
-            labels.append(ViewLabel(f"{float(area):.2f} m²", x, y - 0.20,
+            labels.append(ViewLabel(f"{float(area):.2f} m²", x, y - 0.25,
                                     f"room-area:{index}"))
     width = _finite("largura da planta", model.get("resumo_geometria", {}).get("largura"))
     depth = _finite("profundidade da planta", model.get("resumo_geometria", {}).get("profundidade"))
@@ -324,9 +335,9 @@ def _facade(view_id: str, side: str, width: float, depth: float,
                  "COBERTURA", f"roof:{side}:left-plane")
         _segment(segments, span / 2, ridge, right_eave, wall_top,
                  "COBERTURA", f"roof:{side}:right-plane")
-    else:
-        _segment(segments, left_eave, wall_top + rise,
-                 right_eave, wall_top + rise, "COBERTURA", f"roof:{side}:profile")
+    # When the ridge runs parallel to this facade, the projected roof edge is
+    # the eaves line already drawn above. Adding a second line at ridge height
+    # here created a detached, physically misleading roof profile.
 
     if along_x:
         coord = boundary
@@ -399,6 +410,12 @@ def _section(view_id: str, axis: str, width: float, depth: float, model: dict,
             radians(envelope.roof_pitch_degrees))
         _segment(segments, 0, ridge_height, distance, ridge_height,
                  "CORTE-COBERTURA", f"section:{axis}:ridge-run")
+        # In a section running along the ridge, the cut crosses both gable
+        # end walls. Raise those two end-wall profiles to meet the ridge line;
+        # leaving them at eaves height made the roof appear suspended.
+        for side, position in (("start", 0.0), ("end", distance)):
+            _segment(segments, position, wall_top, position, ridge_height,
+                     "CORTE-PAREDE", f"section:{axis}:gable-{side}")
     else:
         roof_span = distance + 2 * envelope.roof_overhang_m
         half = roof_span / 2

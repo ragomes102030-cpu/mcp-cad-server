@@ -357,13 +357,14 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
     )
     from mcp_cad_cloud.planta_gerador import gerar_modelo
     from mcp_cad_cloud.prancha_dxf import (
-        TitleBlockData, compose_licensing_sheets, renderizar_folha,
+        TitleBlockData, compose_licensing_sheets, default_licensing_sheet_specs,
+        renderizar_folha,
     )
     import ezdxf
 
     if not isinstance(contexto, dict) or not isinstance(envelope, dict):
         raise ValueError("contexto e envelope devem ser objetos JSON")
-    if not isinstance(folhas, list) or not 1 <= len(folhas) <= 12:
+    if folhas is not None and (not isinstance(folhas, list) or len(folhas) > 12):
         raise ValueError("informe de 1 a 12 folhas arquitetônicas")
     project_context = ProjectContext(
         project_name=str(contexto.get("project_name", "")),
@@ -388,7 +389,8 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
             "professional_registration", "issue_date", "revision",
         )
     })
-    specs = [_sheet_spec_from_dict(item) for item in folhas]
+    specs = ([_sheet_spec_from_dict(item) for item in folhas]
+             if folhas else list(default_licensing_sheet_specs(package)))
     sheets = compose_licensing_sheets(package, specs, title_block)
     evaluation = evaluate_package(package, requirements, applicability_rules, evaluators)
 

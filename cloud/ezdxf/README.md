@@ -443,6 +443,7 @@ $env:PYTHONPATH = "cloud/ezdxf"
 $env:MCP_CAD_PROFILE = "full"
 python -m pytest cloud/ezdxf/tests -q
 python tools/run_plant_lab.py --output out/plant-lab
+python tools/run_licensing_corpus.py --output out/licensing-corpus
 ```
 
 O laboratório cria 30 programas que passam pela validação estrita de
@@ -462,8 +463,53 @@ downloads no transporte MCP real. A proposta é exportada sem ser aplicada ao
 desenho original. O workflow de CI publica
 esses arquivos como artefato `plant-generation-lab` por 30 dias.
 
+O corpus arquitetônico separado usa 30 programas aceitos pelo validador
+estrito e dez casos adversariais. Reabre e audita DXF da planta e das folhas,
+verifica as nove vistas, cotas gerais, programa/áreas, portas, janelas,
+mobiliário e circulação. O relatório contabiliza avisos por código e inclui
+PDF/PNG de amostra e folha de contato; CI publica `residential-licensing-corpus`
+por 30 dias. Isso cobre regressões do escopo implementado, não aprovação
+normativa ou municipal.
+
 Limites de medição: o DXF ainda não grava polígonos fechados por cômodo;
 por isso a comparação de áreas verifica as cotas textuais do arquivo, não
 áreas físicas medidas de contornos. Os desenhos são estudos preliminares
 e não recebem nota subjetiva de qualidade, aprovação arquitetônica,
 acessibilidade ou conformidade legal.
+
+## Pacote arquitetônico para revisão de licenciamento
+
+A ferramenta MCP `projetar_pacote_licenciamento` gera pranchas arquitetônicas
+editáveis para uma residência térrea compacta de dois quartos. Recebe o
+programa, contexto do município, envelope vertical, lista de vistas/folhas e
+dados do carimbo. Cada DXF é serializado, reaberto e auditado antes de entrar
+no ZIP com PDF, PNG e relatórios JSON/Markdown. O MCP HTTP retorna links
+temporários para a primeira prancha e para o conjunto.
+
+Se `folhas` for omitido, a ferramenta cria quatro folhas A3: planta baixa,
+implantação/cobertura, dois cortes e quatro fachadas, com escalas declaradas.
+O usuário ainda pode fornecer uma composição própria. A planta traz cotas
+externas da edificação; o pacote ainda não contém quadro completo de
+esquadrias, detalhes construtivos, notas específicas da prefeitura ou cotas
+internas.
+
+O registro `mcp_cad_cloud/normas_arquitetura.json` é um inventário pequeno e
+explicitamente não exaustivo de normas candidatas. Em 29/10/2026, a ficha
+ABNT/Sebrae consultada informa a ABNT NBR 9050:2020 Versão Corrigida:2021 como
+vigente, confirmada em 11/12/2025. Isso confirma apenas os metadados da ficha;
+nenhum texto protegido foi copiado ou usado para implementar critério. As
+demais entradas continuam com status não confirmado quando não foi obtida
+uma ficha oficial detalhada nesta revisão. Nenhum item possui avaliador de
+critério, portanto a ferramenta registra os requisitos como `não testável` e
+mantém a situação em `review_required`.
+
+Preencha município/UF e os campos do carimbo com dados fornecidos pelo usuário.
+Para avaliação local, crie um perfil municipal versionado com fonte oficial,
+data de consulta e revisor; sem isso, a legislação municipal é `não testável`.
+Antes de cadastrar qualquer verificador normativo, confirme a edição/status no
+catálogo ABNT, obtenha acesso autorizado ao texto, registre referência de
+critério e evidência, e crie testes positivos e adversariais independentes.
+O pacote requer revisão de profissional habilitado e não declara conformidade
+integral, aprovação de prefeitura ou prontidão para construção. Elétrica,
+hidráulica, sanitária, estrutural, incêndio e demais projetos complementares
+seguem fora do escopo desta etapa.

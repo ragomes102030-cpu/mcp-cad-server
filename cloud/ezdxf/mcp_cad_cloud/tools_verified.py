@@ -118,16 +118,19 @@ def projetar_residencia(pedido: str, programa: dict | None = None,
 
 @_wrap
 def projetar_pacote_licenciamento(programa: dict, contexto: dict,
-                                  envelope: dict, folhas: list[dict],
-                                  carimbo: dict) -> dict:
+                                  envelope: dict, carimbo: dict,
+                                  folhas: list[dict] | None = None) -> dict:
     """Generate a multi-sheet residential architecture package for review.
 
     This does not certify NBR/municipal compliance or guarantee permit approval.
     """
     from mcp_cad_cloud.projeto_automatico import export_licensing_package
+    from mcp_cad_cloud.normas_arquitetura import load_requirement_records
     return export_licensing_package(
         programa=programa, contexto=contexto, envelope=envelope,
         folhas=folhas, carimbo=carimbo,
+        requirements=load_requirement_records(),
+        applicability_rules={}, evaluators={},
     )
 
 

@@ -124,3 +124,40 @@ def test_two_orthogonal_sections_and_opening_views_are_deterministic(api):
     assert any(segment.layer == "ESQUADRIA-JANELA"
                for segment in first_by_id["ARQ-FACHADA-FRONTAL"].segments)
 
+
+def test_parallel_ridge_facades_do_not_show_a_detached_roof_profile(api):
+    package = generate(api)
+    views = {view.view_id: view for view in package.views}
+    for view_id in ("ARQ-FACHADA-FRONTAL", "ARQ-FACHADA-FUNDOS"):
+        view = views[view_id]
+        roof = [segment for segment in view.segments if segment.layer == "COBERTURA"]
+        assert roof == [], f"roof profile floats above this eave elevation: {roof}"
+        eaves = [segment for segment in view.segments if segment.layer == "BEIRAL"]
+        assert len(eaves) == 1
+        assert eaves[0].y1 == eaves[0].y2 == package.envelope.wall_height_m
+
+
+def test_ridge_parallel_section_connects_roof_to_gable_end_walls(api):
+    package = generate(api)
+    section = next(view for view in package.views if view.view_id == "ARQ-CORTE-B")
+    gable_walls = [segment for segment in section.segments
+                   if segment.source_id.startswith("section:x:gable-")]
+    roof = next(segment for segment in section.segments
+                if segment.source_id == "section:x:ridge-run")
+
+    assert len(gable_walls) == 2
+    assert {segment.x1 for segment in gable_walls} == {roof.x1, roof.x2}
+    assert all(segment.y1 == package.envelope.wall_height_m for segment in gable_walls)
+    assert all(segment.y2 == roof.y1 for segment in gable_walls)
+
+
+def test_room_labels_are_moved_clear_of_known_bed_and_fixture_footprints(api):
+    package = generate(api)
+    floor = next(view for view in package.views if view.view_id == "ARQ-PLANTA")
+    labels = {label.source_id: label for label in floor.labels}
+
+    assert labels["room:0"].x > 3.0  # living-room label clears the sofa
+    assert labels["room:3"].x > 2.4  # bedroom-1 label clears the bed
+    assert labels["room:4"].y < 6.0  # bedroom-2 label uses the open band below furniture
+    assert labels["room:5"].x > 5.0 and labels["room:5"].y > 7.5
+

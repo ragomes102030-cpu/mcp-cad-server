@@ -124,3 +124,34 @@ def test_circulation_comparison_fails_if_tool_claims_original_was_changed(tmp_pa
 
     assert result["status"] == "failed"
     assert result["original_unchanged"] is False
+
+
+def test_circulation_comparison_accepts_clean_baseline_without_unneeded_proposal(tmp_path, monkeypatch):
+    from io import BytesIO
+    from PIL import Image
+    from mcp_cad_cloud import downloads
+
+    buffer = BytesIO()
+    Image.new("RGB", (64, 64), "white").save(buffer, format="PNG")
+    png = buffer.getvalue()
+    token_url = "https://local.invalid/downloads/" + "B" * 43 + "/png"
+    audit = {
+        "ok": True, "avisos": [],
+        "metricas": {"diagnostico_passagens": {"larguras": [
+            {"ambiente": "Área de serviço", "largura_estimativa_m": .65},
+        ]}},
+    }
+    monkeypatch.setattr(downloads, "retrieve", lambda _token, _fmt: (png, "image/png", "plant.png"))
+    monkeypatch.setattr(runner.cad, "propor_melhoria_circulacao", lambda _request: {
+        "ok": True, "modo": "comparacao_sem_aplicacao",
+        "alteracoes_aplicadas_ao_original": False, "candidatas_avaliadas": 0,
+        "alternativa_disponivel": False,
+        "original": {"arquivos": {"png_url": token_url}, "auditoria_circulacao": audit},
+    })
+
+    result = runner._circulation_comparison(tmp_path)
+
+    assert result["status"] == "passed", result
+    assert result["proposal_available"] is False
+    assert "No proposal needed" in result["comparison_reason"]
+    assert (tmp_path / "visuals" / "circulation-original.png").read_bytes() == png

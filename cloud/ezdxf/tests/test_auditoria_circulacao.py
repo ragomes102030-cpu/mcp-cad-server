@@ -102,6 +102,54 @@ def test_social_integration_measured_across_real_opening(drawing):
     assert len(integ["ponto_passagem_m"]) == 2
 
 
+def test_compact_layout_with_offset_room_zones_has_verified_social_connection():
+    p = deepcopy(CASA)
+    p.update(largura=8.7, terreno_largura=9.9, terreno_profundidade=13.2,
+             recuo_lateral=.4, recuo_frente=2.0, recuo_fundo=1.0)
+    areas = (16.0, 8.0, 4.5, 11.0, 10.0, 5.0)
+    for room, area in zip(p["ambientes"], areas):
+        room["area"] = area
+    model = gerar_modelo(p)
+    preview = cad.planta_criar_validada(
+        programa=p, modo="preview", template="programa_sob_medida")
+    assert preview["ok"], preview
+    created = cad.planta_criar_validada(
+        programa=p, modo="desenhar", template="programa_sob_medida",
+        preview_token=preview["preview_token"])
+    assert created["ok"], created
+
+    integration = auditar_circulacao(model, _ensure())["metricas"][
+        "integracao_sala_cozinha"]
+    assert integration["ok"], integration
+    assert integration["verificado"], integration
+    assert integration["largura_abertura_estimada_m"] >= .6
+
+
+def test_compact_layout_keeps_service_approach_clear_of_kitchen_furniture():
+    p = deepcopy(CASA)
+    p.update(largura=8.7, terreno_largura=9.9, terreno_profundidade=13.2,
+             recuo_lateral=.4, recuo_frente=2.0, recuo_fundo=1.0)
+    areas = (16.0, 8.0, 4.5, 11.0, 10.0, 5.0)
+    for room, area in zip(p["ambientes"], areas):
+        room["area"] = area
+    model = gerar_modelo(p)
+    preview = cad.planta_criar_validada(
+        programa=p, modo="preview", template="programa_sob_medida")
+    assert preview["ok"], preview
+    created = cad.planta_criar_validada(
+        programa=p, modo="desenhar", template="programa_sob_medida",
+        preview_token=preview["preview_token"])
+    assert created["ok"], created
+
+    result = auditar_circulacao(model, _ensure())
+    service = next(row for row in result["metricas"]["diagnostico_passagens"]["larguras"]
+                   if row["ambiente"] == "Área de serviço")
+    assert service["largura_estimativa_m"] >= .5, service
+    assert not any(warning["chave"] == "passagem-estreita-estimada"
+                   and warning["onde"] == "Área de serviço"
+                   for warning in result["avisos"]), result["avisos"]
+
+
 def test_wall_closing_social_integration_fails_even_if_room_names_unchanged(drawing):
     model, doc = drawing
     model = deepcopy(model)
@@ -123,19 +171,16 @@ def test_narrow_laundry_has_bottleneck_coordinate_and_nearby_obstacles(drawing):
     model, doc=drawing
     report=auditar_circulacao(model,doc)
     assert report["ok"],report
-    narrow=[x for x in report["metricas"]["gargalos_estimados"]
-            if "serviço" in x["ambiente"].casefold()]
-    assert len(narrow)==1,report
-    entry=narrow[0]
-    assert entry["largura_estimativa_m"] is not None
-    assert entry["largura_estimativa_m"] > 0
-    assert len(entry["ponto_critico_m"]) == 2
-    assert entry["obstaculos_proximos"]
-    assert all(o["id"] for o in entry["obstaculos_proximos"])
     detail=report["metricas"]["diagnostico_passagens"]
     assert detail["grade_m"] == .10
     assert detail["incerteza_quantizacao_aproximada_m"] >= .10
     assert len(detail["larguras"]) == 7
+    entry=next(x for x in detail["larguras"]
+               if "serviço" in x["ambiente"].casefold())
+    assert entry["largura_estimativa_m"] >= .5, entry
+    assert len(entry["ponto_critico_m"]) == 2
+    assert entry["obstaculos_proximos"]
+    assert all(o["id"] for o in entry["obstaculos_proximos"])
 
 
 def test_narrowing_a_route_with_furniture_reduces_reported_width(drawing):

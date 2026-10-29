@@ -136,6 +136,34 @@ class SheetDrawing:
     document: Any
 
 
+def default_licensing_sheet_specs(package) -> tuple[SheetSpec, ...]:
+    """Curated A3 set covering the floor plan and all coordinated views."""
+    available = {view.view_id for view in package.views}
+    groups = (
+        ("ARQ-01", 50, (ViewportSpec("ARQ-PLANTA", 20, 70, 380, 200),)),
+        ("ARQ-02", 125, (
+            ViewportSpec("ARQ-IMPLANTACAO", 20, 70, 180, 200),
+            ViewportSpec("ARQ-COBERTURA", 220, 120, 180, 100),
+        )),
+        ("ARQ-03", 100, (
+            ViewportSpec("ARQ-CORTE-A", 20, 120, 180, 140),
+            ViewportSpec("ARQ-CORTE-B", 220, 120, 180, 140),
+        )),
+        ("ARQ-04", 100, (
+            ViewportSpec("ARQ-FACHADA-FRONTAL", 20, 175, 180, 95),
+            ViewportSpec("ARQ-FACHADA-FUNDOS", 220, 175, 180, 95),
+            ViewportSpec("ARQ-FACHADA-LATERAL-ESQ", 20, 70, 180, 95),
+            ViewportSpec("ARQ-FACHADA-LATERAL-DIR", 220, 70, 180, 95),
+        )),
+    )
+    required = {viewport.view_id for _, _, viewports in groups for viewport in viewports}
+    if not required <= available:
+        raise SheetCompositionError(
+            f"Pacote sem vistas necessárias ao conjunto padrão: {sorted(required - available)}")
+    return tuple(SheetSpec("A3", "landscape", scale, 10.0, sheet_id, viewports)
+                 for sheet_id, scale, viewports in groups)
+
+
 def _paper_dimensions(spec: SheetSpec) -> tuple[float, float]:
     paper = _PAPER_MM.get(spec.paper_format.upper())
     if paper is None:

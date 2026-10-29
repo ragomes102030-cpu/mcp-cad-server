@@ -187,3 +187,15 @@ def test_each_sheet_renders_pdf_png_from_reopened_dxf_document(package, api, tmp
     assert pdf.startswith(b"%PDF-")
     assert png.startswith(bytes.fromhex("89504e470d0a1a0a"))
 
+
+def test_default_licensing_sheets_cover_all_nine_architecture_views(package, api):
+    require_sheet_api(api)
+    specs = api.default_licensing_sheet_specs(package)
+    sheets = api.compose_licensing_sheets(package, specs, title_block(api))
+    included = {viewport.view_id for sheet in specs for viewport in sheet.viewports}
+
+    assert len(sheets) == 4
+    assert included == {view.view_id for view in package.views}
+    assert [sheet.sheet_id for sheet in sheets] == [
+        "ARQ-01", "ARQ-02", "ARQ-03", "ARQ-04"]
+

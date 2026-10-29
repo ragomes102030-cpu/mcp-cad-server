@@ -257,7 +257,37 @@ def _circulation_comparison(out):
             original_files = response["original"]["arquivos"]
             proposed_files = response.get("proposta", {}).get("arquivos")
             if not proposed_files:
-                case["errors"].append("tool produced no circulation proposal to compare")
+                audit = response["original"].get("auditoria_circulacao", {})
+                warnings = audit.get("avisos", [])
+                widths = (audit.get("metricas", {}).get("diagnostico_passagens", {})
+                          .get("larguras", []))
+                service = next((row for row in widths
+                    if any(term in row.get("ambiente", "").casefold()
+                           for term in ("serviço", "servico", "lavanderia"))), None)
+                width = service.get("largura_estimativa_m") if service else None
+                unresolved_passage = any(
+                    warning.get("chave") == "passagem-estreita-estimada"
+                    for warning in warnings)
+                if audit.get("ok") and not unresolved_passage and width is not None and width >= .5:
+                    token = _token_from_url(original_files["png_url"])
+                    retrieved = downloads.retrieve(token, "png")
+                    if not retrieved or not retrieved[0].startswith(b"\x89PNG\r\n\x1a\n"):
+                        raise RuntimeError("original PNG evidence could not be retrieved")
+                    visual_dir = out / "visuals"
+                    visual_dir.mkdir(parents=True, exist_ok=True)
+                    original_path = visual_dir / "circulation-original.png"
+                    original_path.write_bytes(retrieved[0])
+                    case.update({
+                        "status": "passed",
+                        "original_png": str(original_path),
+                        "comparison_reason": (
+                            "No proposal needed: baseline has no unresolved narrow-passage warning "
+                            "and estimated service-route diameter is at least 0.50 m."
+                        ),
+                    })
+                else:
+                    case["errors"].append(
+                        "no proposal was available and baseline circulation was not proven clear")
                 return case
             visual_dir = out / "visuals"
             visual_dir.mkdir(parents=True, exist_ok=True)
