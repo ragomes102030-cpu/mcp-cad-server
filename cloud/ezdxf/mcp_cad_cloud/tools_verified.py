@@ -117,6 +117,18 @@ def projetar_residencia(pedido: str, programa: dict | None = None,
 
 
 @_wrap
+def propor_melhoria_circulacao(pedido: str) -> dict:
+    """Generate an audited ORIGINAL and a separate optional furniture proposal.
+
+    Call with ONLY the user's natural-language pedido. Original DXF remains
+    unchanged; returned alternative never overwrites or applies automatically.
+    No architectural or normative approval is implied.
+    """
+    from mcp_cad_cloud.comparador_mobiliario import propor_alternativa
+    return propor_alternativa(pedido)
+
+
+@_wrap
 def planta_templates() -> dict:
     """Lista templates e impede que o agente improvise uma tipologia."""
     return {
@@ -371,7 +383,7 @@ def export_dxf(incluir_base64: bool = False) -> dict:
 TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_drawing",
          "query_entities", "draw_line", "draw_rectangle", "draw_polyline", "draw_circle",
          "draw_arc", "draw_text", "dim_aligned", "erase", "drawing_audit",
-         "quantitativo", "export_dxf", "projetar_residencia", "planta_templates", "planta_assistida",
+         "quantitativo", "export_dxf", "projetar_residencia", "propor_melhoria_circulacao", "planta_templates", "planta_assistida",
          "planta_criar_validada", "validar_planta")
 
 # Only the tools with real, verified DXF effects may be exposed.
@@ -382,7 +394,7 @@ TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_dra
 
 _PLANTA_SEGURA = {
     "cad_status", "new_drawing", "layer_list", "inspect_drawing", "query_entities",
-    "drawing_audit", "quantitativo", "export_dxf", "projetar_residencia", "planta_templates",
+    "drawing_audit", "quantitativo", "export_dxf", "projetar_residencia", "propor_melhoria_circulacao", "planta_templates",
     "planta_assistida", "planta_criar_validada", "validar_planta",
 }
 _perfil = os.getenv("MCP_CAD_PROFILE", "full").strip().lower()
