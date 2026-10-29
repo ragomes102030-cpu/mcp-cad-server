@@ -53,6 +53,39 @@ def test_wall_closing_only_hall_passage_disconnects_private_rooms(drawing):
     assert "ambiente-inacessivel" in _keys(result)
 
 
+def test_window_glass_is_not_a_walkable_opening(drawing):
+    from mcp_cad_cloud.auditoria_circulacao import _blocked
+    model,doc=drawing
+    walls=[tuple(map(float,p)) for p in model["paredes"]]
+    glazing=[(
+        float(e.dxf.start.x),float(e.dxf.start.y),
+        float(e.dxf.end.x),float(e.dxf.end.y))
+        for e in doc.modelspace().query('LINE[layer=="JANELAS"]')]
+    # A valid window is represented by two glass lines. A person must not
+    # traverse their centreline as though it were a door.
+    first=model["janelas"][0]
+    x=(first[0]+first[2])/2
+    y=(first[1]+first[3])/2
+    assert _blocked(x,y,walls+glazing,[],model["espessura_parede"],0.0)
+
+
+def test_room_cannot_be_reached_by_going_through_its_window(drawing):
+    model,doc=drawing
+    model=deepcopy(model)
+    # Seal the bedroom-1 door in the simplified model. The remaining
+    # bedroom window must not count as a second entrance.
+    left_bedroom = next(a for a in model["ambientes"] if a["nome"]=="Quarto 1")
+    ydoor=next(p[1] for p in model["portas"] if
+               abs(p[0]-(left_bedroom["x2"]+.075))<.01)
+    xwall=left_bedroom["x2"]+.075
+    model["paredes"].append([xwall, ydoor, xwall, ydoor+.90])
+    report=auditar_circulacao(model,doc)
+    bedroom=next(r for r in report["metricas"]["ambientes"] if
+                 r["ambiente"]=="Quarto 1")
+    assert not bedroom["conectado"],report
+    assert "ambiente-inacessivel" in _keys(report)
+
+
 def test_entrance_blocked_by_furniture_is_rejected(drawing):
     model,doc=drawing
     # Entire front door strip blocked by a new rectangular object.
