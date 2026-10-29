@@ -196,18 +196,33 @@ def auditar_circulacao(model: dict, doc) -> dict:
 
     # Check real door sweep sectors, not the endpoints of the leaf only.
     door_geometries=[]
+    door_reports=[]
     for idx,arc in enumerate(arcs,1):
         hinge=(float(arc.dxf.center.x),float(arc.dxf.center.y))
         radius=float(arc.dxf.radius)
         start=float(arc.dxf.start_angle) % 360
         area=_swing_bounds(hinge,radius,start)
         door_geometries.append((idx,hinge,radius,start,area))
+        porta = {
+            "id": f"P{idx:02d}",
+            "pivo_m": [round(hinge[0], 4), round(hinge[1], 4)],
+            "vao_nominal_m": round(radius, 4),
+            "setor_giro_graus": [round(start, 2), round((start+90)%360, 2)],
+            "colisao_mobiliario_detectada": False,
+            "moveis_interferentes": [],
+            "giros_sobrepostos_com": [],
+            "giro_proximo_parede": False,
+            "abaixo_largura_piloto": radius < MIN_PORTA_PILOTO-1e-6,
+        }
+        door_reports.append(porta)
         if radius < MIN_PORTA_PILOTO-1e-6:
             emit(avisos,"porta-estreita-piloto",f"porta {idx}",
                  f"Vao nominal {radius:.2f} m abaixo do criterio piloto {MIN_PORTA_PILOTO:.2f} m")
         for k,rect in enumerate(furniture,1):
             if _grid_intersection(area,rect,
                  lambda x,y: _inside_swing(x,y,hinge,radius,start)):
+                porta["colisao_mobiliario_detectada"] = True
+                porta["moveis_interferentes"].append(k)
                 emit(erros,"porta-colide-mobiliario",f"porta {idx} / movel {k}",
                      "Setor de giro da porta intercepta mobiliario real no DXF")
         # Wall clash is an advisory for this pilot: door hinges are on the
@@ -221,6 +236,7 @@ def auditar_circulacao(model: dict, doc) -> dict:
                 if _blocked(x,y,walls,[],t,.005):
                     wall_hits+=1
         if wall_hits:
+            porta["giro_proximo_parede"] = True
             emit(avisos,"giro-proximo-parede",f"porta {idx}",
                  "Setor de giro amostrado intercepta parede; conferir sentido e batente")
 
@@ -230,6 +246,8 @@ def auditar_circulacao(model: dict, doc) -> dict:
             if _grid_intersection(ba,bb,
                 lambda x,y: _inside_swing(x,y,ca,ra,aa) and
                             _inside_swing(x,y,cb,rb,ab)):
+                door_reports[ida-1]["giros_sobrepostos_com"].append(f"P{idb:02d}")
+                door_reports[idb-1]["giros_sobrepostos_com"].append(f"P{ida:02d}")
                 emit(avisos,"giros-portas-sobrepostos",f"portas {ida}/{idb}",
                      "Setores de giro podem interferir com aberturas simultaneas")
 
@@ -267,6 +285,10 @@ def auditar_circulacao(model: dict, doc) -> dict:
         "metricas":{
             "grade_m":STEP,"reserva_lateral_m":CLEARANCE,
             "portas_verificadas":len(arcs),
+            "portas":door_reports,
+            "criterio_giro":"intersecao amostrada de setores ARC e mobiliario DXF; "
+                            "possiveis interacoes de folhas sao avisos, "
+                            "nao simulacao completa de operacao",
             "moveis_verificados":len(furniture),
             "linhas_vidro_verificadas":len(glazing),
             "entradas_detectadas":len(entrances),
