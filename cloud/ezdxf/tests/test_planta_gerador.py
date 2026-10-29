@@ -57,6 +57,16 @@ def test_terreno_usa_recuos_informados_sem_afirmar_conformidade():
     assert any("normas locais" in aviso for aviso in model["avisos"])
 
 
+def test_suite_without_explicitly_supported_private_bath_is_rejected():
+    program = deepcopy(PROGRAMA)
+    bedroom = next(room for room in program["ambientes"]
+                   if "quarto" in room["nome"].casefold())
+    bedroom["nome"] = "Suíte"
+
+    with pytest.raises(ErroPrograma, match="suíte.*não suportada"):
+        gerar_modelo(program)
+
+
 @pytest.mark.parametrize("alteracao", [
     {"largura": float("nan")},
     {"largura": float("inf")},
@@ -78,7 +88,7 @@ def test_rejeita_banheiro_impraticavel_ao_inves_de_publicar_planta():
         {"nome": "Suíte", "area": 12},
         {"nome": "Banheiro da suíte", "area": 4},
     ])
-    with pytest.raises(ErroPrograma, match="dimensões internas"):
+    with pytest.raises(ErroPrograma, match="suíte.*não suportada"):
         gerar_modelo(program)
 
 

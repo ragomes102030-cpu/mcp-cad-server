@@ -70,6 +70,11 @@ def normalizar_programa(programa):
             raise ErroPrograma(f"ambiente {indice}: nome inválido")
         nome = nome.strip()
         chave = _chave(nome)
+        if "suite" in chave:
+            raise ErroPrograma(
+                f"{nome}: suíte não suportada; o layout atual não modela banheiro privativo. "
+                "Informe o quarto e o banheiro social como ambientes separados."
+            )
         if chave in vistos or chave == "circulacao":
             raise ErroPrograma(f"nome de ambiente duplicado ou reservado: {nome}")
         vistos.add(chave)
