@@ -1,6 +1,4 @@
 """Regression for non-destructive, independent furniture proposal."""
-from pathlib import Path
-
 import pytest
 
 from mcp_cad_cloud import tools_verified as cad
@@ -33,6 +31,12 @@ def test_comparison_preserves_original_and_requires_verified_gain():
     assert p["ganho_estimado_m"] >= .10
     assert p["largura_depois_estimativa_m"] > p["largura_antes_estimativa_m"]
     assert p["movel"] == "MOVEL-03"
+    assert p["rotacionado_90_graus"] is True
+    original=p["posicao_original_m"]
+    alternate=p["posicao_proposta_m"]
+    original_area=(original[2]-original[0])*(original[3]-original[1])
+    alternate_area=(alternate[2]-alternate[0])*(alternate[3]-alternate[1])
+    assert alternate_area == pytest.approx(original_area,abs=1e-6)
     assert p["posicao_original_m"] != p["posicao_proposta_m"]
     assert p["auditoria_geometrica"]["ok"]
     assert p["auditoria_geometrica"]["arquivo_reaberto"]
