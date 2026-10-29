@@ -227,6 +227,18 @@ def projetar_uma_vez(pedido: str, programa: dict | None = None,
             "avisos": ["Arquivo DXF bloqueado por divergencia com o programa."],
         }
 
+    # A DXF geometric equality check ran above: circulation analysis may
+    # now combine real DXF furniture/door arcs with validated model wall axes.
+    from mcp_cad_cloud.auditoria_circulacao import auditar_circulacao
+    circulacao = auditar_circulacao(preview["modelo"], _ensure())
+    if not circulacao["ok"]:
+        return {
+            "ok": False, "etapa": "auditoria_circulacao",
+            "code": "CIRCULACAO_INTERFERENCIA_CRITICA",
+            "auditoria_circulacao": circulacao,
+            "avisos": ["Entrega bloqueada por obstrucao ou conflito geométrico comprovado."],
+        }
+
     pdf, png = renderizar_prancha(_ensure(), nome, preview["resumo_geometria"])
     if len(pdf) > 3_000_000 or len(png) > 3_000_000:
         return {"ok": False, "etapa": "prancha", "error": "PDF ou PNG acima do limite de 3MB"}
@@ -245,6 +257,7 @@ def projetar_uma_vez(pedido: str, programa: dict | None = None,
         "quantitativo": quant,
         "auditoria": auditoria,
         "auditoria_geometrica": geometria,
+        "auditoria_circulacao": circulacao,
         "arquivos": {
             "dxf_url": export["dxf_url"],
             "zip_url": export["download_url"],
