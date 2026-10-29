@@ -96,6 +96,21 @@ def planta_criar_validada(programa: dict | None = None, modo: str = "preview",
 
 
 @_wrap
+def projetar_residencia(pedido: str, programa: dict | None = None,
+                        nome: str = "Residencia_2_quartos") -> dict:
+    """ONE CALL: from a natural-language brief to real audited CAD DXF + A3 PDF + PNG.
+
+    The first phase supports only a single-story compact residence with
+    exactly two ordinary bedrooms, one bathroom, living room, kitchen and
+    laundry. The assistant may provide a structured programa; otherwise
+    default areas and setbacks are returned explicitly as assumptions.
+    Unsupported typologies are rejected rather than silently simplified.
+    """
+    from mcp_cad_cloud.projeto_automatico import projetar_uma_vez
+    return projetar_uma_vez(pedido=pedido, programa=programa, nome=nome)
+
+
+@_wrap
 def planta_templates() -> dict:
     """Lista templates e impede que o agente improvise uma tipologia."""
     return {
@@ -104,6 +119,7 @@ def planta_templates() -> dict:
         "autocad": {"disponivel": False, "acao": "nao tentar abrir, conectar ou reiniciar o AutoCAD"},
         "template_padrao": TEMPLATE_PADRAO,
         "templates": listar_templates(),
+        "fluxo_recomendado": "projetar_residencia(pedido='...') para uma casa terrea de 2 quartos; gera DXF, PDF A3, PNG e auditoria em uma chamada",
         "fluxo_obrigatorio": [
             "planta_templates",
             "planta_criar_validada(modo='preview')",
@@ -349,7 +365,7 @@ def export_dxf(incluir_base64: bool = False) -> dict:
 TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_drawing",
          "query_entities", "draw_line", "draw_rectangle", "draw_polyline", "draw_circle",
          "draw_arc", "draw_text", "dim_aligned", "erase", "drawing_audit",
-         "quantitativo", "export_dxf", "planta_templates", "planta_assistida",
+         "quantitativo", "export_dxf", "projetar_residencia", "planta_templates", "planta_assistida",
          "planta_criar_validada", "validar_planta")
 
 # Only the tools with real, verified DXF effects may be exposed.
@@ -360,7 +376,7 @@ TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_dra
 
 _PLANTA_SEGURA = {
     "cad_status", "new_drawing", "layer_list", "inspect_drawing", "query_entities",
-    "drawing_audit", "quantitativo", "export_dxf", "planta_templates",
+    "drawing_audit", "quantitativo", "export_dxf", "projetar_residencia", "planta_templates",
     "planta_assistida", "planta_criar_validada", "validar_planta",
 }
 _perfil = os.getenv("MCP_CAD_PROFILE", "full").strip().lower()
