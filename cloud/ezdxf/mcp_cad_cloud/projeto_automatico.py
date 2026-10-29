@@ -179,8 +179,9 @@ def interpretar_pedido(pedido: str, programa: dict | None) -> tuple[dict, list[s
     ):
         if field not in programa:
             premissas.append(message)
-    premissas.append(
-        "Recuos sao hipoteses de implantacao e nao regras urbanisticas verificadas.")
+    if premissas:
+        premissas.append(
+            "Recuos sao hipoteses de implantacao e nao regras urbanisticas verificadas.")
     return p, premissas
 
 
