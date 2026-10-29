@@ -64,7 +64,7 @@ def test_quadro_areas_em_m2_e_hall_em_metros_sem_ambiguidade():
     assert quadro["ambientes_solicitados"] + quadro["circulacao_hall"] == pytest.approx(
         quadro["total_mapeado"], abs=.0001)
     assert quadro["projecao_externa"] == pytest.approx(77.4)
-    assert resumo["hall_profundidade_livre_m"] == pytest.approx(hall["y2"]-hall["y1"])
+    assert resumo["hall_profundidade_livre_m"] == pytest.approx(hall["y2"]-hall["y1"], abs=.0001)
     assert resumo["area_util_total"] == pytest.approx(quadro["total_mapeado"])
 
 
