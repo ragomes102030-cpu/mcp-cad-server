@@ -41,7 +41,7 @@ def test_reference_layout_connects_seven_rooms_without_critical_collision(drawin
     assert result["metricas"]["ambientes_conectados"] == 7
     assert result["metricas"]["portas_verificadas"] == 5
     assert result["metricas"]["moveis_verificados"] == 12
-    assert any("nao constitui rota acessivel" in x for x in result["limitacoes"])
+    assert any("nao constitui rota acessivel" in x.casefold() for x in result["limitacoes"])
 
 
 def test_wall_closing_only_hall_passage_disconnects_private_rooms(drawing):
