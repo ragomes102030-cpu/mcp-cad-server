@@ -92,6 +92,84 @@ def test_room_cannot_be_reached_by_going_through_its_window(drawing):
     assert "ambiente-inacessivel" in _keys(report)
 
 
+def test_social_integration_measured_across_real_opening(drawing):
+    model, doc = drawing
+    result = auditar_circulacao(model, doc)
+    integ = result["metricas"]["integracao_sala_cozinha"]
+    assert integ["ok"], integ
+    assert integ["verificado"]
+    assert integ["largura_abertura_estimada_m"] >= 0.80
+    assert len(integ["ponto_passagem_m"]) == 2
+
+
+def test_wall_closing_social_integration_fails_even_if_room_names_unchanged(drawing):
+    model, doc = drawing
+    model = deepcopy(model)
+    sala=next(a for a in model["ambientes"] if "Sala" in a["nome"])
+    cozinha=next(a for a in model["ambientes"] if "Cozinha" in a["nome"])
+    x=(sala["x2"]+cozinha["x1"])/2
+    y1=max(sala["y1"],cozinha["y1"])
+    y2=min(sala["y2"],cozinha["y2"])
+    model["paredes"].append([x,y1-.20,x,y2+.20])
+    result=auditar_circulacao(model,doc)
+    integration=result["metricas"]["integracao_sala_cozinha"]
+    assert not integration["ok"], result
+    assert integration["verificado"]
+    assert integration["largura_abertura_estimada_m"] == 0.0
+    assert "sala-cozinha-integracao-nao-comprovada" in _keys(result)
+
+
+def test_narrow_laundry_has_bottleneck_coordinate_and_nearby_obstacles(drawing):
+    model, doc=drawing
+    report=auditar_circulacao(model,doc)
+    assert report["ok"],report
+    narrow=[x for x in report["metricas"]["gargalos_estimados"]
+            if "serviço" in x["ambiente"].casefold()]
+    assert len(narrow)==1,report
+    entry=narrow[0]
+    assert entry["largura_estimativa_m"] is not None
+    assert entry["largura_estimativa_m"] > 0
+    assert len(entry["ponto_critico_m"]) == 2
+    assert entry["obstaculos_proximos"]
+    assert all(o["id"] for o in entry["obstaculos_proximos"])
+    detail=report["metricas"]["diagnostico_passagens"]
+    assert detail["grade_m"] == .10
+    assert detail["incerteza_quantizacao_aproximada_m"] >= .10
+    assert len(detail["larguras"]) == 7
+
+
+def test_narrowing_a_route_with_furniture_reduces_reported_width(drawing):
+    model,doc=drawing
+    from mcp_cad_cloud.auditoria_circulacao import _walk_grid,_reach,_entrance_seeds
+    from mcp_cad_cloud.diagnostico_passagens import diagnosticar_larguras
+    t=model["espessura_parede"]
+    w=model["resumo_geometria"]["largura"]
+    h=model["resumo_geometria"]["profundidade"]
+    walls=model["paredes"] + [
+        (float(e.dxf.start.x),float(e.dxf.start.y),
+         float(e.dxf.end.x),float(e.dxf.end.y))
+        for e in doc.modelspace().query('LINE[layer=="JANELAS"]')]
+    def measure():
+        furniture=[
+            (min(p[0] for p in e.get_points("xy")),
+             min(p[1] for p in e.get_points("xy")),
+             max(p[0] for p in e.get_points("xy")),
+             max(p[1] for p in e.get_points("xy")))
+            for e in doc.modelspace().query('LWPOLYLINE[layer=="MOBILIARIO"]')]
+        free=_walk_grid(w,h,walls,furniture,t,0.0)
+        seen=_reach(free,[c for _,c in _entrance_seeds(model,free)])
+        rows=diagnosticar_larguras(model,doc,free,seen)["larguras"]
+        return next(x["largura_estimativa_m"] for x in rows
+                    if x["ambiente"]=="Área de serviço")
+    before=measure()
+    # Additional fixture occupies the clear centre of the service zone.
+    doc.modelspace().add_lwpolyline(
+        [(7.65,1.95),(8.55,1.95),(8.55,2.40),(7.65,2.40)],
+        close=True,dxfattribs={"layer":"MOBILIARIO"})
+    after=measure()
+    assert after is None or after <= before, (before,after)
+
+
 def test_entrance_blocked_by_furniture_is_rejected(drawing):
     model,doc=drawing
     # Entire front door strip blocked by a new rectangular object.
