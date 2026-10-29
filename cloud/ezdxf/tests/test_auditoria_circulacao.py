@@ -165,6 +165,9 @@ def test_one_prompt_still_produces_all_four_files_and_audit():
     result=cad.projetar_residencia(BRIEF)
     assert result["ok"],result
     assert result["auditoria_circulacao"]["ok"]
+    areas=result["quadro_areas_m2"]
+    assert areas["ambientes_solicitados"]+areas["circulacao_hall"] == pytest.approx(
+        areas["total_mapeado"], abs=.0001)
     assert len(result["auditoria_circulacao"]["metricas"]["portas"]) == 5
     assert result["auditoria_geometrica"]["ok"]
     assert result["auditoria"]["ok"]
