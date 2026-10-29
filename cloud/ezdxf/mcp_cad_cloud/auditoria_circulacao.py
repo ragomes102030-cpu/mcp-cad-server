@@ -180,6 +180,16 @@ def auditar_circulacao(model: dict, doc) -> dict:
     if len(arcs)!=len(model["portas"]):
         emit(erros,"portas-incompletas","PORTAS",
              "Quantidade de arcos fisicos diverge das portas do programa")
+    # Windows are glazed barriers, not walkable passages. The model's
+    # walls are intentionally cut at windows; without the DXF glazing,
+    # the flood-fill may reach an isolated room through an exterior window.
+    glazing = [
+        (float(e.dxf.start.x), float(e.dxf.start.y),
+         float(e.dxf.end.x), float(e.dxf.end.y))
+        for e in msp.query('LINE[layer=="JANELAS"]')
+    ]
+    movement_barriers = walls + glazing
+
     t=float(model["espessura_parede"])
     info=model["resumo_geometria"]
     width,height=float(info["largura"]),float(info["profundidade"])
@@ -223,7 +233,7 @@ def auditar_circulacao(model: dict, doc) -> dict:
                 emit(avisos,"giros-portas-sobrepostos",f"portas {ida}/{idb}",
                      "Setores de giro podem interferir com aberturas simultaneas")
 
-    free=_walk_grid(width,height,walls,furniture,t,0.0)
+    free=_walk_grid(width,height,movement_barriers,furniture,t,0.0)
     entrances=_entrance_seeds(model,free)
     if not entrances:
         emit(erros,"entrada-inexistente","entrada",
@@ -240,7 +250,7 @@ def auditar_circulacao(model: dict, doc) -> dict:
 
     # Clearance pass: narrower than the configured pilot radius is a warning
     # rather than a regulatory assertion or a false hard stop.
-    clearance_free=_walk_grid(width,height,walls,furniture,t,CLEARANCE)
+    clearance_free=_walk_grid(width,height,movement_barriers,furniture,t,CLEARANCE)
     wide_entrances=_entrance_seeds(model,clearance_free)
     wide_reach=_reach(clearance_free,[seed for _,seed in wide_entrances])
     wide_rooms=_rooms_reached(model["ambientes"],clearance_free,wide_reach)
@@ -258,13 +268,14 @@ def auditar_circulacao(model: dict, doc) -> dict:
             "grade_m":STEP,"reserva_lateral_m":CLEARANCE,
             "portas_verificadas":len(arcs),
             "moveis_verificados":len(furniture),
+            "linhas_vidro_verificadas":len(glazing),
             "entradas_detectadas":len(entrances),
             "ambientes":rooms,
             "ambientes_conectados":sum(x["conectado"] for x in rooms),
             "ambientes_total":len(rooms),
         },
         "limitacoes":[
-            "Conectividade aproximada por malha de 0,10 m; nao constitui rota acessivel NBR 9050.",
+            "Conectividade aproximada por malha de 0,10 m; janelas de vidro sao barreiras. Nao constitui rota acessivel NBR 9050.",
             "Eixos de paredes do modelo sao usados apos confrontacao com DXF; "
             "erros compartilhados por modelo e desenho podem nao ser detectados.",
             "Giros sao avaliados em setores geometricos; sobreposicao entre portas "
