@@ -71,6 +71,10 @@ def test_compact_house_produces_all_licensing_views_with_sources(api):
     } <= set(by_id)
     assert all(view.unit == "m" and view.segments for view in package.views)
     assert all(view.source_ids for view in package.views)
+    floor_plan = by_id["ARQ-PLANTA"]
+    assert sum(segment.layer == "ESQUADRIA-PORTA" for segment in floor_plan.segments) == len(package.source_plan["portas"])
+    assert sum(segment.layer == "ESQUADRIA-JANELA" for segment in floor_plan.segments) == 2 * len(package.source_plan["janelas"])
+    assert sum(segment.layer == "MOBILIARIO" for segment in floor_plan.segments) == 4 * len(package.source_plan["moveis"])
     assert package.readiness == "review_required"
     assert any("NBR" in limitation for limitation in package.limitations)
     assert any("municip" in limitation.lower() for limitation in package.limitations)

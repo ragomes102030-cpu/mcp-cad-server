@@ -71,6 +71,7 @@ class ArchitecturePackage:
         "NBR e código de obras municipal ainda não avaliados por requisitos rastreáveis.",
         "Conjunto geométrico para revisão profissional; não representa aprovação de licenciamento.",
         "Alturas e cobertura derivam somente dos valores explícitos fornecidos no contexto.",
+        "Áreas anotadas derivam do modelo de projeto, não de medição independente das faces DXF.",
     )
 
 
@@ -211,11 +212,39 @@ def _floor_plan(model: dict) -> ViewGeometry:
     for index, wall in enumerate(model["paredes"]):
         x1, y1, x2, y2 = wall
         _segment(segments, x1, y1, x2, y2, "PAREDES", f"wall:{index}")
+    leaves = model.get("portas_folhas", [])
+    if len(leaves) != len(model.get("portas", [])):
+        raise ArchitecturePackageError("Orientação explícita das folhas das portas ausente.")
+    for index, (door, leaf_angle) in enumerate(zip(model["portas"], leaves)):
+        x, y, _wall_angle, width = door
+        angle = radians(_finite("orientação de folha de porta", leaf_angle))
+        _segment(segments, x, y, x + width * cos(angle), y + width * sin(angle),
+                 "ESQUADRIA-PORTA", f"door:{index}:leaf")
+    for index, window in enumerate(model["janelas"]):
+        x1, y1, x2, y2 = window
+        offset = 0.035
+        _segment(segments, x1, y1 - offset, x2, y2 - offset,
+                 "ESQUADRIA-JANELA", f"window:{index}:line:1")
+        _segment(segments, x1, y1 + offset, x2, y2 + offset,
+                 "ESQUADRIA-JANELA", f"window:{index}:line:2")
+    for index, furniture in enumerate(model.get("moveis", [])):
+        if len(furniture) != 4:
+            raise ArchitecturePackageError("Mobiliário inválido no programa.")
+        x1, y1, x2, y2 = (_finite("mobiliário", value) for value in furniture)
+        if x2 <= x1 or y2 <= y1:
+            raise ArchitecturePackageError("Dimensões de mobiliário inválidas.")
+        _rect(segments, x1, y1, x2, y2, "MOBILIARIO", f"furniture:{index}")
+
+    areas = {room.get("nome"): room.get("area") for room in model.get("cotas_ambientes", [])}
     labels: list[ViewLabel] = []
     for index, room in enumerate(model["ambientes"]):
-        x = (room["x1"] + room["x2"]) / 2
-        y = (room["y1"] + room["y2"]) / 2
+        x = room.get("texto_x", (room["x1"] + room["x2"]) / 2)
+        y = room.get("texto_y", (room["y1"] + room["y2"]) / 2)
         labels.append(ViewLabel(room["nome"], x, y, f"room:{index}"))
+        area = areas.get(room["nome"])
+        if area is not None:
+            labels.append(ViewLabel(f"{float(area):.2f} m²", x, y - 0.20,
+                                    f"room-area:{index}"))
     return _make_view("ARQ-PLANTA", "planta_baixa", segments, labels)
 
 
