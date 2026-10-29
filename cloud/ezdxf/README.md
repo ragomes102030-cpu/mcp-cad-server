@@ -67,7 +67,8 @@ do pedido (casa terrea compacta de dois quartos). O fluxo:
 1. Gera/audita o **original** pelo fluxo estavel `projetar_residencia`
    e fornece seus links DXF/PDF/PNG/ZIP.
 2. Localiza o mobiliario mais proximo do gargalo sinalizado,
-   produz candidatos por deslocamentos pequenos e previamente delimitados.
+   produz candidatos por deslocamentos pequenos ou rotacao de 90 graus,
+   sempre preservando as dimensoes da base e a area do bloco esquematico.
 3. Cada candidato e avaliado por `validar_modelo`, auditoria do DXF
    reaberto e auditoria de circulacao.
 4. So apresenta uma proposta se a folga estimada na rota da lavanderia
@@ -79,7 +80,7 @@ do pedido (casa terrea compacta de dois quartos). O fluxo:
 **A original nao e modificada, substituida nem aprovada para construcao.**
 `alternativa_disponivel=false` significa que nenhuma das opcoes
 testadas cumpriu os criterios; nunca simular ganho ou fabricar DXF.
-Deslocar mobiliario esquematico nao prova que eletrodomesticos ou
+Deslocar ou rotacionar mobiliario esquematico nao prova que eletrodomesticos ou
 equipamentos caibam, nem verifica instalaçoes, acessibilidade ou
 legislacao. A largura da malha tem incerteza de discretizacao de
 aproximadamente 0,20 m: ganhos pequenos precisam ser conferidos.
