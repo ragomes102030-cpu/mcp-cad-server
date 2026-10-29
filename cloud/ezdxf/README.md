@@ -59,6 +59,32 @@ layout (dependente das areas dos quartos).
 "Sala e Cozinha integradas" precisa continuar como dois ambientes nomeados
 separadamente no modelo, ainda que abertos fisicamente no desenho.
 
+## Diagnostico espacial quantificado — candidata v0.3.5
+
+No retorno `auditoria_circulacao.metricas` surgem:
+
+- `diagnostico_passagens.larguras[]`: para cada um dos sete ambientes,
+  `largura_estimativa_m`, `ponto_critico_m` e
+  `obstaculos_proximos`, identificando `PAREDE-NN`, `VIDRO-NN`,
+  `MOVEL-NN` ou `CONTORNO`.
+- `gargalos_estimados[]`: apenas os ambientes previamente sinalizados
+  como estreitos pela malha com reserva lateral de 0,25 m.
+- `integracao_sala_cozinha`: verifica geometria das zonas contiguas,
+  mede por amostragem a maior faixa aberta no limite compartilhado e
+  informa coordenadas; uma divisoria que fecha a abertura gera erro.
+
+**Criterio técnico do primeiro item:** busca uma rota de maior folga
+mínima (maximin) dentro da casa, a partir de um ponto amplo na sala.
+A estimativa é duas vezes a distância ao obstáculo mais próximo,
+calculada em grade de 0,10 m. **Não é a largura livre real medida**;
+a incerteza aproximada de quantização é 0,20 m, sem incluir desvios de
+modelagem, acabamentos, giro ou uso. A porta de entrada, sua largura
+e suas ferragens devem ser avaliadas separadamente.
+
+**Atenção:** ambientes sem rota deixam a largura como `null`, nunca
+como zero inventado. Pontos de gargalo e identificadores de obstáculos
+são dados geométricos para inspeção, não uma conclusão normativa.
+
 ## Campos de areas e diagnostico por porta — v0.3.4
 
 A resposta de `projetar_residencia` agora publica
