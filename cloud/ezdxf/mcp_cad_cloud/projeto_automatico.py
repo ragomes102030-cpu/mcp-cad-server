@@ -215,6 +215,18 @@ def projetar_uma_vez(pedido: str, programa: dict | None = None,
     if not quant.get("ok"):
         return {"ok": False, "etapa": "quantitativo", "detalhes": quant}
 
+    # Independent audit of the actual serialized DXF, not only model metadata.
+    # Fail closed: no PDF/PNG or external download URL for inconsistent output.
+    from mcp_cad_cloud.auditoria_geometrica import auditar_dxf_serializado
+    geometria = auditar_dxf_serializado(preview["modelo"], _ensure())
+    if not geometria["ok"]:
+        return {
+            "ok": False, "etapa": "auditoria_geometrica",
+            "code": "CONTRATO_GEOMETRICO_VIOLADO",
+            "auditoria_geometrica": geometria,
+            "avisos": ["Arquivo DXF bloqueado por divergencia com o programa."],
+        }
+
     pdf, png = renderizar_prancha(_ensure(), nome, preview["resumo_geometria"])
     if len(pdf) > 3_000_000 or len(png) > 3_000_000:
         return {"ok": False, "etapa": "prancha", "error": "PDF ou PNG acima do limite de 3MB"}
@@ -232,6 +244,7 @@ def projetar_uma_vez(pedido: str, programa: dict | None = None,
         "resumo_geometria": preview["resumo_geometria"],
         "quantitativo": quant,
         "auditoria": auditoria,
+        "auditoria_geometrica": geometria,
         "arquivos": {
             "dxf_url": export["dxf_url"],
             "zip_url": export["download_url"],

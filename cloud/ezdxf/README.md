@@ -59,6 +59,30 @@ layout (dependente das areas dos quartos).
 "Sala e Cozinha integradas" precisa continuar como dois ambientes nomeados
 separadamente no modelo, ainda que abertos fisicamente no desenho.
 
+## Auditoria geometrica de DXF serializado (v0.3.2)
+
+No fluxo `projetar_residencia`, apos o desenho e antes de gerar PDF/PNG
+e os links, o sistema **grava o DXF em um arquivo temporario e reabre com
+`ezdxf.readfile`**. Compara as entidades reais com o contrato do modelo:
+vertices e fechamento do TERRENO, todas as faces LINE das PAREDES,
+ARC e folhas de PORTAS, vidro das JANELAS, LWPOLYLINE de MOBILIARIO,
+origens das cotas DIMENSION, anotacoes internas e $INSUNITS=metros.
+
+Detecta manipulacoes que `doc.audit()` nao detecta (por exemplo,
+terreno com largura errada, porta sem arco, segmento extra que
+fecha a abertura sala/cozinha, cota movida). Em divergencia,
+`projetar_residencia` devolve
+`etapa=auditoria_geometrica, code=CONTRATO_GEOMETRICO_VIOLADO`
+sem fornecer links de download nem afirmar sucesso. Respostas validas
+incluem `auditoria_geometrica` e medidas extraidas do arquivo.
+
+**Limite explicito:** trata-se de comparacao entre modelo e DXF,
+e a extracao das faces esperadas utiliza a mesma rotina de paredes
+do desenho. Portanto, nao identifica automaticamente toda falha de
+arquitetura, acessibilidade, ventilacao ou legislacao, nem garante
+independencia completa caso o modelo e o gerador compartilhem um defeito.
+Nao substitui projeto legal ou executivo.
+
 ## Um prompt para uma planta: projetar_residencia (fase piloto)
 
 A partir da versao 0.3.0, o Claude pode chamar uma unica ferramenta:
