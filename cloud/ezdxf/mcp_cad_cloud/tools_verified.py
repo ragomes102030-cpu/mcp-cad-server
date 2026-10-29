@@ -105,6 +105,12 @@ def projetar_residencia(pedido: str, programa: dict | None = None,
     laundry. The assistant may provide a structured programa; otherwise
     default areas and setbacks are returned explicitly as assumptions.
     Unsupported typologies are rejected rather than silently simplified.
+
+    IMPORTANT FOR CLAUDE: for a usual text request, invoke with ONLY pedido.
+    Leave programa omitted: the MCP fills the validated six-room pilot,
+    9.0 m house width, lot from text (default 10x20), walls and setbacks.
+    Do NOT construct or mutate arbitrary areas to fix the hall. Supply
+    programa only when the USER explicitly specified particular room areas.
     """
     from mcp_cad_cloud.projeto_automatico import projetar_uma_vez
     return projetar_uma_vez(pedido=pedido, programa=programa, nome=nome)
@@ -119,7 +125,7 @@ def planta_templates() -> dict:
         "autocad": {"disponivel": False, "acao": "nao tentar abrir, conectar ou reiniciar o AutoCAD"},
         "template_padrao": TEMPLATE_PADRAO,
         "templates": listar_templates(),
-        "fluxo_recomendado": "projetar_residencia(pedido='...') para uma casa terrea de 2 quartos; gera DXF, PDF A3, PNG e auditoria em uma chamada",
+        "fluxo_recomendado": "projetar_residencia(pedido='...') com APENAS o argumento pedido; nao enviar programa na solicitacao natural de casa terrea de dois quartos. O servidor assume areas, largura e recuos e informa premissas. Gera DXF, PDF A3 e PNG.",
         "fluxo_obrigatorio": [
             "planta_templates",
             "planta_criar_validada(modo='preview')",

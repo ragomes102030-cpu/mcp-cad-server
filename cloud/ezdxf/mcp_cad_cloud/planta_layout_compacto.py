@@ -67,7 +67,16 @@ def gerar_compacto(programa):
     h_banheiro = banheiro["area"] / (largura_nucleo - T)
     h_hall = prof_quartos - h_banheiro
     if not 1.22 <= h_hall <= 1.65:
-        raise ErroPrograma("hall de distribuição inviável para a área solicitada do banheiro")
+        area_min=(prof_quartos - 1.65)*(largura_nucleo - T)
+        area_max=(prof_quartos - 1.22)*(largura_nucleo - T)
+        raise ErroPrograma(
+            f"area de banheiro {banheiro['area']:.2f} m2 incompatível com "
+            f"este layout compacto e a largura do hall. Para as areas "
+            f"dos dois quartos informadas, o intervalo geometrico "
+            f"admissivel do banheiro e {area_min:.2f} a {area_max:.2f} m2. "
+            "Nao altere a area solicitada silenciosamente. "
+            "Se o usuario nao definiu areas, chame projetar_residencia "
+            "sem o campo programa para usar as areas piloto validadas.")
     for quarto, largura_livre in ((quartos[0], x_esquerda-1.5*T),
                                   (quartos[1], largura-x_direita-1.5*T)):
         if largura_livre < 2.70 or prof_quartos < 3:

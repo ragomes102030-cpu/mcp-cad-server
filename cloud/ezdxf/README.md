@@ -42,6 +42,23 @@ usar dados sensíveis, adicionar autenticação e isolamento por projeto.
 - Health check: `/healthz`
 - Endpoint MCP: `/mcp`
 
+## Uso recomendado no Claude (v0.3.1)
+
+Chame **`projetar_residencia(pedido="...")` apenas com pedido**, sem passar
+`programa`, quando o usuario nao fornece areas exatas. O backend preenche
+as seis areas do layout piloto e informa suas premissas, em vez de tentar
+adivinhar o tamanho correto do banheiro e hall. Um dicionario `programa`
+parcial tambem recebe os padroes de largura, recuos e ambientes ausentes.
+
+Se o Claude enviar seis nomes de ambientes sem area, os valores padrao
+serao usados e informados. **Areas fornecidas explicitamente nunca sao
+alteradas para fazer o gerador aceitar.** Se a geometria nao comportar um
+banheiro de 4,5 ou 6 m2, a mensagem informa a faixa admissivel para aquele
+layout (dependente das areas dos quartos).
+
+"Sala e Cozinha integradas" precisa continuar como dois ambientes nomeados
+separadamente no modelo, ainda que abertos fisicamente no desenho.
+
 ## Um prompt para uma planta: projetar_residencia (fase piloto)
 
 A partir da versao 0.3.0, o Claude pode chamar uma unica ferramenta:
