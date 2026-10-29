@@ -1,6 +1,8 @@
 """Exercise initialize -> tools/list -> real MCP tool call -> HTTP file downloads."""
 import json
 from pathlib import Path
+import io
+import zipfile
 from urllib.parse import urlparse
 
 import ezdxf
@@ -71,3 +73,72 @@ def test_mcp_http_call_and_downloaded_files_are_real_and_reopenable(tmp_path):
                 reopened = ezdxf.readfile(disk)
                 assert not reopened.audit().has_errors
                 assert len(list(reopened.modelspace().query('ARC[layer=="PORTAS"]'))) == 5
+
+
+def test_mcp_http_exposes_and_executes_licensing_package(tmp_path):
+    from test_layout_compacto import CASA
+
+    headers = {"Accept": "application/json, text/event-stream"}
+    context = {
+        "project_name": "Casa compacta MCP", "use": "residencial_unifamiliar",
+        "typology": "compacto_2quartos", "municipality": None, "state": None,
+        "storeys": 1, "lot_width_m": 10, "lot_depth_m": 20,
+        "requested_rooms": ["Sala de estar", "Cozinha", "Área de serviço",
+                            "Quarto 1", "Quarto 2", "Banheiro social"],
+        "stage": "licenciamento",
+    }
+    envelope = {
+        "floor_level_m": 0, "wall_height_m": 2.8, "door_head_m": 2.1,
+        "window_sill_m": .9, "window_head_m": 2.2, "roof_type": "gable",
+        "roof_pitch_degrees": 25, "roof_overhang_m": .45, "ridge_axis": "x",
+    }
+    sheets = [{
+        "paper_format": "A3", "orientation": "landscape", "scale": 50,
+        "margin_mm": 10, "sheet_id": "ARQ-01",
+        "viewports": [{"view_id": "ARQ-PLANTA", "x_mm": 20, "y_mm": 70,
+                       "width_mm": 220, "height_mm": 200}],
+    }]
+    title_block = {
+        "project_name": context["project_name"], "municipality": None,
+        "state": None, "owner": "", "designer": "",
+        "professional_registration": "", "issue_date": "2026-10-29",
+        "revision": "R00",
+    }
+    with TestClient(mcp.http_app()) as client:
+        initialized = client.post("/mcp", headers=headers, json={
+            "jsonrpc": "2.0", "id": 11, "method": "initialize",
+            "params": {"protocolVersion": "2025-06-18", "capabilities": {},
+                       "clientInfo": {"name": "licensing-smoke", "version": "1"}},
+        })
+        assert initialized.status_code == 200
+        session_headers = {**headers, "mcp-session-id": initialized.headers["mcp-session-id"]}
+        listed = client.post("/mcp", headers=session_headers, json={
+            "jsonrpc": "2.0", "id": 12, "method": "tools/list", "params": {},
+        })
+        assert "projetar_pacote_licenciamento" in {
+            item["name"] for item in _result(listed)["tools"]
+        }
+        call = client.post("/mcp", headers=session_headers, json={
+            "jsonrpc": "2.0", "id": 13, "method": "tools/call",
+            "params": {"name": "projetar_pacote_licenciamento", "arguments": {
+                "programa": CASA, "contexto": context, "envelope": envelope,
+                "folhas": sheets, "carimbo": title_block,
+            }},
+        })
+        assert call.status_code == 200
+        payload = _result(call)
+        assert not payload.get("isError"), payload
+        result = json.loads(next(item["text"] for item in payload["content"]
+                                 if item.get("type") == "text"))
+        assert result["ok"] is True, result
+        assert result["licensing_readiness"] == "review_required"
+        zip_path = urlparse(result["arquivos"]["zip_url"]).path
+        response = client.get(zip_path)
+        assert response.status_code == 200
+        archive = zipfile.ZipFile(io.BytesIO(response.content))
+        assert {"ARQ-01.dxf", "ARQ-01.pdf", "ARQ-01.png", "report.json"} <= set(archive.namelist())
+        dxf_path = tmp_path / "ARQ-01.dxf"
+        dxf_path.write_bytes(archive.read("ARQ-01.dxf"))
+        reopened = ezdxf.readfile(dxf_path)
+        assert reopened.header["$INSUNITS"] == ezdxf.units.MM
+        assert not reopened.audit().has_errors

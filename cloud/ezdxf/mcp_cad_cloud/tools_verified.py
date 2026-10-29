@@ -117,6 +117,21 @@ def projetar_residencia(pedido: str, programa: dict | None = None,
 
 
 @_wrap
+def projetar_pacote_licenciamento(programa: dict, contexto: dict,
+                                  envelope: dict, folhas: list[dict],
+                                  carimbo: dict) -> dict:
+    """Generate a multi-sheet residential architecture package for review.
+
+    This does not certify NBR/municipal compliance or guarantee permit approval.
+    """
+    from mcp_cad_cloud.projeto_automatico import export_licensing_package
+    return export_licensing_package(
+        programa=programa, contexto=contexto, envelope=envelope,
+        folhas=folhas, carimbo=carimbo,
+    )
+
+
+@_wrap
 def propor_melhoria_circulacao(pedido: str) -> dict:
     """Generate an audited ORIGINAL and a separate optional furniture proposal.
 
@@ -383,7 +398,7 @@ def export_dxf(incluir_base64: bool = False) -> dict:
 TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_drawing",
          "query_entities", "draw_line", "draw_rectangle", "draw_polyline", "draw_circle",
          "draw_arc", "draw_text", "dim_aligned", "erase", "drawing_audit",
-         "quantitativo", "export_dxf", "projetar_residencia", "propor_melhoria_circulacao", "planta_templates", "planta_assistida",
+         "quantitativo", "export_dxf", "projetar_residencia", "projetar_pacote_licenciamento", "propor_melhoria_circulacao", "planta_templates", "planta_assistida",
          "planta_criar_validada", "validar_planta")
 
 # Only the tools with real, verified DXF effects may be exposed.
@@ -394,7 +409,7 @@ TOOLS = ("cad_status", "new_drawing", "layer_list", "layer_create", "inspect_dra
 
 _PLANTA_SEGURA = {
     "cad_status", "new_drawing", "layer_list", "inspect_drawing", "query_entities",
-    "drawing_audit", "quantitativo", "export_dxf", "projetar_residencia", "propor_melhoria_circulacao", "planta_templates",
+    "drawing_audit", "quantitativo", "export_dxf", "projetar_residencia", "projetar_pacote_licenciamento", "propor_melhoria_circulacao", "planta_templates",
     "planta_assistida", "planta_criar_validada", "validar_planta",
 }
 _perfil = os.getenv("MCP_CAD_PROFILE", "full").strip().lower()

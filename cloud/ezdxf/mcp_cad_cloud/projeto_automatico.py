@@ -7,9 +7,13 @@ requirements are rejected, never silently dropped.
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import date
 import hashlib
+import io
+import json
 import re
 import unicodedata
+import zipfile
 
 
 _TWO_ROOMS = re.compile(r"\b(?:2|dois|duas)\s+(?:quartos?|dormit[oó]rios?)\b", re.I)
@@ -273,5 +277,215 @@ def projetar_uma_vez(pedido: str, programa: dict | None = None,
             "Estudo conceitual; nao substitui revisao arquitetonica ou legal.",
             "Links temporarios e publicos; nao usar para desenhos sigilosos.",
             *preview.get("avisos", []),
+        ],
+    }
+
+
+def evaluate_package(package, requirements, applicability_rules, evaluators) -> dict:
+    """Evaluate only requirements backed by current metadata and registered checks."""
+    from mcp_cad_cloud.arquitetura_requisitos import (
+        RequirementStatus, evaluate_applicability,
+    )
+
+    records = tuple(requirements or ())
+    if not records:
+        return {
+            "licensing_readiness": "review_required",
+            "reason": "Nenhum requisito normativo/local foi cadastrado e verificado.",
+            "results": (),
+        }
+    results = tuple(
+        evaluate_applicability(
+            package.project_context, requirement,
+            applicability_rules=applicability_rules or {},
+            evaluators=evaluators or {},
+        )
+        for requirement in records
+    )
+    statuses = {item.status for item in results}
+    if RequirementStatus.FAILED in statuses:
+        readiness = "blocked"
+        reason = "Ao menos um requisito aplicável falhou; revisar antes de emitir."
+    elif RequirementStatus.NOT_TESTABLE in statuses:
+        readiness = "review_required"
+        reason = "Há requisitos sem verificação suficiente ou com fonte/contexto pendente."
+    elif not statuses or statuses <= {RequirementStatus.NOT_APPLICABLE}:
+        readiness = "review_required"
+        reason = "Não há requisito aplicável efetivamente verificado."
+    else:
+        readiness = "ready_for_professional_review"
+        reason = "Verificações cadastradas passaram; revisão profissional continua obrigatória."
+    return {"licensing_readiness": readiness, "reason": reason, "results": results}
+
+
+def _sheet_spec_from_dict(value):
+    from mcp_cad_cloud.prancha_dxf import SheetSpec, ViewportSpec
+    if not isinstance(value, dict):
+        raise ValueError("cada folha deve ser um objeto")
+    viewports = value.get("viewports")
+    if not isinstance(viewports, list):
+        raise ValueError("viewports deve ser uma lista")
+    return SheetSpec(
+        paper_format=value.get("paper_format", "A3"),
+        orientation=value.get("orientation", "landscape"),
+        scale=value.get("scale", 50), margin_mm=value.get("margin_mm", 10),
+        sheet_id=value.get("sheet_id", ""),
+        viewports=tuple(ViewportSpec(**item) for item in viewports),
+    )
+
+
+def _requirement_report_item(result) -> dict:
+    return {
+        "requirement_id": result.requirement_id,
+        "status": result.status.value,
+        "reason": result.reason,
+        "evidence": list(result.evidence),
+        "standard": result.standard,
+        "edition": result.edition,
+    }
+
+
+def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
+                             folhas: list[dict], carimbo: dict,
+                             requirements=(), applicability_rules=None,
+                             evaluators=None) -> dict:
+    """Build, reopen, audit, render and publish an in-memory architecture set."""
+    from mcp_cad_cloud.arquitetura_requisitos import ProjectContext
+    from mcp_cad_cloud.auditoria_prancha import audit_sheet_document
+    from mcp_cad_cloud.projeto_arquitetonico import (
+        BuildingEnvelope, generate_architecture_package,
+    )
+    from mcp_cad_cloud.planta_gerador import gerar_modelo
+    from mcp_cad_cloud.prancha_dxf import (
+        TitleBlockData, compose_licensing_sheets, renderizar_folha,
+    )
+    import ezdxf
+
+    if not isinstance(contexto, dict) or not isinstance(envelope, dict):
+        raise ValueError("contexto e envelope devem ser objetos JSON")
+    if not isinstance(folhas, list) or not 1 <= len(folhas) <= 12:
+        raise ValueError("informe de 1 a 12 folhas arquitetônicas")
+    project_context = ProjectContext(
+        project_name=str(contexto.get("project_name", "")),
+        use=str(contexto.get("use", "residencial_unifamiliar")),
+        typology=str(contexto.get("typology", "compacto_2quartos")),
+        municipality=contexto.get("municipality"), state=contexto.get("state"),
+        storeys=int(contexto.get("storeys", 1)),
+        lot_width_m=contexto.get("lot_width_m"),
+        lot_depth_m=contexto.get("lot_depth_m"),
+        requested_rooms=tuple(contexto.get("requested_rooms", ())),
+        stage=str(contexto.get("stage", "licenciamento")),
+        municipal_profile_revision=contexto.get("municipal_profile_revision"),
+    )
+    building_envelope = BuildingEnvelope(**envelope)
+    plan_model = gerar_modelo(deepcopy(programa))
+    package = generate_architecture_package(plan_model, project_context, building_envelope)
+    if not isinstance(carimbo, dict):
+        raise ValueError("carimbo deve ser um objeto JSON")
+    title_block = TitleBlockData(**{
+        key: carimbo.get(key) for key in (
+            "project_name", "municipality", "state", "owner", "designer",
+            "professional_registration", "issue_date", "revision",
+        )
+    })
+    specs = [_sheet_spec_from_dict(item) for item in folhas]
+    sheets = compose_licensing_sheets(package, specs, title_block)
+    evaluation = evaluate_package(package, requirements, applicability_rules, evaluators)
+
+    serialized, audits, visuals = [], [], []
+    for sheet in sheets:
+        stream = io.StringIO()
+        sheet.document.write(stream)
+        raw = stream.getvalue().encode("utf-8")
+        reopened = ezdxf.read(io.StringIO(raw.decode("utf-8")))
+        audit = audit_sheet_document(reopened, sheet.spec, package)
+        audits.append(audit)
+        if not audit["ok"]:
+            return {
+                "ok": False, "etapa": "auditoria_prancha",
+                "licensing_readiness": "blocked",
+                "auditorias_folhas": audits,
+                "arquivos": {},
+                "avisos": ["Exportação bloqueada: auditoria do DXF serializado falhou."],
+            }
+        reopened_sheet = type(sheet)(sheet.sheet_id, sheet.spec,
+                                    sheet.title_block_rows, reopened)
+        pdf, png = renderizar_folha(reopened_sheet)
+        if len(raw) > 3_000_000 or len(pdf) > 3_000_000 or len(png) > 3_000_000:
+            raise ValueError(f"folha {sheet.sheet_id} excede o limite individual de 3 MB")
+        serialized.append((sheet.sheet_id, raw, pdf, png))
+        visuals.append((pdf, png))
+
+    results = [_requirement_report_item(item) for item in evaluation["results"]]
+    report = {
+        "schema_version": 1,
+        "project": {
+            "name": project_context.project_name,
+            "use": project_context.use,
+            "typology": project_context.typology,
+            "municipality": project_context.municipality,
+            "state": project_context.state,
+            "stage": project_context.stage,
+        },
+        "licensing_readiness": evaluation["licensing_readiness"],
+        "readiness_reason": evaluation["reason"],
+        "requirements": results,
+        "sheet_audits": audits,
+        "limitations": list(package.limitations),
+        "artifacts": [f"{sheet_id}.{ext}" for sheet_id, *_ in serialized
+                      for ext in ("dxf", "pdf", "png")],
+        "generated_at": date.today().isoformat(),
+    }
+    report_json = json.dumps(report, ensure_ascii=False, indent=2).encode("utf-8")
+    report_md = [
+        f"# Pacote arquitetônico — {project_context.project_name}", "",
+        f"- Etapa: {project_context.stage}",
+        f"- Situação: {evaluation['licensing_readiness']}",
+        f"- Motivo: {evaluation['reason']}",
+        "- Revisão profissional obrigatória; sem afirmação de aprovação ou conformidade total.",
+        "", "## Requisitos", "",
+    ]
+    report_md.extend(
+        f"- {item['requirement_id']}: {item['status']} — {item['reason']}"
+        for item in results
+    )
+    if not results:
+        report_md.append("- Nenhum requisito cadastrado/verificado; situação mantida em revisão.")
+    report_md.extend(["", "## Pranchas", ""])
+    report_md.extend(f"- {sheet_id}: auditoria independente passou."
+                     for sheet_id, *_ in serialized)
+
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for sheet_id, raw, pdf, png in serialized:
+            archive.writestr(f"{sheet_id}.dxf", raw)
+            archive.writestr(f"{sheet_id}.pdf", pdf)
+            archive.writestr(f"{sheet_id}.png", png)
+        archive.writestr("report.json", report_json)
+        archive.writestr("report.md", "\n".join(report_md).encode("utf-8"))
+    archive_bytes = zip_buffer.getvalue()
+    if len(archive_bytes) > 20_000_000:
+        raise ValueError("ZIP do projeto excede o limite seguro de 20 MB")
+    from mcp_cad_cloud.downloads import attach_visuals, publish
+    links = publish(serialized[0][1], archive_bytes)
+    visual_links = attach_visuals(links["dxf_url"], pdf=visuals[0][0], png=visuals[0][1])
+    return {
+        "ok": True,
+        "etapa": "concluido",
+        "modo": "pacote_arquitetonico_licenciamento",
+        "licensing_readiness": evaluation["licensing_readiness"],
+        "motivo_prontidao": evaluation["reason"],
+        "resultados_requisitos": results,
+        "auditorias_folhas": audits,
+        "arquivos": {
+            "dxf_url": links["dxf_url"], "zip_url": links["download_url"],
+            "pdf_url": visual_links["pdf_url"], "png_url": visual_links["png_url"],
+            "expires_in_seconds": links["expires_in_seconds"],
+            "folhas": [sheet_id for sheet_id, *_ in serialized],
+        },
+        "avisos": [
+            "Revisão de profissional habilitado obrigatória; este pacote não é aprovação de licenciamento.",
+            "Normas NBR e regras municipais não verificadas permanecem pendentes.",
+            "Links temporários públicos; não enviar projetos sigilosos.",
         ],
     }

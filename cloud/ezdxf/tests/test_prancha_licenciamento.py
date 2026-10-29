@@ -106,6 +106,12 @@ def test_sheet_has_editable_pending_title_block_and_reopened_dxf(package, api, t
     assert any("RESPONSÁVEL TÉCNICO: PENDENTE" in value for value in texts)
     assert any("REGISTRO: PENDENTE" in value for value in texts)
     assert any(entity.dxf.layer == "CARIMBO" for entity in reopened.modelspace())
+    source_ids = {entity.get_xdata("MCP_CAD")[0].value
+                  for entity in reopened.modelspace()
+                  if entity.has_xdata("MCP_CAD")}
+    assert "dimension:overall:width" in source_ids
+    assert "dimension:overall:depth" in source_ids
+    assert "dimension-label:overall:width" in source_ids
     assert all(entity.dxf.get("true_color") == 0x101820 for entity in reopened.modelspace()
                if entity.dxftype() == "TEXT")
     assert reopened.audit().has_errors is False

@@ -245,6 +245,27 @@ def _floor_plan(model: dict) -> ViewGeometry:
         if area is not None:
             labels.append(ViewLabel(f"{float(area):.2f} m²", x, y - 0.20,
                                     f"room-area:{index}"))
+    width = _finite("largura da planta", model.get("resumo_geometria", {}).get("largura"))
+    depth = _finite("profundidade da planta", model.get("resumo_geometria", {}).get("profundidade"))
+    # Overall external dimension strings are explicit drawing geometry with
+    # stable source IDs, so serialization audits can detect missing cotas.
+    offset = 0.65
+    tick = 0.12
+    for source, x1, y1, x2, y2 in (
+        ("dimension:overall:width", 0.0, depth + offset, width, depth + offset),
+        ("dimension:overall:width", -tick, depth + offset - tick, tick, depth + offset + tick),
+        ("dimension:overall:width", width - tick, depth + offset - tick, width + tick, depth + offset + tick),
+        ("dimension:overall:depth", -offset, 0.0, -offset, depth),
+        ("dimension:overall:depth", -offset - tick, -tick, -offset + tick, tick),
+        ("dimension:overall:depth", -offset - tick, depth - tick, -offset + tick, depth + tick),
+    ):
+        _segment(segments, x1, y1, x2, y2, "COTAS", source)
+    labels.extend((
+        ViewLabel(f"{width:.2f} m", width / 2, depth + offset + 0.08,
+                  "dimension-label:overall:width"),
+        ViewLabel(f"{depth:.2f} m", -offset - 0.10, depth / 2,
+                  "dimension-label:overall:depth"),
+    ))
     return _make_view("ARQ-PLANTA", "planta_baixa", segments, labels)
 
 
