@@ -59,7 +59,42 @@ layout (dependente das areas dos quartos).
 "Sala e Cozinha integradas" precisa continuar como dois ambientes nomeados
 separadamente no modelo, ainda que abertos fisicamente no desenho.
 
-## Auditoria de circulacao e interferencias — candidata v0.3.3
+## Campos de areas e diagnostico por porta — v0.3.4
+
+A resposta de `projetar_residencia` agora publica
+`quadro_areas_m2`, com unidades explicitas:
+- `ambientes_solicitados`: soma das seis areas assumidas/fornecidas;
+- `circulacao_hall`: area do hall calculada pelas faces livres;
+- `total_mapeado`: area dos sete retangulos mapeados;
+- `projecao_externa`: largura externa vezes profundidade externa.
+
+A profundidade livre linear do hall usa a chave
+`hall_profundidade_livre_m` (em metros). A chave antiga
+`hall_livre` fica somente para compatibilidade com consumidores
+anteriores; **nao representa m2**. A chave historica
+`area_util_total` representa somente a soma das areas geometricas
+mapeadas, nao uma area util aferida por norma.
+
+`auditoria_circulacao.metricas.portas` retorna um objeto por arco DXF
+com `id` (`P01`, `P02`...), `pivo_m`, `vao_nominal_m`,
+`setor_giro_graus`, `colisao_mobiliario_detectada`,
+`moveis_interferentes`, `giros_sobrepostos_com`,
+`giro_proximo_parede` e `abaixo_largura_piloto`.
+A ausencia de colisao identificada e **ausencia pelo metodo
+amostrado**, nao comprovacao de operabilidade ou acessibilidade.
+
+### Atualizacao do catalogo no ChatGPT
+
+O servidor FastMCP registra as ferramentas que anuncia em
+`cad_status.capabilities`, mas **nao pode obrigar um cliente a
+expor ferramentas recem-adicionadas**. Se `projetar_residencia`
+aparecer no `cad_status` e nao no catalogo do ChatGPT, verificar
+a atualizacao da lista de ferramentas na conexao MCP/Plugin no
+ChatGPT, conforme permissoes do proprietario/admin do app.
+Nao afirmar ter executado a ferramenta apenas porque esta listada
+em `capabilities`. Testar a chamada real apos a atualizacao.
+
+## Auditoria de circulacao e interferencias — v0.3.3
 
 Na ferramenta `projetar_residencia`, apos a verificacao geométrica de
 correspondencia modelo/DXF, uma segunda auditoria cruza:

@@ -216,6 +216,8 @@ def gerar_compacto(programa):
         terreno=(-1.0,-3.0,largura+1.0,profundidade+4.0)
     area_ambientes=sum(a["area"] for a in itens)
     area_mapeada=sum((a["x2"]-a["x1"])*(a["y2"]-a["y1"]) for a in ambs)
+    area_hall=sum((a["x2"]-a["x1"])*(a["y2"]-a["y1"])
+                  for a in ambs if a["nome"] == "Hall / circulação")
     area_projecao=largura*profundidade
     selos=[
         "ESTUDO PRELIMINAR 2D - RESIDÊNCIA COMPACTA",
@@ -278,7 +280,18 @@ def gerar_compacto(programa):
             "area_ambientes":round(area_ambientes,4),
             "area_util_total":round(area_mapeada,4),
             "area_construida":round(area_projecao,4),
+            # Backwards-compatible legacy keys remain, but new fields
+            # explicitly distinguish metres from square metres.
             "hall_livre":round(h_hall-T,4),
+            "hall_profundidade_livre_m":round(h_hall-T,4),
+            "quadro_areas_m2":{
+                "ambientes_solicitados":round(area_ambientes,4),
+                "circulacao_hall":round(area_hall,4),
+                "total_mapeado":round(area_mapeada,4),
+                "projecao_externa":round(area_projecao,4),
+            },
+            "criterio_area":"soma dos retangulos geometricos mapeados, "
+                            "nao levantamento de area util normativa",
             "tipo":"compacto_2quartos",
         },
     }

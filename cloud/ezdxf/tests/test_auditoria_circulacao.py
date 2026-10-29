@@ -40,6 +40,12 @@ def test_reference_layout_connects_seven_rooms_without_critical_collision(drawin
     assert result["metricas"]["ambientes_total"] == 7
     assert result["metricas"]["ambientes_conectados"] == 7
     assert result["metricas"]["portas_verificadas"] == 5
+    doors = result["metricas"]["portas"]
+    assert [d["id"] for d in doors] == ["P01","P02","P03","P04","P05"]
+    assert [d["vao_nominal_m"] for d in doors] == pytest.approx([.90,.90,.90,.90,.80])
+    assert not any(d["colisao_mobiliario_detectada"] for d in doors)
+    assert all(isinstance(d["giros_sobrepostos_com"], list) for d in doors)
+    assert all(len(d["pivo_m"]) == 2 for d in doors)
     assert result["metricas"]["moveis_verificados"] == 12
     assert any("nao constitui rota acessivel" in x.casefold() for x in result["limitacoes"])
 
@@ -109,6 +115,9 @@ def test_door_swing_to_furniture_collision_detected_even_if_document_is_valid(dr
     result=auditar_circulacao(model,doc)
     assert not result["ok"]
     assert "porta-colide-mobiliario" in _keys(result)
+    report_doors = result["metricas"]["portas"]
+    assert any(d["colisao_mobiliario_detectada"] and
+               d["moveis_interferentes"] for d in report_doors)
 
 
 def test_doors_with_overlapping_sweep_return_warning_not_legal_failure(drawing):
@@ -120,6 +129,8 @@ def test_doors_with_overlapping_sweep_return_warning_not_legal_failure(drawing):
         dxfattribs={"layer":"PORTAS"})
     result=auditar_circulacao(model,doc)
     assert "giros-portas-sobrepostos" in _keys(result,"avisos")
+    assert "P06" in result["metricas"]["portas"][4]["giros_sobrepostos_com"]
+    assert "P05" in result["metricas"]["portas"][5]["giros_sobrepostos_com"]
     # Arc-count mismatch is a separate, provable model/drawing failure.
     assert "portas-incompletas" in _keys(result)
 
@@ -154,6 +165,10 @@ def test_one_prompt_still_produces_all_four_files_and_audit():
     result=cad.projetar_residencia(BRIEF)
     assert result["ok"],result
     assert result["auditoria_circulacao"]["ok"]
+    areas=result["quadro_areas_m2"]
+    assert areas["ambientes_solicitados"]+areas["circulacao_hall"] == pytest.approx(
+        areas["total_mapeado"], abs=.0001)
+    assert len(result["auditoria_circulacao"]["metricas"]["portas"]) == 5
     assert result["auditoria_geometrica"]["ok"]
     assert result["auditoria"]["ok"]
     assert all(result["arquivos"].get(k) for k in
