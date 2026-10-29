@@ -59,7 +59,33 @@ layout (dependente das areas dos quartos).
 "Sala e Cozinha integradas" precisa continuar como dois ambientes nomeados
 separadamente no modelo, ainda que abertos fisicamente no desenho.
 
-## Diagnostico espacial quantificado — candidata v0.3.5
+## Correcao assistida e reversivel do mobiliario — candidata v0.3.6
+
+Use `propor_melhoria_circulacao(pedido="...")`, com APENAS o texto
+do pedido (casa terrea compacta de dois quartos). O fluxo:
+
+1. Gera/audita o **original** pelo fluxo estavel `projetar_residencia`
+   e fornece seus links DXF/PDF/PNG/ZIP.
+2. Localiza o mobiliario mais proximo do gargalo sinalizado,
+   produz candidatos por deslocamentos pequenos ou rotacao de 90 graus,
+   sempre preservando as dimensoes da base e a area do bloco esquematico.
+3. Cada candidato e avaliado por `validar_modelo`, auditoria do DXF
+   reaberto e auditoria de circulacao.
+4. So apresenta uma proposta se a folga estimada na rota da lavanderia
+   ganhar ao menos 0,10 m, sem novos avisos nem perdas estimadas
+   superiores a 0,10 m nas demais rotas.
+5. A alternativa aprovada pelo criterio piloto recebe **outro** conjunto
+   de links, hash do DXF e relatorio antes/depois.
+
+**A original nao e modificada, substituida nem aprovada para construcao.**
+`alternativa_disponivel=false` significa que nenhuma das opcoes
+testadas cumpriu os criterios; nunca simular ganho ou fabricar DXF.
+Deslocar ou rotacionar mobiliario esquematico nao prova que eletrodomesticos ou
+equipamentos caibam, nem verifica instalaçoes, acessibilidade ou
+legislacao. A largura da malha tem incerteza de discretizacao de
+aproximadamente 0,20 m: ganhos pequenos precisam ser conferidos.
+
+## Diagnostico espacial quantificado — v0.3.5
 
 No retorno `auditoria_circulacao.metricas` surgem:
 
