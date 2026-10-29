@@ -75,6 +75,6 @@ def renderizar_prancha(doc, titulo: str, geometria: dict) -> tuple[bytes, bytes]
     finally:
         fig.clear()
     pdf_bytes, png_bytes = pdf.getvalue(), png.getvalue()
-    if not pdf_bytes.startswith(b"%PDF-") or not png_bytes.startswith(b"\\x89PNG\\r\\n\\x1a\\n"):
+    if not pdf_bytes.startswith(b"%PDF-") or not png_bytes.startswith(bytes.fromhex("89504e470d0a1a0a")):
         raise RuntimeError("Falha ao renderizar PDF/PNG a partir do DXF")
     return pdf_bytes, png_bytes
