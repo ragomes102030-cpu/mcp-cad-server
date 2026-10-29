@@ -162,16 +162,34 @@ def propor_alternativa(pedido: str) -> dict:
         original_bytes=source.read_bytes()
         best=None
         rejected=[]
+        avaliadas=[]
         for furniture_number in ids:
             furniture_index=furniture_number-1
             if furniture_index>=len(model["moveis"]):
                 continue
             old=model["moveis"][furniture_index]
-            for dx,dy in OFFSETS_M:
+            source_width=old[2]-old[0]
+            source_depth=old[3]-old[1]
+            transforms=[
+                (old[0]+dx,old[1]+dy,source_width,source_depth,False)
+                for dx,dy in OFFSETS_M
+            ]
+            # An optional 90-degree rotation keeps the actual furniture
+            # footprint dimensions/area, but changes its orientation;
+            # this is a hypothesis for human review, not an auto-fix.
+            if source_depth>source_width+.20:
+                transforms += [
+                    (old[0]+dx,old[1]+dy,source_depth,source_width,True)
+                    for dx,dy in ((-1.25,0),(-1.10,0),(-.95,0),
+                                  (-1.25,.15),(-1.10,.15),(-.95,.15))
+                ]
+            for nx,ny,cwidth,cdepth,rotated in transforms:
+                dx=round(nx-old[0],3)
+                dy=round(ny-old[1],3)
                 result["candidatas_avaliadas"]+=1
                 candidate=deepcopy(model)
-                moved=[round(old[0]+dx,6),round(old[1]+dy,6),
-                       round(old[2]+dx,6),round(old[3]+dy,6)]
+                moved=[round(nx,6),round(ny,6),
+                       round(nx+cwidth,6),round(ny+cdepth,6)]
                 candidate["moveis"][furniture_index]=moved
                 validation=validar(candidate)
                 if not validation["ok"]:
@@ -194,23 +212,32 @@ def propor_alternativa(pedido: str) -> dict:
                     rejected.append("largura-sem-estimativa")
                     continue
                 gain=round(width-base_width,3)
+                avaliadas.append({"movel":f"MOVEL-{furniture_number:02d}",
+                                  "rotacionado_90_graus":rotated,
+                                  "deslocamento_m":[dx,dy],
+                                  "largura_estimada_m":width,
+                                  "ganho_estimado_m":gain})
                 if gain < MIN_GAIN_M:
                     rejected.append("ganho-insuficiente")
                     continue
-                # Choose greater improvement, then smaller furniture displacement.
+                # Prefer best improvement and minimal translation; a
+                # rotation is disclosed as a geometric assumption.
                 score=(gain,-round(abs(dx)+abs(dy),3))
                 if best is None or score>best["score"]:
                     best={
                         "score":score,"model":candidate,"doc":alternate,
                         "audit":audit,"geom":geometric,"before":old,
                         "after":moved,"furniture":furniture_number,
-                        "dx":dx,"dy":dy,"gain":gain,"width":width,
+                        "dx":dx,"dy":dy,"rotated":rotated,
+                        "gain":gain,"width":width,
                     }
         if original_bytes!=source.read_bytes():
             raise RuntimeError("Snapshot original alterado durante a busca")
         if best is None:
             result["motivo"]="Nenhuma proposta passou a validacao e o ganho minimo"
             result["candidatas_rejeitadas"]=len(rejected)
+            result["candidatas_geometricamente_validas"]=avaliadas[:20]
+            result["motivos_rejeicao"]={k:rejected.count(k) for k in set(rejected)}
             return result
         # Publish a separate, audited candidate, never touch session's doc.
         proposal_files=_export_candidate(best["doc"],best["model"])
@@ -221,6 +248,9 @@ def propor_alternativa(pedido: str) -> dict:
             "posicao_original_m":list(best["before"]),
             "posicao_proposta_m":list(best["after"]),
             "deslocamento_m":[best["dx"],best["dy"]],
+            "rotacionado_90_graus":best["rotated"],
+            "observacao_rotacao":"O bloco e esquematico; conferir fisicamente "
+                                "se equipamento permite a nova orientacao.",
             "largura_antes_estimativa_m":base_width,
             "largura_depois_estimativa_m":best["width"],
             "ganho_estimado_m":best["gain"],
