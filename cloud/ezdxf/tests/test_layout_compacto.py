@@ -51,6 +51,23 @@ def test_areas_de_seis_comodos_sao_iguais_ao_programa():
         assert a["y1"] <= a["texto_y"] <= a["y2"]
 
 
+def test_quadro_areas_em_m2_e_hall_em_metros_sem_ambiguidade():
+    m = gerar_modelo(CASA)
+    resumo = m["resumo_geometria"]
+    quadro = resumo["quadro_areas_m2"]
+    hall = next(x for x in m["ambientes"] if x["nome"] == "Hall / circulação")
+    area_hall = (hall["x2"]-hall["x1"])*(hall["y2"]-hall["y1"])
+    assert quadro["ambientes_solicitados"] == pytest.approx(59.0)
+    assert quadro["circulacao_hall"] == pytest.approx(3.508, abs=.0001)
+    assert quadro["circulacao_hall"] == pytest.approx(area_hall, abs=.0001)
+    assert quadro["total_mapeado"] == pytest.approx(62.508)
+    assert quadro["ambientes_solicitados"] + quadro["circulacao_hall"] == pytest.approx(
+        quadro["total_mapeado"], abs=.0001)
+    assert quadro["projecao_externa"] == pytest.approx(77.4)
+    assert resumo["hall_profundidade_livre_m"] == pytest.approx(hall["y2"]-hall["y1"])
+    assert resumo["area_util_total"] == pytest.approx(quadro["total_mapeado"])
+
+
 def test_banheiro_e_dormitorios_acessiveis_por_hall_central():
     m=gerar_modelo(CASA)
     h = next(a for a in m["ambientes"] if "Hall" in a["nome"])
