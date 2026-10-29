@@ -25,7 +25,7 @@ def test_comparison_preserves_original_and_requires_verified_gain():
     furniture=list(_ensure().modelspace().query('LWPOLYLINE[layer=="MOBILIARIO"]'))
     assert len(furniture)==12
     original_m03=[tuple(p[:2]) for p in furniture[2].get_points("xy")]
-    assert original_m03 == pytest.approx([(5.92,.30),(6.65,.30),(6.65,2.43),(5.92,2.43)])
+    assert [coord for point in original_m03 for coord in point] == pytest.approx([5.92,.30,6.65,.30,6.65,2.43,5.92,2.43])
 
     assert result["alternativa_disponivel"],result
     p=result["proposta"]
@@ -58,6 +58,6 @@ def test_no_improvement_does_not_publish_unjustified_proposal(monkeypatch):
 def test_unsupported_brief_does_not_propose_plan():
     response=cad.propor_melhoria_circulacao("Desenhe um sobrado com cinco quartos.")
     assert not response["ok"]
-    assert response["alternativa_disponivel"] is False
-    assert response["etapa"]=="original"
-    assert not response["original"]["ok"]
+    assert response.get("alternativa_disponivel",False) is False
+    assert response["code"] == "INVALID_INPUT"
+    assert "sobrado" in response["error"]
