@@ -272,11 +272,36 @@ def auditar_circulacao(model: dict, doc) -> dict:
     wide_entrances=_entrance_seeds(model,clearance_free)
     wide_reach=_reach(clearance_free,[seed for _,seed in wide_entrances])
     wide_rooms=_rooms_reached(model["ambientes"],clearance_free,wide_reach)
+    from mcp_cad_cloud.diagnostico_passagens import (
+        diagnosticar_larguras, verificar_integracao_sala_cozinha,
+    )
+    gargalos = diagnosticar_larguras(model, doc, free, reachable)
+    por_ambiente = {
+        a["ambiente"]: a for a in gargalos.get("larguras", [])
+    }
+    criticos = []
     for room in wide_rooms:
         if not room["conectado"]:
+            diag = por_ambiente.get(room["ambiente"], {})
+            item = {
+                "ambiente": room["ambiente"],
+                "largura_estimativa_m": diag.get("largura_estimativa_m"),
+                "ponto_critico_m": diag.get("ponto_critico_m"),
+                "obstaculos_proximos": diag.get("obstaculos_proximos", []),
+            }
+            criticos.append(item)
+            width_text = item["largura_estimativa_m"]
+            estimate = (f"Estimativa de diametro livre da rota: {width_text:.2f} m."
+                        if width_text is not None else "Sem estimativa de rota.")
             emit(avisos,"passagem-estreita-estimada",room["ambiente"],
                  f"Malha com reserva lateral de {CLEARANCE:.2f} m nao alcanca "
-                 "o ambiente. Verificar largura livre em CAD e escala real.")
+                 f"o ambiente. {estimate} Verificar no CAD, sem valor normativo.")
+
+    integracao = verificar_integracao_sala_cozinha(model,doc)
+    if not integracao["ok"]:
+        emit(erros if integracao.get("verificado") else avisos,
+             "sala-cozinha-integracao-nao-comprovada","Sala / Cozinha",
+             integracao["motivo"])
 
     return {
         "ok":not erros,
@@ -295,6 +320,9 @@ def auditar_circulacao(model: dict, doc) -> dict:
             "ambientes":rooms,
             "ambientes_conectados":sum(x["conectado"] for x in rooms),
             "ambientes_total":len(rooms),
+            "diagnostico_passagens":gargalos,
+            "gargalos_estimados":criticos,
+            "integracao_sala_cozinha":integracao,
         },
         "limitacoes":[
             "Conectividade aproximada por malha de 0,10 m; janelas de vidro sao barreiras. Nao constitui rota acessivel NBR 9050.",
@@ -304,5 +332,8 @@ def auditar_circulacao(model: dict, doc) -> dict:
             "nao comprova colisao em uso real.",
             "Reserva de 0,25 m e porta de 0,80 m sao parametros de teste, "
             "nao exigencias legais verificadas.",
+            "A largura de gargalo e estimada como diametro de folga de "
+            "uma rota na grade, com incerteza de quantizacao; nao e "
+            "largura livre medida em projeto executivo.",
         ],
     }
