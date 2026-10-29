@@ -42,6 +42,44 @@ usar dados sensíveis, adicionar autenticação e isolamento por projeto.
 - Health check: `/healthz`
 - Endpoint MCP: `/mcp`
 
+## Um prompt para uma planta: projetar_residencia (fase piloto)
+
+A partir da versao 0.3.0, o Claude pode chamar uma unica ferramenta:
+
+```text
+projetar_residencia(
+    pedido="Desenhe uma casa terrea de dois quartos, sala, cozinha, banheiro e lavanderia em um terreno de 10 x 20 metros"
+)
+```
+
+O fluxo interno realiza **preview / validacao / desenho CAD / auditoria ezdxf /
+quantitativo / geracao PDF A3 e PNG a partir das entidades DXF / exportacao
+DXF e ZIP**. Tudo em uma unica chamada MCP, sem o agente gerenciar
+`preview_token`. A resposta retorna `arquivos.dxf_url`, `zip_url`,
+`pdf_url` e `png_url`, todos temporarios por 15 minutos, mais SHA-256.
+Esta versao utiliza matplotlib no servidor Render.
+
+O Claude pode fornecer opcionalmente `programa={...}` com nomes e areas
+especificos dos ambientes. Sem isso, o motor assume as seis areas piloto
+18/9/5/12/10/5 m2, largura externa 9 m, paredes 0,15 m e recuos
+hipoteticos 3/0,5/2 m, declarados explicitamente na resposta.
+O campo `pedido` suporta a identificacao de uma casa terrea de 2 quartos,
+com eventual terreno declarado como "10 x 20" ou "10 por 20".
+O servidor nao usa LLM proprio para interpretar portugues; o Claude pode
+preencher o `programa` estruturado ao precisar de areas exatas.
+
+**Escopo restrito:** este piloto aceita apenas residencia terrea compacta
+com 2 quartos convencionais, 1 banheiro, sala, cozinha e area de servico.
+Rejeita pedidos de suites, garagem, varanda, piscina, pavimentos extras
+e outros numeros de dormitorios. Requisitos nao suportados nao sao
+silenciosamente omitidos. O PDF e conceitual, nao projeto legal ou
+executivo. Recuos nao foram verificados com legislacao de Fortaleza
+ou de outro municipio. Para outros arranjos, ampliar o motor de layout
+antes de declarar suporte.
+
+Use somente desenhos de teste neste ambiente publico sem autenticacao.
+Quem receber os links podera acessar o arquivo durante os 15 minutos de TTL.
+
 ## Planta assistida
 
 O cloud expõe `planta_assistida` para gerar a mesma residência determinística
