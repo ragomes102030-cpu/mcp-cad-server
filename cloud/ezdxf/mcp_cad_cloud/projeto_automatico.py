@@ -9,7 +9,7 @@ from __future__ import annotations
 from copy import deepcopy
 import hashlib
 import re
-from urllib.parse import urlparse
+import unicodedata
 
 
 _TWO_ROOMS = re.compile(r"\b(?:2|dois|duas)\s+(?:quartos?|dormit[oó]rios?)\b", re.I)
@@ -47,6 +47,70 @@ _PADRAO = {
 }
 
 
+def _chave(nome: str) -> str:
+    return unicodedata.normalize("NFKD", nome).encode("ascii", "ignore").decode().casefold()
+
+
+def _completar_ambientes(itens: list, premissas: list[str]) -> list[dict]:
+    """Complete only missing areas for the six supported distinct rooms.
+
+    Never change or guess an area explicitly supplied by the agent/user.
+    """
+    if not isinstance(itens, list) or len(itens) != 6:
+        raise ValueError(
+            "modelo compacto requer seis ambientes separados: Sala, Cozinha, "
+            "Lavanderia, Quarto 1, Quarto 2 e Banheiro. "
+            "Se nao conhece as areas, omita 'ambientes' ou todo o 'programa'.")
+    defaults = {
+        "sala": 18.0, "cozinha": 9.0, "servico": 5.0,
+        "quarto1": 12.0, "quarto2": 10.0, "banheiro": 5.0,
+    }
+    result, seen, quarto_num = [], set(), 0
+    for item in itens:
+        if not isinstance(item, dict):
+            raise ValueError("cada ambiente deve ser objeto com nome e area opcional")
+        nome = item.get("nome")
+        if not isinstance(nome, str) or not nome.strip():
+            raise ValueError("cada ambiente precisa de um nome")
+        n = _chave(nome)
+        if "sala" in n and "cozinha" in n:
+            raise ValueError(
+                "'Sala e Cozinha integradas' deve ser informada como dois "
+                "ambientes separados ('Sala' e 'Cozinha'); o desenho gerado "
+                "os integra fisicamente sem parede divisoria.")
+        if "quarto" in n or "dormitorio" in n:
+            quarto_num += 1
+            categoria = "quarto1" if quarto_num == 1 else "quarto2"
+            # The geometric engine expects the literal 'quarto' in the name.
+            if "quarto" not in n:
+                nome = "Quarto " + str(quarto_num)
+        elif "banheiro" in n:
+            categoria = "banheiro"
+        elif "sala" in n or "estar" in n:
+            categoria = "sala"
+        elif "cozinha" in n:
+            categoria = "cozinha"
+        elif "servico" in n or "lavanderia" in n:
+            categoria = "servico"
+        else:
+            raise ValueError(
+                f"ambiente {nome!r} nao suportado no piloto de dois quartos")
+        if categoria in seen or categoria not in defaults:
+            raise ValueError("programa contem ambientes repetidos ou quartos adicionais")
+        seen.add(categoria)
+        sala = dict(item)
+        sala["nome"] = nome
+        if sala.get("area") is None:
+            sala["area"] = defaults[categoria]
+            premissas.append(f"Area de {nome} assumida: {sala['area']:.2f} m2")
+        result.append(sala)
+    if seen != set(defaults):
+        raise ValueError(
+            "programa incompleto: sao obrigatorios sala, cozinha, "
+            "lavanderia, dois quartos e banheiro em itens distintos")
+    return result
+
+
 def interpretar_pedido(pedido: str, programa: dict | None) -> tuple[dict, list[str]]:
     if not isinstance(pedido, str) or not 8 <= len(pedido.strip()) <= 2000:
         raise ValueError("pedido deve ser texto de 8 a 2000 caracteres")
@@ -56,37 +120,67 @@ def interpretar_pedido(pedido: str, programa: dict | None) -> tuple[dict, list[s
         raise ValueError(
             f"tipologia ainda nao suportada: {inadequado.group(0)}; "
             "esta fase suporta somente casa terrea de 2 quartos sem suite ou garagem")
-    if programa is not None:
-        if not isinstance(programa, dict):
-            raise ValueError("programa deve ser um objeto com ambientes e medidas")
-        if programa.get("estrategia", "compacto_2quartos") != "compacto_2quartos":
-            raise ValueError("esta operacao suporta apenas estrategia compacto_2quartos")
-        p = deepcopy(programa)
-        p["estrategia"] = "compacto_2quartos"
-        # The generator itself checks exact room counts and dimensions.
-        return p, []
-    if not _TWO_ROOMS.search(trecho):
+    if not _TWO_ROOMS.search(trecho) and programa is None:
         raise ValueError(
             "texto nao indica claramente dois quartos; "
             "informe 2 quartos ou envie um programa estruturado")
+
     p = deepcopy(_PADRAO)
-    premissas = [
-        "Areas assumidas por modelo piloto: sala 18, cozinha 9, servico 5, "
-        "quartos 12/10 e banheiro 5 m2.",
-        "Largura da casa adotada: 9,00 m; paredes de 0,15 m e pe-direito de 2,80 m.",
-        "Recuos 3,00 m frontal, 0,50 m laterais e 2,00 m de fundo sao "
-        "hipoteses, nao exigencias urbanisticas verificadas.",
-    ]
+    premissas: list[str] = []
     lote = _LOT.search(trecho)
     if lote:
         p["terreno_largura"] = float(lote.group(1).replace(",", "."))
         p["terreno_profundidade"] = float(lote.group(2).replace(",", "."))
     else:
         premissas.append("Terreno assumido: 10,00 x 20,00 m.")
-    # An explicit requested room area must not be ignored in the fixed pilot.
-    if re.search(r"\d+(?:[.,]\d+)?\s*(?:m²|m2|metros\s+quadrados)", trecho):
+
+    if programa is None:
+        if re.search(r"\d+(?:[.,]\d+)?\s*(?:m²|m2|metros\s+quadrados)", trecho):
+            raise ValueError(
+                "areas explicitas exigem programa estruturado para nao ignorar valores")
+        premissas.extend([
+            "Areas do modelo piloto assumidas: sala 18, cozinha 9, servico 5, "
+            "quartos 12/10 e banheiro 5 m2.",
+            "Largura da casa adotada: 9,00 m; paredes de 0,15 m e pe-direito de 2,80 m.",
+            "Recuos 3,00 m frontal, 0,50 m laterais e 2,00 m de fundo sao "
+            "hipoteses, nao exigencias urbanisticas verificadas.",
+        ])
+        return p, premissas
+
+    if not isinstance(programa, dict):
+        raise ValueError("programa deve ser objeto JSON; omita se nao conhece areas")
+    if programa.get("estrategia", "compacto_2quartos") != "compacto_2quartos":
+        raise ValueError("esta operacao suporta apenas estrategia compacto_2quartos")
+    aceitos = set(_PADRAO) | {"titulo", "integracao_sala_cozinha"}
+    desconhecidos = set(programa) - aceitos
+    if desconhecidos:
         raise ValueError(
-            "areas explicitas exigem programa estruturado para nao ignorar valores")
+            f"campos ainda nao suportados: {sorted(desconhecidos)}. "
+            "Se nao sao requisitos explicitos, omita 'programa' para usar o modelo seguro.")
+    if programa.get("integracao_sala_cozinha") is False:
+        raise ValueError("esta ferramenta somente produz sala e cozinha integradas")
+    for field in ("terreno_largura", "terreno_profundidade"):
+        if field in programa and lote and abs(float(programa[field]) - p[field]) > 1e-8:
+            raise ValueError(
+                f"{field} no programa contradiz o terreno descrito no pedido")
+    p.update({key: deepcopy(value) for key, value in programa.items()
+              if key in aceitos and key != "integracao_sala_cozinha"})
+    if "ambientes" in programa:
+        p["ambientes"] = _completar_ambientes(programa["ambientes"], premissas)
+    else:
+        premissas.append(
+            "Areas internas assumidas conforme modelo validado porque "
+            "a lista ambientes foi omitida: 18/9/5/12/10/5 m2.")
+    for field, message in (
+        ("largura", "Largura da edificacao assumida: 9,00 m."),
+        ("recuo_frente", "Recuo frontal assumido: 3,00 m."),
+        ("recuo_lateral", "Recuo lateral assumido: 0,50 m."),
+        ("recuo_fundo", "Recuo de fundo assumido: 2,00 m."),
+    ):
+        if field not in programa:
+            premissas.append(message)
+    premissas.append(
+        "Recuos sao hipoteses de implantacao e nao regras urbanisticas verificadas.")
     return p, premissas
 
 
