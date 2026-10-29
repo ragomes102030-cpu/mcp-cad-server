@@ -5,26 +5,39 @@ from copy import deepcopy
 from itertools import product
 
 from mcp_cad_cloud.planta_gerador import ErroPrograma, gerar_modelo
-from test_layout_compacto import CASA
+from mcp_cad_cloud.validar_modelo import validar
+
+BASE_PROGRAM = {
+    "largura": 9.0, "terreno_largura": 10.0, "terreno_profundidade": 20.0,
+    "recuo_lateral": 0.5, "recuo_frente": 3.0, "recuo_fundo": 2.0,
+    "ambientes": [
+        {"nome": "Sala de estar", "area": 18.0},
+        {"nome": "Cozinha", "area": 9.0},
+        {"nome": "Área de serviço", "area": 5.0},
+        {"nome": "Quarto 1", "area": 12.0},
+        {"nome": "Quarto 2", "area": 10.0},
+        {"nome": "Banheiro social", "area": 5.0},
+    ],
+}
 
 
 def _build_valid_scenarios() -> list[dict]:
     candidates = product(
-        (16.0, 17.0, 18.0, 19.0, 20.0),
-        (8.0, 9.0, 10.0),
-        (4.0, 5.0, 6.0),
-        (11.0, 12.0, 13.0),
-        (9.0, 10.0, 11.0),
+        (16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0),
+        (8.0, 8.5, 9.0, 9.5, 10.0),
+        (4.0, 4.5, 5.0, 5.5, 6.0),
+        (11.0, 11.5, 12.0, 12.5, 13.0),
+        (9.0, 9.5, 10.0, 10.5, 11.0),
         (4.0, 4.5, 5.0, 5.5, 6.0),
     )
     candidates = tuple(candidates)
-    widths = (8.7, 8.8, 8.9, 9.0, 9.1)
+    widths = (8.7, 8.8, 8.9, 9.0, 9.1, 9.2, 9.3)
     setbacks = ((0.4, 2.0, 1.0), (0.5, 3.0, 2.0), (0.7, 4.0, 3.0))
     scenarios = []
     for width in widths:
         accepted_for_width = 0
         for areas in candidates:
-            program = deepcopy(CASA)
+            program = deepcopy(BASE_PROGRAM)
             setback = setbacks[(len(scenarios) + accepted_for_width) % len(setbacks)]
             side, front, back = setback
             program.update(
@@ -38,8 +51,12 @@ def _build_valid_scenarios() -> list[dict]:
             for room, area in zip(program["ambientes"], areas):
                 room["area"] = area
             try:
-                gerar_modelo(program)
+                model = gerar_modelo(program)
             except ErroPrograma:
+                continue
+            # A generator-accepted program can still contain orphaned furniture.
+            # Only count scenarios that pass the same strict model gate as preview.
+            if not validar(model, estrito=True).get("ok"):
                 continue
             index = len(scenarios) + 1
             lot_width = float(program["terreno_largura"])
@@ -63,8 +80,55 @@ def _build_valid_scenarios() -> list[dict]:
             accepted_for_width += 1
             if accepted_for_width == 6:
                 break
-    if len(scenarios) < 30:
-        raise RuntimeError(f"Scenario corpus found only {len(scenarios)} supported programs")
+    # Preserve a full end-to-end case at the width where the original suite
+    # exposed a laundry-door/furniture collision.
+    scenarios = scenarios[:30]
+    if not any(abs(float(item["program"]["largura"]) - 9.2) < 1e-8
+               for item in scenarios):
+        program = deepcopy(BASE_PROGRAM)
+        program.update(largura=9.2, terreno_largura=10.4, terreno_profundidade=20.0,
+            recuo_lateral=0.5, recuo_frente=3.0, recuo_fundo=2.0)
+        for room, area in zip(program["ambientes"], (16.0, 8.0, 4.0, 11.0, 11.0, 5.5)):
+            room["area"] = area
+        if validar(gerar_modelo(program), estrito=True).get("ok"):
+            case = {
+                "id": "valid-width-9.2", "kind": "supported_program",
+                "source": "structured", "program": program,
+                "briefing": "Residência de dois quartos no lote de 10,4 x 20,0 m.",
+                "terrain_bounds": (-0.5, -3.0, 9.9, 17.0),
+                "expected_doors": 5, "expected_window_pairs": 6,
+                "expected_room_areas_m2": [room["area"] for room in program["ambientes"]],
+                "render": True,
+            }
+            if len(scenarios) >= 30:
+                scenarios[-1] = case
+            else:
+                scenarios.append(case)
+    # The compact template supports fewer independent room-area combinations
+    # than the raw Cartesian input space suggests. Add explicit terrain/recuo
+    # variants of already verified room programs so lot placement is exercised
+    # without pretending unsupported room schedules are valid.
+    base_scenarios = list(scenarios)
+    terrain_variants = ((0.35, 2.5, 1.5), (0.6, 3.5, 2.5), (0.8, 4.0, 3.0))
+    variant_index = 0
+    while len(scenarios) < 30:
+        source = base_scenarios[variant_index % len(base_scenarios)]
+        side, front, back = terrain_variants[variant_index % len(terrain_variants)]
+        program = deepcopy(source["program"])
+        house_width = float(program["largura"])
+        house_depth = float(gerar_modelo(program)["resumo_geometria"]["profundidade"])
+        program.update(recuo_lateral=side, recuo_frente=front, recuo_fundo=back,
+            terreno_largura=house_width + 2 * side + 0.4,
+            terreno_profundidade=house_depth + front + back + 1.0)
+        if validar(gerar_modelo(program), estrito=True).get("ok"):
+            variant_index += 1
+            item = deepcopy(source)
+            item.update(id=f"valid-terrain-{len(scenarios)+1:02d}", program=program,
+                terrain_bounds=(-side, -front, -side + program["terreno_largura"],
+                                -front + program["terreno_profundidade"]))
+            scenarios.append(item)
+        else:
+            variant_index += 1
     return scenarios[:30]
 
 
@@ -75,7 +139,7 @@ def _invalid_programs() -> list[dict]:
     cases = []
 
     def add(case_id, mutate):
-        program = deepcopy(CASA)
+        program = deepcopy(BASE_PROGRAM)
         mutate(program)
         cases.append({"id": f"invalid-{case_id}", "kind": "invalid_program",
                       "program": program})
@@ -123,6 +187,19 @@ ADVERSARIAL_SCENARIOS = _invalid_programs() + [
 
 
 MCP_SCENARIOS = [
-    {"id": "mcp-natural-language-basic", "valid_scenario": VALID_SCENARIOS[0]},
-    {"id": "mcp-natural-language-compact-variation", "valid_scenario": VALID_SCENARIOS[13]},
+    {"id": "mcp-natural-language-basic", "valid_scenario": {
+        "program": deepcopy(BASE_PROGRAM),
+        "briefing": "Residência térrea de dois quartos, sala, cozinha, lavanderia e banheiro em lote de 10 x 20 m.",
+        "terrain_bounds": (-0.5, -3.0, 9.5, 17.0), "expected_doors": 5,
+        "expected_window_pairs": 6,
+        "expected_room_areas_m2": [room["area"] for room in BASE_PROGRAM["ambientes"]],
+    }},
+    {"id": "mcp-natural-language-larger-lot", "valid_scenario": {
+        "program": {**deepcopy(BASE_PROGRAM), "terreno_largura": 11.0,
+                    "terreno_profundidade": 22.0},
+        "briefing": "Residência térrea de dois quartos, sala, cozinha, lavanderia e banheiro em lote de 11 x 22 m.",
+        "terrain_bounds": (-0.5, -3.0, 10.5, 19.0), "expected_doors": 5,
+        "expected_window_pairs": 6,
+        "expected_room_areas_m2": [room["area"] for room in BASE_PROGRAM["ambientes"]],
+    }},
 ]

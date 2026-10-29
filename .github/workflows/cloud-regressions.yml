@@ -24,6 +24,18 @@ jobs:
           PYTHONPATH: cloud/ezdxf
           MCP_CAD_PROFILE: full
         run: python -m pytest cloud/ezdxf/tests -q
+      - name: Run plant generation lab
+        env:
+          PYTHONPATH: cloud/ezdxf
+          MCP_CAD_PROFILE: full
+        run: python tools/run_plant_lab.py --output out/plant-lab
+      - name: Upload plant lab reports and visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plant-generation-lab
+          path: out/plant-lab/
+          retention-days: 30
       - name: Generate review previews and DXF
         env:
           PYTHONPATH: cloud/ezdxf

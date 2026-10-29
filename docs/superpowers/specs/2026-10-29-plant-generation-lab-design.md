@@ -63,3 +63,15 @@ Substituir a verificação manual isolada por um laboratório reproduzível para
 - Não criar uma nota subjetiva de “qualidade arquitetônica”. Definir falha obrigatória por contrato verificável (geometria, briefing, portas/vãos, mobiliário, áreas, conectividade e saída visual legível); deixar juízos de projeto/uso e conformidade para avaliação profissional separada.
 - A medição independente em grades de 5/10/15 cm é um indicador de sensibilidade apenas; o algoritmo existente permanece em 10 cm e sua resposta deve ser relatada separadamente.
 - Nenhuma verificação normativa será atribuída ao laboratório.
+
+## Cobertura implementada e limites medidos
+
+- A matriz executa 30 programas suportados na família existente `compacto_2quartos`. Varia seis áreas, largura externa de 8,7 a 9,2 m e dimensões/recuos de lote; nomes dos cômodos e adjacências permanecem fixos. Inclui o caso corrigido de 9,2 m. Não é um benchmark de várias tipologias.
+- São executadas 12 entradas inválidas e 10 mutações controladas de DXF em portas, janelas, mobiliário, lote, unidades, paredes e cotas. O subconjunto MCP contém dois pedidos em linguagem natural; o smoke HTTP exercita `initialize`, `tools/list`, `tools/call`, downloads e reabertura DXF.
+- A área por cômodo é verificada pela consistência das cotas textuais com o briefing. O DXF não tem polígonos fechados de cada cômodo, portanto não há medição independente de área física.
+- A conectividade vem da auditoria de produção aplicada ao DXF; sensibilidade independente de rota usa malhas de 5/10/15 cm e permanece uma aproximação, não uma medição normativa ou acessível.
+- Inspecionei a folha de contato, uma planta representativa de 9,2 m e a comparação visual de circulação original/proposta. As saídas são estudos preliminares legíveis, com textos/linhas de mobiliário leves; isso não demonstra qualidade arquitetônica alta nem prontidão para construção.
+- Foram reproduzidos e corrigidos dois defeitos: rótulos estruturados de `Suíte` eram aceitos sem banho privativo modelado; em 9,2 m, o giro da porta da lavanderia colidia com mobiliário fixo.
+- Na execução validada local: suíte completa com 138 testes e um aviso de depreciação; matriz final com 30/30 válidos, 22/22 adversariais esperados e 2/2 pedidos naturais pelo manipulador da ferramenta. Um teste MCP/HTTP independente exercita initialize/list/call/download.
+- O teste de reprodutibilidade compara o hash de entidades de duas gerações idênticas; em duas execuções completas, os 29 cenários compartilhados tiveram hash de entidades igual. O relatório conserva também o SHA-256 binário exato de cada arquivo. Metadados DXF com GUID/data explicam diferenças no SHA-256 binário entre execuções.
+- A matriz final registra 59 avisos (30 `sala-cozinha-integracao-nao-comprovada`, 29 `passagem-estreita-estimada`), zero erros e zero cômodos desconectados; na grade independente de 10 cm, seis resultados foram inconclusivos. Esses resultados permanecem como limites abertos, mesmo com os contratos obrigatórios aprovados.

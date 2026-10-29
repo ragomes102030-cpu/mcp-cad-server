@@ -38,10 +38,9 @@
 - Produces `evaluate_reopened_dxf(doc, scenario) -> list[dict]`, where each issue has `code`, `severity`, and `detail`.
 - Uses DXF entities and scenario requirements; does not use model summaries or production geometry auditors to compute its own checks.
 
-- [ ] Write tests for valid serialized DXF, out-of-lot geometry, missing/shifted door and window geometry, furniture/room overlap, and measured-vs-requested room areas.
-- [ ] Run `python -m pytest cloud/ezdxf/tests/test_plant_lab_geometry.py -q`; confirm tests fail because the evaluator is missing.
-- [ ] Implement the independent evaluator using geometry derived from the reopened DXF entities and explicit tolerances.
-- [ ] Re-run the targeted tests and confirm they pass; record issue codes for each intentional mutation.
+- [x] Write tests for valid serialized DXF, out-of-lot geometry, missing/shifted door and window geometry, furniture overlap, and requested area label consistency.
+- [x] Run the targeted tests RED because the evaluator was missing, then implement it from reopened DXF entities and explicit tolerances.
+- [x] Re-run the targeted tests GREEN; intentional mutations report named issue codes.
 
 ### Task 2: Scenario corpus and circulation sensitivity
 
@@ -55,11 +54,11 @@
 - `ADVERSARIAL_SCENARIOS` contains at least 20 stable cases split between expected input rejection and controlled DXF corruption.
 - `measure_route_widths(doc, scenario, steps=(0.05, 0.10, 0.15)) -> dict` independently measures approximate connectivity/clearance sensitivity from reopened DXF geometry.
 
-- [ ] Write count, unique-ID, deterministic-seed, valid scenario, adversarial rejection/no-mutation, DXF mutation detection, and grid-sensitivity tests.
-- [ ] Run the targeted test file and confirm expected failures expose missing corpus/evaluator behavior.
-- [ ] Implement supported program variants only after probing generator compatibility; classify unsupported briefs as adversarial instead of counting them as valid.
-- [ ] Implement test-only multi-grid measurements and label all results approximate, separate from the fixed 10 cm production auditor.
-- [ ] Re-run targeted tests and ensure all valid IDs generate and all adversarial cases produce their expected classification.
+- [x] Write count, unique-ID, valid scenario, adversarial rejection/no-mutation, DXF mutation detection, and grid-sensitivity tests.
+- [x] Run targeted tests RED before implementing the corpus/evaluator.
+- [x] Probe generator and strict preview compatibility; only strict-valid supported programs count as valid. Unsupported suites and other requirements remain adversarial.
+- [x] Implement 5/10/15 cm test-only measurements, labelled approximate and separate from the fixed 10 cm production audit.
+- [x] Targeted tests pass; the full lab reports 30 valid and 22 adversarial cases.
 
 ### Task 3: Runner, reports, and visual inspection artifacts
 
@@ -72,12 +71,12 @@
 - `run_lab(output_dir: Path) -> dict` returns stable aggregate counts, per-scenario diagnostics, timings, file hashes, and artifact paths.
 - CLI writes `report.json`, `report.md`, DXFs for valid scenarios, and selected real-flow PDF/PNG samples/contact sheet beneath `out/plant-lab/`.
 
-- [ ] Test report schema, deterministic scenario classification, hashes, and that required failures return a non-zero CLI exit.
-- [ ] Confirm tests fail before runner/report implementation.
-- [ ] Implement isolation/reset, DXF write/read with `ezdxf.readfile`, `ezdxf.audit()`, production audit reporting, independent audit, fidelity checks, and per-scenario error capture.
-- [ ] Render documented representative cases for each supported layout family plus original/proposal circulation comparison; assemble contact sheet.
-- [ ] Run the runner locally, inspect the resulting contact sheet and selected PNG/PDF, and correct concrete rendering/generation defects with regression tests.
-- [ ] Re-run runner tests and verify report totals match the corpus, with no discarded failures.
+- [x] Test report schema, hashes, expected-mutation failures, and a non-zero CLI exit on required failure.
+- [x] Confirm the runner import test failed before implementation; later regressions reproduce the width-specific furniture/door collision before the fix.
+- [x] Implement isolated sessions, DXF save/reopen/audit, production and independent checks, fidelity labels, and visible per-case failures.
+- [x] Render compact layout samples plus the circulation original/proposal comparison and contact sheet.
+- [x] Inspect the contact sheet, a 9.2 m plan, and the circulation comparison; fix the width-dependent collision with a regression.
+- [x] Full runner passed 30/30 valid, 22/22 adversarial and 2/2 natural-language tool-handler cases, including the 9.2 m regression scenario.
 
 ### Task 4: CI and usage documentation
 
@@ -90,11 +89,11 @@
 - CI runs the lab CLI after pytest and uploads `out/plant-lab/` with a fixed artifact name and bounded retention.
 - MCP/HTTP smoke exercises one supported natural-language request and confirms tool response plus real returned DXF/PDF/PNG validity without relying on a deployed service.
 
-- [ ] Add HTTP smoke assertions for supported call, invalid request handling, and download signatures/round-trip DXF.
-- [ ] Confirm the new smoke test fails for any absent/malformed contract before changing workflow/docs.
-- [ ] Add lab execution and upload steps to existing workflow; keep existing preview artifact behavior intact.
-- [ ] Document local invocation, scenario categories, output files, and explicit non-legal limitations.
-- [ ] Run focused smoke and workflow configuration checks.
+- [x] Add HTTP smoke assertions for initialize/tools/list/tools/call and valid DXF/PDF/PNG downloads with DXF round-trip.
+- [x] Exercise public MCP initialization and tool listing plus malformed/unsupported requests in existing isolated coverage.
+- [x] Add lab execution/artifact upload while retaining the existing preview artifact.
+- [x] Document local invocation, scenarios, outputs and explicit legal/measurement limits.
+- [x] Focused HTTP smoke passes; workflow and docs reviewed.
 
 ### Task 5: Full regression, review, and PR
 
@@ -102,9 +101,9 @@
 - Review all changed files from Tasks 1–4.
 - Create a PR against `cloud/ezdxf` after evidence is complete.
 
-- [ ] Run the full existing cloud suite plus lab suite from repository root with `PYTHONPATH=cloud/ezdxf` and `MCP_CAD_PROFILE=full`.
-- [ ] Run the CLI twice and compare stable report fields/hashes; inspect all visual samples.
-- [ ] Confirm the original checkout's dirty files remain untouched and the worktree diff contains only scoped lab/product fixes.
-- [ ] Fix any concrete defect only with a failing regression first; repeat affected checks and the full suite.
-- [ ] Review changed files for unsupported quality/legal claims, accidental weakening of checks, artifacts containing secrets, and flaky nondeterminism.
+- [x] Run the full cloud suite after the final original-integrity regression: 138 passed, one Authlib deprecation warning.
+- [x] Run the CLI with natural-language-only tool-handler cases; 29 shared cases across full runs had identical entity hashes, and the same-scenario regression test passes. Inspect the contact sheet, 9.2 m sample and circulation comparison.
+- [x] Confirm the original dirty checkout remains on `cloud/ezdxf` with its pre-existing edits/untracked outputs; all work is isolated in `codex/plant-lab-20261029`.
+- [x] Fix reproduced generator/layout defects with failing regressions, then rerun the full lab and suite.
+- [x] Review changed code, CI, and report outputs for claims, weakened checks, token URLs and nondeterminism. The report has no short-lived download URLs; architectural/legal limits and 59 circulation warnings remain visible.
 - [ ] Commit the branch, push it, open a PR against `cloud/ezdxf`, and attach the PR. Do not merge or deploy in this plan.

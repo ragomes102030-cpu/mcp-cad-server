@@ -14,6 +14,7 @@ def test_corpus_has_thirty_supported_programs_and_twenty_adversarial_cases():
     from tools.plant_lab.scenarios import VALID_SCENARIOS, ADVERSARIAL_SCENARIOS
 
     assert len(VALID_SCENARIOS) >= 30
+    assert any(item["id"] == "valid-width-9.2" for item in VALID_SCENARIOS)
     assert len(ADVERSARIAL_SCENARIOS) >= 20
     ids = [item["id"] for item in (*VALID_SCENARIOS, *ADVERSARIAL_SCENARIOS)]
     assert len(ids) == len(set(ids))

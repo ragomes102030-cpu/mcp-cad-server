@@ -432,3 +432,38 @@ de projeção e os recuos referenciam o contorno construído, não eixos
 de paredes. As áreas internas referenciam as faces livres. A estratégia
 antiga `duas_faixas` permanece experimental e deve ser tratada como
 estudo geométrico não aprovado, sem promessa de dimensões externas.
+
+## Laboratório automatizado de plantas
+
+Para executar a matriz localmente no PowerShell, a partir da raiz do
+repositório:
+
+```powershell
+$env:PYTHONPATH = "cloud/ezdxf"
+$env:MCP_CAD_PROFILE = "full"
+python -m pytest cloud/ezdxf/tests -q
+python tools/run_plant_lab.py --output out/plant-lab
+```
+
+O laboratório cria 30 programas que passam pela validação estrita de
+prévia, variando áreas de ambientes, largura da casa e implantação no
+lote. Também verifica 12 entradas inválidas e 10 corrupções controladas
+de DXF. Cada caso válido é desenhado, auditado, salvo e reaberto com
+`ezdxf`; a geometria física é comparada com expectativas independentes,
+e conectividade e interferências são registradas junto à auditoria do
+produto. A largura de passagem independente é uma estimativa por malha
+em 5, 10 e 15 cm e não representa medição ou conformidade normativa.
+
+O diretório de saída contém `report.json` e `report.md`, os DXFs, PDFs e
+PNGs selecionados, uma folha de contato, duas execuções naturais do
+manipulador da ferramenta e a comparação visual de circulação original/proposta.
+O teste HTTP separado percorre `initialize`, `tools/list`, `tools/call` e os
+downloads no transporte MCP real. A proposta é exportada sem ser aplicada ao
+desenho original. O workflow de CI publica
+esses arquivos como artefato `plant-generation-lab` por 30 dias.
+
+Limites de medição: o DXF ainda não grava polígonos fechados por cômodo;
+por isso a comparação de áreas verifica as cotas textuais do arquivo, não
+áreas físicas medidas de contornos. Os desenhos são estudos preliminares
+e não recebem nota subjetiva de qualidade, aprovação arquitetônica,
+acessibilidade ou conformidade legal.
