@@ -380,11 +380,19 @@ def quantitativo(projeto_id: str | None = None,
         aberturas_por_parede=aberturas_por_parede,
         inventario_aberturas_completo=inventario_aberturas_completo,
     )
-    return {"ok": engineering["ok"], "entities": len(entities),
+    from mcp_cad_cloud.topologia_paredes import auditar_paredes_e_vaos_dxf
+    topo = auditar_paredes_e_vaos_dxf(
+        doc, altura_paredes_m=altura_paredes_m,
+        altura_portas_m=altura_portas_m,
+        altura_janelas_m=altura_janelas_m,
+        espessura_paredes_m=espessura_paredes_m,
+    )
+    return {"ok": engineering["ok"] and topo["ok"], "entities": len(entities),
             "by_type": dict(Counter(e.dxftype() for e in entities)),
             "by_layer": dict(Counter(e.dxf.layer for e in entities)),
             "quantitativos_construtivos": engineering,
-            "warning": "Quantitativos só são completos quando dados e geometria comprovados; não calcula preços."}
+            "auditoria_paredes_continuas": topo,
+            "warning": "Eixos de trechos sólidos não equivalem a paredes brutas; a análise topológica separada nunca inventa alturas de passagens ou volumes."}
 
 @_wrap
 def export_dxf(incluir_base64: bool = False) -> dict:
