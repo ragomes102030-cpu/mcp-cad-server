@@ -37,7 +37,9 @@ def test_one_prompt_produces_downloadable_real_dxfs_png_and_a3_pdf():
     assert result["etapa"] == "concluido"
     assert result["modo"] == "uma_chamada"
     assert result["premissas"]
-    assert result["quantitativo"]["entities"] == 146
+    assert result["quantitativo"]["entities"] == 175
+    assert result["quantitativo"]["by_layer"]["EIXOS-PAREDES"] == 22
+    assert result["quantitativo"]["by_layer"]["PISOS"] == 7
     assert result["quantitativo"]["by_type"]["DIMENSION"] == 8
     assert result["auditoria"]["ok"]
     assert result["auditoria"]["errors"] == 0
@@ -61,7 +63,11 @@ def test_one_prompt_produces_downloadable_real_dxfs_png_and_a3_pdf():
         path = Path(tmp) / "audited.dxf"
         path.write_bytes(by_kind["dxf"])
         reopened = ezdxf.readfile(path)
-    assert len(reopened.modelspace()) == 146
+    assert len(reopened.modelspace()) == 175
+    assert len([e for e in reopened.modelspace()
+                if e.dxf.layer not in ("EIXOS-PAREDES", "PISOS")]) == 146
+    assert len(reopened.modelspace().query('LINE[layer=="EIXOS-PAREDES"]')) == 22
+    assert len(reopened.modelspace().query('LWPOLYLINE[layer=="PISOS"]')) == 7
     assert reopened.audit().has_errors is False
     assert len(list(reopened.modelspace().query("DIMENSION"))) == 8
 
