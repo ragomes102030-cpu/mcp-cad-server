@@ -54,7 +54,7 @@ def test_opening_ids_point_to_physical_dxf_entities_and_are_unique(doc):
     windows=[g for w in q["paredes"] for g in w["vaos"] if g["tipo"]=="JANELA"]
     assert len(doors)==5 and len(windows)==6
     handles=[h for gap in doors+windows for h in gap["handles_simbolos"]]
-    assert len(handles)==5+6*2
+    assert len(handles)==5*2+6*2
     assert len(set(handles))==len(handles)
     assert set(handles)<=physical
     assert all(g["largura_m"]>0 for g in doors+windows)
@@ -68,6 +68,22 @@ def test_missing_door_arc_is_detected_as_unidentified_gap(doc):
     assert result["resumo"]["vaos_sem_simbolo"]==2
     assert result["status"]=="PARCIAL"
     assert not result["aprovacao_arquitetonica"]
+
+
+def test_door_without_a_matching_leaf_cannot_be_verified(doc):
+    leaf=next(iter(doc.modelspace().query('LINE[layer=="PORTAS"]')))
+    doc.modelspace().delete_entity(leaf)
+    result=auditar_paredes_e_vaos_dxf(doc)
+    assert not result["ok"]
+    assert "FOLHA_PORTA_INCONSISTENTE" in _issues(result)
+
+
+def test_ghost_door_leaf_without_arc_is_rejected(doc):
+    doc.modelspace().add_line((13,13),(13.9,13),
+                              dxfattribs={"layer":"PORTAS"})
+    result=auditar_paredes_e_vaos_dxf(doc)
+    assert not result["ok"]
+    assert "SIMBOLO_SEM_ABERTURA" in _issues(result)
 
 
 def test_ghost_door_arc_outside_any_wall_is_rejected(doc):
