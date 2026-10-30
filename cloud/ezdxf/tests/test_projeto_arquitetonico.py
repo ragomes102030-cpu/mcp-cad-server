@@ -80,6 +80,32 @@ def test_compact_house_produces_all_licensing_views_with_sources(api):
     assert any("municip" in limitation.lower() for limitation in package.limitations)
 
 
+def test_floor_plan_represents_wall_thickness_with_two_faces_and_jambs(api):
+    package = generate(api)
+    floor_plan = next(view for view in package.views if view.view_id == "ARQ-PLANTA")
+    wall_index = 0
+    faces = [segment for segment in floor_plan.segments
+             if segment.source_id in {f"wall:{wall_index}",
+                                      f"wall:{wall_index}:face:1"}]
+    jambs = [segment for segment in floor_plan.segments
+             if segment.source_id in {f"wall:{wall_index}:end:0",
+                                      f"wall:{wall_index}:end:1"}]
+
+    assert len(faces) == 2, faces
+    assert len(jambs) == 2, jambs
+    assert all(segment.layer == "PAREDES" for segment in faces + jambs)
+    model_wall = package.source_plan["paredes"][wall_index]
+    thickness = package.source_plan["espessura_parede"]
+    y_face_0 = faces[0].y1
+    y_face_1 = faces[1].y1
+    if model_wall[1] == model_wall[3]:
+        assert abs(abs(y_face_0-y_face_1) - thickness) < 1e-8
+        assert all(abs(segment.x1-segment.x2) < 1e-8 for segment in jambs)
+    else:
+        assert abs(abs(faces[0].x1-faces[1].x1) - thickness) < 1e-8
+        assert all(abs(segment.y1-segment.y2) < 1e-8 for segment in jambs)
+
+
 def test_missing_wall_opening_or_roof_height_is_rejected(api):
     for changes in (
         {"wall_height_m": None},

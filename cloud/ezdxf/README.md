@@ -493,6 +493,13 @@ externas da edificação; o pacote ainda não contém quadro completo de
 esquadrias, detalhes construtivos, notas específicas da prefeitura ou cotas
 internas.
 
+Na planta baixa, os eixos ortogonais de parede são representados pelas duas
+faces paralelas, espaçadas pela espessura declarada no modelo, e pelos
+fechamentos transversais nos extremos dos segmentos/vãos. A auditoria da folha
+reaberta conserva IDs separados para as duas faces e detecta a remoção de uma
+delas. Essa representação 2D não adiciona hachura de material ou composição
+construtiva.
+
 O registro `mcp_cad_cloud/normas_arquitetura.json` é um inventário pequeno e
 explicitamente não exaustivo de normas candidatas. Em 29/10/2026, a ficha
 ABNT/Sebrae consultada informa a ABNT NBR 9050:2020 Versão Corrigida:2021 como

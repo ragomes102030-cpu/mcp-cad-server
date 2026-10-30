@@ -60,6 +60,24 @@ def test_missing_source_geometry_is_detected_after_serialization():
     assert "source-entity-missing" in {item["code"] for item in result["errors"]}
 
 
+def test_missing_second_wall_face_is_detected_after_serialization():
+    auditor = load_auditor()
+    package, spec, doc = serialized_sheet()
+    entity = next(
+        entity for entity in doc.modelspace().query("LINE")
+        if entity.has_xdata("MCP_CAD")
+        and entity.get_xdata("MCP_CAD")[0].value == "wall:0:face:1"
+    )
+    doc.modelspace().delete_entity(entity)
+
+    result = auditor.audit_sheet_document(doc, spec, package)
+
+    assert result["ok"] is False
+    missing = [item["message"] for item in result["errors"]
+               if item["code"] == "source-entity-missing"]
+    assert any("wall:0:face:1" in message for message in missing)
+
+
 def test_missing_overall_dimension_is_detected_after_serialization():
     auditor = load_auditor()
     package, spec, doc = serialized_sheet()

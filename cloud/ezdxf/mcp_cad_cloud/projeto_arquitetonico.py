@@ -207,11 +207,43 @@ def _rect(target: list[Segment], x1: float, y1: float, x2: float, y2: float,
     _segment(target, x1, y2, x1, y1, layer, source_id)
 
 
+def _wall_faces(target: list[Segment], wall: tuple[float, ...],
+                thickness: float, source_id: str):
+    """Draw both wall faces and end jambs from an orthogonal wall axis."""
+    x1, y1, x2, y2 = (float(value) for value in wall)
+    half = thickness / 2
+    if abs(y2-y1) <= 1e-8:
+        left, right = sorted((x1, x2))
+        _segment(target, left, y1-half, right, y1-half,
+                 "PAREDES", source_id)
+        _segment(target, left, y1+half, right, y1+half,
+                 "PAREDES", f"{source_id}:face:1")
+        _segment(target, left, y1-half, left, y1+half,
+                 "PAREDES", f"{source_id}:end:0")
+        _segment(target, right, y1-half, right, y1+half,
+                 "PAREDES", f"{source_id}:end:1")
+    elif abs(x2-x1) <= 1e-8:
+        bottom, top = sorted((y1, y2))
+        _segment(target, x1-half, bottom, x1-half, top,
+                 "PAREDES", source_id)
+        _segment(target, x1+half, bottom, x1+half, top,
+                 "PAREDES", f"{source_id}:face:1")
+        _segment(target, x1-half, bottom, x1+half, bottom,
+                 "PAREDES", f"{source_id}:end:0")
+        _segment(target, x1-half, top, x1+half, top,
+                 "PAREDES", f"{source_id}:end:1")
+    else:
+        raise ArchitecturePackageError(
+            "A planta arquitetônica exige eixos de parede ortogonais nesta versão.")
+
+
 def _floor_plan(model: dict) -> ViewGeometry:
     segments: list[Segment] = []
+    thickness = _finite("espessura de parede", model.get("espessura_parede"))
+    if thickness <= 0:
+        raise ArchitecturePackageError("Espessura de parede deve ser positiva.")
     for index, wall in enumerate(model["paredes"]):
-        x1, y1, x2, y2 = wall
-        _segment(segments, x1, y1, x2, y2, "PAREDES", f"wall:{index}")
+        _wall_faces(segments, wall, thickness, f"wall:{index}")
     leaves = model.get("portas_folhas", [])
     if len(leaves) != len(model.get("portas", [])):
         raise ArchitecturePackageError("Orientação explícita das folhas das portas ausente.")
