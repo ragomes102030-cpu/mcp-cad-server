@@ -1,12 +1,16 @@
-"""Conservative room-width cotas for the compact pilot.
+"""Measured, collision-aware interior dimensions for compact floor plans.
 
-Dimensions are derived from the plan's clear-face room bounding boxes. When
-the drawing is too crowded, omit the graphical dimension instead of placing
-a false/illegible label. The room schedule remains the complete numeric record.
+Use room clear-face bounds without silently shortening a dimension. Full-length
+horizontal/vertical lines are drawn only where door swings, furniture and text
+permit them. Record any omission rather than inventing a clear placement.
+
+This is a graphic preflight, NOT an accessibility or code-compliance check.
 """
 from __future__ import annotations
 
 from math import isfinite
+
+from mcp_cad_cloud.auditoria_legibilidade import _label_box
 
 
 def _overlap(a, b, clearance=0.0):
@@ -14,81 +18,144 @@ def _overlap(a, b, clearance=0.0):
             min(a[3], b[3]) - max(a[1], b[1]) > -clearance)
 
 
+def _room_box(room):
+    values = tuple(float(room[key]) for key in ("x1", "y1", "x2", "y2"))
+    x1, y1, x2, y2 = values
+    if not all(map(isfinite, values)) or x2 <= x1 or y2 <= y1:
+        raise ValueError("Ambiente sem dimensoes positivas e finitas")
+    return values
+
+
+def _candidates(index, room, axis, blocked, obstacles, door_boxes, ViewLabel):
+    x1, y1, x2, y2 = _room_box(room)
+    length = x2 - x1 if axis == "width" else y2 - y1
+    text = f"{length:.2f} m"
+    height = 0.16  # model metres at 1:50; matches A3 annotation estimate
+    text_width = len(text) * height * 0.53
+    extent = y2 - y1 if axis == "width" else x2 - x1
+    choices = []
+    for step in range(17, int((extent - 0.17) * 100), 3):
+        pos = (y1 if axis == "width" else x1) + step / 100
+        line = (x1, pos - .010, x2, pos + .010) if axis == "width" else (
+            pos - .010, y1, pos + .010, y2)
+        if any(_overlap(line, box, .020) for box in obstacles + blocked):
+            continue
+        if any(_overlap(line, box, .008) for box in door_boxes):
+            continue
+        for side in (1, -1):
+            if axis == "width":
+                label_y = pos + (.14 if side == 1 else -.17)
+                options = ((x1 + step / 100) for step in range(
+                    6, int((x2 - x1 - text_width - .06) * 100), 6))
+                label_locations = ((xx, label_y) for xx in options)
+            else:
+                label_x = pos + (.13 if side == 1 else -text_width - .13)
+                options = ((y1 + step / 100) for step in range(
+                    6, int((y2 - y1 - .15) * 100), 6))
+                label_locations = ((label_x, yy) for yy in options)
+            for lx, ly in label_locations:
+                label = ViewLabel(
+                    text, lx, ly, f"dimension-label:room:{index}:{axis}")
+                rect = _label_box(label, 50)
+                if (rect[0] < x1 + .035 or rect[2] > x2 - .035 or
+                        rect[1] < y1 + .035 or rect[3] > y2 - .035):
+                    continue
+                if any(_overlap(rect, box, .018) for box in obstacles + blocked):
+                    continue
+                if any(_overlap(rect, box, .018) for box in door_boxes):
+                    continue
+                boundary = min(pos - (y1 if axis == "width" else x1),
+                               (y2 if axis == "width" else x2) - pos)
+                center_penalty = (abs(lx + text_width/2 - (x1+x2)/2)
+                                  if axis == "width" else
+                                  abs(ly - (y1+y2)/2))
+                choices.append((boundary + .25 * center_penalty, pos,
+                                label, line, rect))
+    return sorted(choices, key=lambda entry: entry[0])
+
+
+def _emit(segments, labels, Segment, chosen, room, index, axis, blocked):
+    _, pos, label, _, rect = chosen
+    x1, y1, x2, y2 = _room_box(room)
+    source = f"dimension:room:{index}:{axis}"
+    if axis == "width":
+        segments.append(Segment(x1, pos, x2, pos, "COTAS-INTERIOR", source))
+        ends = ((x1, pos), (x2, pos))
+    else:
+        segments.append(Segment(pos, y1, pos, y2, "COTAS-INTERIOR", source))
+        ends = ((pos, y1), (pos, y2))
+    for x, y in ends:
+        segments.append(Segment(x-.045, y-.045, x+.045, y+.045,
+                                "COTAS-INTERIOR", source))
+    labels.append(label)
+    blocked.append(rect)
+
+
 def adicionar_cotas_internas(segments, labels, model, Segment, ViewLabel):
-    """Add measured horizontal interior dimension lines and labels.
+    """Place two measured axes per room where unobstructed.
 
-    Returns source IDs of rooms that could not be annotated safely. No
-    dimension is fabricated when an area is obstructed by furniture or text.
+    Pair-search for the congested rooms prevents a width label from making
+    an otherwise possible vertical label impossible. Vertical and horizontal
+    dimension baselines inherently cross geometrically inside a rectangle;
+    their *labels* are protected from both baselines.
     """
-    omitted = []
-    furniture = [
-        tuple(map(float, item)) for item in model.get("moveis", [])
-        if len(item) == 4
+    furniture = [tuple(map(float, item)) for item in model.get("moveis", [])
+                 if len(item) == 4]
+    doors = [
+        (min(s.x1, s.x2), min(s.y1, s.y2),
+         max(s.x1, s.x2), max(s.y1, s.y2))
+        for s in segments if s.layer == "ESQUADRIA-PORTA"
     ]
-    # Match the paper text footprint approximation used by the A3 renderer:
-    # min(4, max(3, 160/scale)) mm at 1:50 -> 0.16 m text height.
-    height = 0.16
+    prefixes = ("room:", "room-area:", "opening-tag:", "dimension-label:")
+    blocked = [_label_box(label, 50) for label in labels
+               if label.source_id.startswith(prefixes)]
+    rooms = model.get("ambientes", [])
+    for room in rooms:
+        _room_box(room)  # reject invalid geometry before producing any cotas
 
-    def annotation_box(label):
-        width = max(0.10, len(label.text) * height * 0.53)
-        centered = label.source_id.startswith(("room:", "room-area:"))
-        left = label.x - width / 2 if centered else label.x
-        return (left, label.y - height * 0.55,
-                left + width, label.y + height * 0.65)
+    # Constrained rooms first: the bathroom and laundry have far fewer
+    # safe placements than the open living room.
+    rankings = []
+    for index, room in enumerate(rooms):
+        width = _candidates(index, room, "width", blocked, furniture,
+                            doors, ViewLabel)
+        depth = _candidates(index, room, "depth", blocked, furniture,
+                            doors, ViewLabel)
+        rankings.append((min(len(width), len(depth)), index))
+    omitted = {"width": [], "depth": []}
 
-    label_boxes = [annotation_box(label) for label in labels
-                   if label.source_id.startswith((
-                       "room:", "room-area:", "opening-tag:",
-                       "dimension-label:"
-                   ))]
-    for index, room in enumerate(model.get("ambientes", [])):
-        x1, y1, x2, y2 = (
-            float(room[k]) for k in ("x1", "y1", "x2", "y2"))
-        if not all(map(isfinite, (x1, y1, x2, y2))) or x2 <= x1 or y2 <= y1:
-            raise ValueError("Dimensões inválidas do ambiente para cotas internas")
-        width = x2 - x1
-        name = f"dimension:room:{index}:width"
-        text = f"{width:.2f} m"
-        estimated_text_width = len(text) * height * 0.53
-        # Candidates closest to the horizontal room edges first, with
-        # alternatives for furniture and interior annotation congestion.
-        depths = (0.22, 0.36, 0.50, 0.68, 0.88)
-        candidates = [
-            y for offset in depths for y in (y1 + offset, y2 - offset)
-            if y1 + 0.12 < y < y2 - 0.24
-        ]
-        placed = False
-        for y in candidates:
-            # The drawn line spans the actual clear-face width, without
-            # trimming ends to change the measured length.
-            line_box = (x1, y - .022, x2, y + .022)
-            label_x = (x1 + x2 - estimated_text_width) / 2
-            label_y = y + .11
-            label_box = (label_x, label_y - .04,
-                         label_x + estimated_text_width, label_y + height)
-            if (label_box[0] < x1 + .05 or label_box[2] > x2 - .05
-                    or label_box[3] > y2 - .06):
-                continue
-            if any(_overlap(box, obstacle, .03)
-                   for obstacle in furniture
-                   for box in (line_box, label_box)):
-                continue
-            if any(_overlap(label_box, box, .03) for box in label_boxes):
-                continue
-            # The line itself must not run through another annotation.
-            if any(_overlap(line_box, box, .01) for box in label_boxes):
-                continue
-            segments.append(Segment(x1, y, x2, y, "COTAS-INTERIOR", name))
-            for edge in (x1, x2):
-                segments.append(Segment(edge - .045, y - .045,
-                                        edge + .045, y + .045,
-                                        "COTAS-INTERIOR", name))
-            new_label = ViewLabel(text, label_x, label_y,
-                                  f"dimension-label:room:{index}:width")
-            labels.append(new_label)
-            label_boxes.append(annotation_box(new_label))
-            placed = True
-            break
-        if not placed:
-            omitted.append(f"room:{index}")
+    for _, index in sorted(rankings):
+        room = rooms[index]
+        width = _candidates(index, room, "width", blocked, furniture,
+                            doors, ViewLabel)
+        depth = _candidates(index, room, "depth", blocked, furniture,
+                            doors, ViewLabel)
+        best_pair = None
+        for w in width[:450]:
+            for d in depth[:450]:
+                if (_overlap(w[4], d[4], .012) or
+                        _overlap(w[4], d[3], .010) or
+                        _overlap(d[4], w[3], .010)):
+                    continue
+                score = w[0] + d[0]
+                if best_pair is None or score < best_pair[0]:
+                    best_pair = (score, w, d)
+            if best_pair and w[0] > best_pair[0]:
+                break
+        if best_pair:
+            _emit(segments, labels, Segment, best_pair[1], room,
+                  index, "width", blocked)
+            _emit(segments, labels, Segment, best_pair[2], room,
+                  index, "depth", blocked)
+        else:
+            # A requested dimension is not silently fabricated just to
+            # achieve 100% graphic coverage.
+            for axis in ("width", "depth"):
+                options = _candidates(index, room, axis, blocked, furniture,
+                                      doors, ViewLabel)
+                if options:
+                    _emit(segments, labels, Segment, options[0], room,
+                          index, axis, blocked)
+                else:
+                    omitted[axis].append(index)
     return omitted
