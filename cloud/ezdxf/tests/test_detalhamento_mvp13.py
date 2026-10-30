@@ -58,3 +58,18 @@ def test_default_package_legibility_reports_provenance_and_no_normative_approval
     assert result["checked_labels"] > 12
     assert result["normative_approval"] is False
     assert result["method"] == "estimated-text-bounds"
+
+
+def test_compact_plan_window_ids_do_not_overlap_furniture():
+    # Regression from the 10 x 20 pilot: J02 used to sit over the kitchen worktop.
+    package = package_fixture.__wrapped__()
+    floor = next(view for view in package.views if view.view_id == "ARQ-PLANTA")
+    audit = auditar_legibilidade_vista(floor, 50)
+    warnings = [item for item in audit["warnings"]
+                if item["code"] == "label-furniture-overlap"]
+    assert not warnings, warnings
+    # Put external facade identifiers outside rooms, where they do not
+    # compete with equipment, beds or internal room labels.
+    for label in floor.labels:
+        if label.source_id.startswith("opening-tag:window:"):
+            assert label.y < 0 or label.y > package.source_plan["resumo_geometria"]["profundidade"]
