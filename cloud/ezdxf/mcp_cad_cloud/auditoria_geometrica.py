@@ -46,6 +46,47 @@ def _diff(chave, esperados, reais, erros):
         })
 
 
+def _auditar_arestas_paredes(entities, tol=1e-7):
+    """Independent line-geometry checks; does not call the wall generator.
+
+    In the supported orthogonal pilot, visible wall boundary LINEs may touch
+    at endpoints but must never have positive-length collinear overlap.
+    """
+    issues = []
+    horizontal, vertical = {}, {}
+    for ent in entities:
+        start, end = _point(ent.dxf.start), _point(ent.dxf.end)
+        x1, y1 = start
+        x2, y2 = end
+        if math.hypot(x2 - x1, y2 - y1) <= tol:
+            issues.append({"chave": "parede-segmento-degenerado",
+                           "handle": ent.dxf.handle})
+        elif abs(y1 - y2) <= tol:
+            horizontal.setdefault(round(y1, PRECISION), []).append(
+                (min(x1, x2), max(x1, x2), ent.dxf.handle))
+        elif abs(x1 - x2) <= tol:
+            vertical.setdefault(round(x1, PRECISION), []).append(
+                (min(y1, y2), max(y1, y2), ent.dxf.handle))
+        else:
+            issues.append({"chave": "parede-segmento-nao-ortogonal",
+                           "handle": ent.dxf.handle})
+
+    # Compare intervals on each shared ordinate. Strictly positive
+    # intersection is invalid; touching endpoints is deliberately allowed.
+    for groups in (horizontal, vertical):
+        for ordinate, segments in groups.items():
+            segments.sort()
+            for index, (lo, hi, handle) in enumerate(segments):
+                for other_lo, other_hi, other_handle in segments[index + 1:]:
+                    if other_lo >= hi - tol:
+                        break
+                    if min(hi, other_hi) - max(lo, other_lo) > tol:
+                        issues.append({"chave": "paredes-arestas-sobrepostas",
+                                       "handles": [handle, other_handle],
+                                       "ordenada": ordinate})
+    return issues
+
+
 def _rooms(model):
     rooms = model.get("ambientes", [])
     living = next((a for a in rooms if "sala" in a["nome"].casefold()), None)
@@ -93,6 +134,7 @@ def auditar_documento(model: dict, doc) -> dict:
                       "detalhe": "Layer PAREDES deve conter somente LINE"})
     actual_walls = _keys(_segment(e.dxf.start, e.dxf.end) for e in actual_wall_entities)
     _diff("paredes-divergentes", expected_walls, actual_walls, erros)
+    erros.extend(_auditar_arestas_paredes(actual_wall_entities))
     resumo = model.get("resumo_geometria") or {}
     building_dims = None
     if actual_wall_entities:
