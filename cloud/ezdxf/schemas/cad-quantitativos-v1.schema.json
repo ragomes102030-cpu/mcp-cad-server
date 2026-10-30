@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ragomes102030-cpu/mcp-cad-server/blob/cloud/ezdxf/cloud/ezdxf/schemas/cad-quantitativos-v1.schema.json",
+  "title": "Arquimedes CAD Quantitativos — Contrato de Saída v1",
+  "description": "Somente geometria, sem preços, composições, BDI ou encargos. Tipologias e critérios incompletos devem ser sinalizados.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["ok", "status", "unidade_base", "versao_calculo", "itens", "pendencias", "erros", "resumo", "integracao"],
+  "properties": {
+    "ok": {"type": "boolean"},
+    "status": {"enum": ["VALIDADO_GEOMETRICAMENTE", "PARCIAL", "DADOS_INSUFICIENTES", "INVALIDO", "LIMITE_EXCEDIDO"]},
+    "projeto_id": {"type": ["string", "null"], "maxLength": 80},
+    "unidade_base": {"const": "m"},
+    "versao_calculo": {"type": "string", "minLength": 1},
+    "itens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id_elemento", "id_projeto", "tipo", "descricao", "quantidade", "unidade", "metricas", "origem_geometrica", "premissas", "criterio_medicao", "completude", "campos_ausentes", "avisos", "versao_calculo"],
+        "properties": {
+          "id_elemento": {"type": "string"},
+          "id_projeto": {"type": ["string", "null"]},
+          "tipo": {"enum": ["parede", "porta", "janela", "piso"]},
+          "descricao": {"type": "string"},
+          "quantidade": {"type": "number", "minimum": 0},
+          "unidade": {"enum": ["m", "m²", "un"]},
+          "metricas": {"type": "object"},
+          "origem_geometrica": {"type": "string", "minLength": 1},
+          "premissas": {"type": "array", "items": {"type": "string"}},
+          "criterio_medicao": {"type": "string"},
+          "completude": {"enum": ["COMPLETO_GEOMETRICAMENTE", "DADOS_INSUFICIENTES"]},
+          "campos_ausentes": {"type": "array", "items": {"type": "string"}},
+          "avisos": {"type": "array", "items": {"type": "string"}},
+          "versao_calculo": {"type": "string"}
+        }
+      }
+    },
+    "pendencias": {"type": "array", "items": {"type": "string"}},
+    "erros": {"type": "array"},
+    "resumo": {"type": "object"},
+    "integracao": {
+      "type": "object",
+      "required": ["precos", "custos", "bdi", "destino_sugerido", "dependencia_obrigatoria"],
+      "properties": {
+        "precos": {"type": "null"},
+        "custos": {"type": "null"},
+        "bdi": {"type": "null"},
+        "destino_sugerido": {"type": "string"},
+        "dependencia_obrigatoria": {"const": false}
+      }
+    }
+  }
+}
