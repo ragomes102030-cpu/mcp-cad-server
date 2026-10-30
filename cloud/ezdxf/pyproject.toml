@@ -11,6 +11,7 @@ dependencies = [
     "fastmcp>=2.14,<5",
     "ezdxf>=1.4,<2",
     "matplotlib>=3.8,<4",
+    "jsonschema>=4.20,<5",
 ]
 
 [project.scripts]
