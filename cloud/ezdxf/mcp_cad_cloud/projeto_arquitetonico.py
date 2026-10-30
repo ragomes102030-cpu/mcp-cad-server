@@ -380,8 +380,17 @@ def _floor_plan(model: dict, envelope: BuildingEnvelope) -> ViewGeometry:
         labels.append(ViewLabel(f"P{index + 1:02d}", tag_x, tag_y,
                                 f"opening-tag:door:{index}"))
     for index, (x1, y1, x2, y2) in enumerate(model["janelas"]):
-        labels.append(ViewLabel(f"J{index + 1:02d}", (x1 + x2) / 2,
-                                y1 + (0.48 if y1 < depth / 2 else -0.48),
+        # External façade tags stay outside the habitable rooms so a
+        # kitchen counter, bathroom fixture or bed cannot obscure J01/J02.
+        # Only horizontal exterior windows are supported by this placement;
+        # vertical windows retain a side-specific tag next to their reveal.
+        if abs(float(y2) - float(y1)) < 1e-8:
+            tag_x = (float(x1) + float(x2)) / 2
+            tag_y = min(float(y1), float(y2)) - 0.38 if y1 < depth / 2 else max(float(y1), float(y2)) + 0.38
+        else:
+            tag_x = -0.38 if float(x1) < width / 2 else width + 0.38
+            tag_y = (float(y1) + float(y2)) / 2
+        labels.append(ViewLabel(f"J{index + 1:02d}", tag_x, tag_y,
                                 f"opening-tag:window:{index}"))
 
     # Compact drawing schedule, positioned to the right of the footprint.
