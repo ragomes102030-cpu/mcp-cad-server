@@ -135,6 +135,10 @@ def auditar_documento(model: dict, doc) -> dict:
     actual_walls = _keys(_segment(e.dxf.start, e.dxf.end) for e in actual_wall_entities)
     _diff("paredes-divergentes", expected_walls, actual_walls, erros)
     erros.extend(_auditar_arestas_paredes(actual_wall_entities))
+    # Independent evidence check reads the actual physical PAREDES faces
+    # and measurable DXF entities, never the face generator helper.
+    from mcp_cad_cloud.camadas_medicao import auditar_evidencias_de_medicao
+    erros.extend(auditar_evidencias_de_medicao(model, doc))
     resumo = model.get("resumo_geometria") or {}
     building_dims = None
     if actual_wall_entities:
