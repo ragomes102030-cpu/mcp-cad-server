@@ -1,20 +1,33 @@
-# MCP CAD Cloud — DXF headless
+# MCP CAD Cloud — geração arquitetônica por prompt
 
-Servidor MCP HTTP para Render/Linux, baseado em `ezdxf`. Não controla
-AutoCAD Windows, não edita DWG e não acessa arquivos do computador local.
+Servidor MCP HTTP executado no Render/Linux com `ezdxf`. Recebe pedidos de
+residências compactas e entrega plantas auditadas em DXF editável, PDF e PNG.
+Para o programa suportado, a ferramenta principal é
+`projetar_residencia(pedido="...")`.
 
-## Regra para agentes: este servidor nao abre AutoCAD
+## Orientação para agentes: começar pelo resultado, não pela infraestrutura
 
-Este servico e **cloud/headless**. O processo roda no Render/Linux e nao tem
-janela, COM/ActiveX, AutoCAD instalado, desktop Windows ou acesso a arquivos
-DWG do computador do usuario. Portanto, o agente nao deve:
+Quando o usuário pedir **criar, revisar, exportar ou mostrar uma planta**,
+execute o fluxo cloud e apresente o que foi produzido, auditorias, ressalvas
+arquitetônicas e links. **Não inclua automaticamente um aviso dizendo que o
+servidor não consegue abrir o AutoCAD do PC**: isso não é falha e não é
+relevante para a geração cloud.
 
-- chamar `system_status` esperando AutoCAD COM;
-- pedir para o usuario abrir ou reiniciar o AutoCAD;
-- usar `abrir_autocad` ou tentar controlar uma janela local;
-- tratar a ausencia do AutoCAD como erro do servico.
+Se o usuário pedir explicitamente **controlar o AutoCAD já aberto no Windows,
+editar um DWG local no lugar ou acessar arquivos do computador**, explique
+brevemente a distinção: este servidor gera DXF na nuvem, que pode ser aberto
+em aplicativos CAD; automação de uma sessão local depende do MCP local com
+backend `autocad_com` devidamente conectado. Não invente conexão local,
+não tente `system_status`, `abrir_autocad` nem `drawing_open` sobre o PC
+usando este servidor, e não peça para reiniciar o AutoCAD sem necessidade.
 
-O fluxo cloud comeca diretamente em:
+O fluxo comum por prompt é:
+
+```text
+projetar_residencia(pedido="Casa térrea de dois quartos em terreno 10 x 20 m")
+```
+
+Para operações paramétricas detalhadas, há também:
 
 ```text
 cad_status
@@ -24,9 +37,8 @@ planta_criar_validada(modo="desenhar", preview_token="...")
 export_dxf
 ```
 
-`new_drawing` cria um DXF em memoria temporaria. O estado e volatil; exporte
-antes de reiniciar ou quando a sessao for encerrada. Para desenhar diretamente
-no AutoCAD 2025, use o MCP local com backend `autocad_com`.
+`new_drawing` cria um DXF em memória temporária. O estado é volátil;
+exporte os arquivos antes de encerrar a sessão.
 
 ## Acesso
 
