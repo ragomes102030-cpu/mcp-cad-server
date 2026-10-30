@@ -158,6 +158,9 @@ def test_export_reopens_all_sheets_and_bundles_auditable_files():
     assert result["licensing_readiness"] == "review_required"
     assert len(result["auditorias_folhas"]) == 2
     assert all(item["ok"] for item in result["auditorias_folhas"])
+    assert result["auditoria_coerencia"]["ok"] is True
+    assert result["auditoria_coerencia"]["normative_approval"] is False
+    assert result["auditoria_coerencia"]["checked"]["views"] == 9
     token = urlparse(result["arquivos"]["dxf_url"]).path.split("/")[-2]
     downloaded = importlib.import_module("mcp_cad_cloud.downloads").retrieve(token, "zip")
     assert downloaded is not None
@@ -168,5 +171,7 @@ def test_export_reopens_all_sheets_and_bundles_auditable_files():
     report_text = archive.read("report.json").decode("utf-8")
     report = json.loads(report_text)
     assert report["licensing_readiness"] == "review_required"
+    assert report["cross_view_coherence"]["ok"] is True
+    assert report["cross_view_coherence"]["status"] == "review_required"
     assert "https://" not in report_text
 
