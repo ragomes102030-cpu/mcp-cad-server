@@ -200,7 +200,7 @@ def auditar_paredes_e_vaos_dxf(
                     height=None  # Do not apply passage_height to unknown opening.
                     pendencies.append(
                         f"Vão sem identificação no eixo {axis}:{coord} [{b:.3f},{c:.3f}]. "
-                        "Confirmar se é passagem e altura da abertura.")
+                        "Confirmar natureza do vão e fornecer altura_passagens_m vinculada ao vão.")
                 used_arcs.update(matched_arcs)
                 used_windows.update(handle for handle,offset in matched_windows)
                 gap={
