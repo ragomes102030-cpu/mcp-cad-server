@@ -388,14 +388,24 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         if label.source_id.startswith("dimension-label:room:")
     }
     total_rooms = len(plan_model.get("ambientes", []))
+    missing_width = [
+        index for index in range(total_rooms)
+        if f"dimension-label:room:{index}:width" not in graphic_room_dimensions
+    ]
+    missing_depth = [
+        index for index in range(total_rooms)
+        if f"dimension-label:room:{index}:depth" not in graphic_room_dimensions
+    ]
     room_dimension_summary = {
-        "width_dimensions_drawn": len(graphic_room_dimensions),
+        "width_dimensions_drawn": total_rooms - len(missing_width),
+        "depth_dimensions_drawn": total_rooms - len(missing_depth),
         "room_count": total_rooms,
         "width_dimensions_in_schedule": len(plan_model.get("cotas_ambientes", [])),
-        "omitted_graphic_room_indices": [
-            index for index in range(total_rooms)
-            if f"dimension-label:room:{index}:width" not in graphic_room_dimensions
-        ],
+        "depth_dimensions_in_schedule": len(plan_model.get("cotas_ambientes", [])),
+        "omitted_graphic_room_indices": missing_width,
+        "omitted_width_room_indices": missing_width,
+        "omitted_depth_room_indices": missing_depth,
+        "graphic_status": "complete" if not (missing_width or missing_depth) else "partial",
         "source": "model_room_clear_faces",
         "normative_approval": False,
     }
@@ -506,9 +516,11 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
     ])
     report_md.extend([
         "", "## Cotas internas — primeira faixa piloto", "",
-        f"- Larguras gráficas posicionadas sem interferência estimada: {room_dimension_summary['width_dimensions_drawn']}/{total_rooms}",
-        f"- Ambientes com largura/profundidade numérica no quadro: {room_dimension_summary['width_dimensions_in_schedule']}/{total_rooms}",
-        f"- Índices sem cota interna gráfica: {room_dimension_summary['omitted_graphic_room_indices']}",
+        f"- Larguras gráficas: {room_dimension_summary['width_dimensions_drawn']}/{total_rooms}",
+        f"- Profundidades gráficas: {room_dimension_summary['depth_dimensions_drawn']}/{total_rooms}",
+        f"- Ambientes com largura/profundidade no quadro: {room_dimension_summary['width_dimensions_in_schedule']}/{total_rooms}",
+        f"- Índices sem largura gráfica: {room_dimension_summary['omitted_width_room_indices']}",
+        f"- Índices sem profundidade gráfica: {room_dimension_summary['omitted_depth_room_indices']}",
         "- Comprimentos derivados das faces internas do modelo; não são verificação normativa.",
     ])
     report_md.extend([
