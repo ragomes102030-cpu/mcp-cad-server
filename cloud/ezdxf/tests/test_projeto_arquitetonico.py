@@ -80,30 +80,39 @@ def test_compact_house_produces_all_licensing_views_with_sources(api):
     assert any("municip" in limitation.lower() for limitation in package.limitations)
 
 
-def test_floor_plan_represents_wall_thickness_with_two_faces_and_jambs(api):
+def test_floor_plan_wall_faces_form_one_non_overlapping_outline(api):
     package = generate(api)
     floor_plan = next(view for view in package.views if view.view_id == "ARQ-PLANTA")
-    wall_index = 0
-    faces = [segment for segment in floor_plan.segments
-             if segment.source_id in {f"wall:{wall_index}",
-                                      f"wall:{wall_index}:face:1"}]
-    jambs = [segment for segment in floor_plan.segments
-             if segment.source_id in {f"wall:{wall_index}:end:0",
-                                      f"wall:{wall_index}:end:1"}]
+    wall_edges = [segment for segment in floor_plan.segments if segment.layer == "PAREDES"]
+    assert wall_edges
+    assert all(segment.source_id.startswith("wall:outline:") for segment in wall_edges)
 
-    assert len(faces) == 2, faces
-    assert len(jambs) == 2, jambs
-    assert all(segment.layer == "PAREDES" for segment in faces + jambs)
-    model_wall = package.source_plan["paredes"][wall_index]
+    # Contour edges may meet at vertices, but must not lie over one another.
+    for index, first in enumerate(wall_edges):
+        for second in wall_edges[index + 1:]:
+            if abs(first.y1-first.y2) < 1e-8 and abs(second.y1-second.y2) < 1e-8:
+                if abs(first.y1-second.y1) < 1e-8:
+                    overlap = min(max(first.x1, first.x2), max(second.x1, second.x2)) - max(
+                        min(first.x1, first.x2), min(second.x1, second.x2))
+                    assert overlap <= 1e-8, (first, second)
+            elif abs(first.x1-first.x2) < 1e-8 and abs(second.x1-second.x2) < 1e-8:
+                if abs(first.x1-second.x1) < 1e-8:
+                    overlap = min(max(first.y1, first.y2), max(second.y1, second.y2)) - max(
+                        min(first.y1, first.y2), min(second.y1, second.y2))
+                    assert overlap <= 1e-8, (first, second)
+
+    # A long internal partition retains both thickness faces until it meets
+    # the adjacent exterior wall, where the contours join without overlap.
     thickness = package.source_plan["espessura_parede"]
-    y_face_0 = faces[0].y1
-    y_face_1 = faces[1].y1
-    if model_wall[1] == model_wall[3]:
-        assert abs(abs(y_face_0-y_face_1) - thickness) < 1e-8
-        assert all(abs(segment.x1-segment.x2) < 1e-8 for segment in jambs)
-    else:
-        assert abs(abs(faces[0].x1-faces[1].x1) - thickness) < 1e-8
-        assert all(abs(segment.y1-segment.y2) < 1e-8 for segment in jambs)
+    lower = [segment for segment in wall_edges
+             if abs(segment.y1-4.625) < 1e-8 and abs(segment.y2-4.625) < 1e-8]
+    upper = [segment for segment in wall_edges
+             if abs(segment.y1-4.775) < 1e-8 and abs(segment.y2-4.775) < 1e-8]
+    assert lower and upper
+    assert any(min(max(a.x1, a.x2), max(b.x1, b.x2))
+               - max(min(a.x1, a.x2), min(b.x1, b.x2)) > 3.0
+               for a in lower for b in upper)
+    assert abs(thickness-0.15) < 1e-8
 
 
 def test_floor_plan_has_internal_room_and_opening_dimensions(api):

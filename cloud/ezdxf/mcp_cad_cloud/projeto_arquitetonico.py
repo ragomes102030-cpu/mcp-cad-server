@@ -212,34 +212,78 @@ def _rect(target: list[Segment], x1: float, y1: float, x2: float, y2: float,
     _segment(target, x1, y2, x1, y1, layer, source_id)
 
 
-def _wall_faces(target: list[Segment], wall: tuple[float, ...],
-                thickness: float, source_id: str):
-    """Draw both wall faces and end jambs from an orthogonal wall axis."""
-    x1, y1, x2, y2 = (float(value) for value in wall)
+def _wall_outline(target: list[Segment], walls: list[tuple[float, ...]],
+                  thickness: float):
+    """Emit the boundary of the union of thick orthogonal wall segments.
+
+    Building independent rectangles per centerline duplicates the two faces
+    and end caps at every T/corner join. A rectilinear occupancy grid makes a
+    single union first, then emits only edges between wall and empty cells.
+    """
     half = thickness / 2
-    if abs(y2-y1) <= 1e-8:
-        left, right = sorted((x1, x2))
-        _segment(target, left, y1-half, right, y1-half,
-                 "PAREDES", source_id)
-        _segment(target, left, y1+half, right, y1+half,
-                 "PAREDES", f"{source_id}:face:1")
-        _segment(target, left, y1-half, left, y1+half,
-                 "PAREDES", f"{source_id}:end:0")
-        _segment(target, right, y1-half, right, y1+half,
-                 "PAREDES", f"{source_id}:end:1")
-    elif abs(x2-x1) <= 1e-8:
-        bottom, top = sorted((y1, y2))
-        _segment(target, x1-half, bottom, x1-half, top,
-                 "PAREDES", source_id)
-        _segment(target, x1+half, bottom, x1+half, top,
-                 "PAREDES", f"{source_id}:face:1")
-        _segment(target, x1-half, bottom, x1+half, bottom,
-                 "PAREDES", f"{source_id}:end:0")
-        _segment(target, x1-half, top, x1+half, top,
-                 "PAREDES", f"{source_id}:end:1")
-    else:
-        raise ArchitecturePackageError(
-            "A planta arquitetônica exige eixos de parede ortogonais nesta versão.")
+    rectangles = []
+    for wall in walls:
+        x1, y1, x2, y2 = (float(value) for value in wall)
+        if abs(y2-y1) <= 1e-8 and abs(x2-x1) > 1e-8:
+            left, right = sorted((x1, x2))
+            rectangles.append((left, y1-half, right, y1+half))
+        elif abs(x2-x1) <= 1e-8 and abs(y2-y1) > 1e-8:
+            bottom, top = sorted((y1, y2))
+            rectangles.append((x1-half, bottom, x1+half, top))
+        else:
+            raise ArchitecturePackageError(
+                "A planta arquitetônica exige eixos de parede ortogonais nesta versão.")
+
+    xs = sorted({round(value, 9) for rect in rectangles for value in (rect[0], rect[2])})
+    ys = sorted({round(value, 9) for rect in rectangles for value in (rect[1], rect[3])})
+    if len(xs) < 2 or len(ys) < 2:
+        raise ArchitecturePackageError("Geometria de paredes insuficiente para formar contorno.")
+    x_index = {value: index for index, value in enumerate(xs)}
+    y_index = {value: index for index, value in enumerate(ys)}
+    occupied = [[False] * (len(xs)-1) for _ in range(len(ys)-1)]
+    for left, bottom, right, top in rectangles:
+        i0, i1 = x_index[round(left, 9)], x_index[round(right, 9)]
+        j0, j1 = y_index[round(bottom, 9)], y_index[round(top, 9)]
+        for j in range(j0, j1):
+            for i in range(i0, i1):
+                occupied[j][i] = True
+
+    horizontal: dict[float, list[tuple[float, float]]] = {}
+    vertical: dict[float, list[tuple[float, float]]] = {}
+    rows, columns = len(occupied), len(occupied[0])
+    for j in range(rows):
+        for i in range(columns):
+            if not occupied[j][i]:
+                continue
+            if j == 0 or not occupied[j-1][i]:
+                horizontal.setdefault(ys[j], []).append((xs[i], xs[i+1]))
+            if j == rows-1 or not occupied[j+1][i]:
+                horizontal.setdefault(ys[j+1], []).append((xs[i], xs[i+1]))
+            if i == 0 or not occupied[j][i-1]:
+                vertical.setdefault(xs[i], []).append((ys[j], ys[j+1]))
+            if i == columns-1 or not occupied[j][i+1]:
+                vertical.setdefault(xs[i+1], []).append((ys[j], ys[j+1]))
+
+    def emit_merged(groups, orientation: str):
+        for line_index, coordinate in enumerate(sorted(groups)):
+            intervals = sorted(groups[coordinate])
+            merged = []
+            for start, end in intervals:
+                if merged and start <= merged[-1][1] + 1e-8:
+                    merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+                else:
+                    merged.append((start, end))
+            for edge_index, (start, end) in enumerate(merged):
+                source = f"wall:outline:{orientation}:{line_index}:{edge_index}"
+                if orientation == "h":
+                    _segment(target, start, coordinate, end, coordinate,
+                             "PAREDES", source)
+                else:
+                    _segment(target, coordinate, start, coordinate, end,
+                             "PAREDES", source)
+
+    emit_merged(horizontal, "h")
+    emit_merged(vertical, "v")
 
 
 def _opening_axis(model: dict, x: float, y: float, width: float) -> str:
@@ -267,8 +311,7 @@ def _floor_plan(model: dict) -> ViewGeometry:
     thickness = _finite("espessura de parede", model.get("espessura_parede"))
     if thickness <= 0:
         raise ArchitecturePackageError("Espessura de parede deve ser positiva.")
-    for index, wall in enumerate(model["paredes"]):
-        _wall_faces(segments, wall, thickness, f"wall:{index}")
+    _wall_outline(segments, model["paredes"], thickness)
     leaves = model.get("portas_folhas", [])
     if len(leaves) != len(model.get("portas", [])):
         raise ArchitecturePackageError("Orientação explícita das folhas das portas ausente.")

@@ -50,7 +50,7 @@ def test_missing_source_geometry_is_detected_after_serialization():
     entity = next(
         entity for entity in doc.modelspace().query("LINE")
         if entity.has_xdata("MCP_CAD")
-        and entity.get_xdata("MCP_CAD")[0].value == "wall:0"
+        and entity.get_xdata("MCP_CAD")[0].value.startswith("wall:outline:")
     )
     doc.modelspace().delete_entity(entity)
 
@@ -60,13 +60,20 @@ def test_missing_source_geometry_is_detected_after_serialization():
     assert "source-entity-missing" in {item["code"] for item in result["errors"]}
 
 
-def test_missing_second_wall_face_is_detected_after_serialization():
+def test_missing_inner_partition_face_is_detected_after_serialization():
     auditor = load_auditor()
     package, spec, doc = serialized_sheet()
+    floor_plan = next(view for view in package.views if view.view_id == "ARQ-PLANTA")
+    expected_source = next(
+        segment.source_id for segment in floor_plan.segments
+        if segment.layer == "PAREDES"
+        and abs(segment.y1-4.775) < 1e-8
+        and abs(segment.y2-4.775) < 1e-8
+    )
     entity = next(
         entity for entity in doc.modelspace().query("LINE")
         if entity.has_xdata("MCP_CAD")
-        and entity.get_xdata("MCP_CAD")[0].value == "wall:0:face:1"
+        and entity.get_xdata("MCP_CAD")[0].value == expected_source
     )
     doc.modelspace().delete_entity(entity)
 
@@ -75,7 +82,7 @@ def test_missing_second_wall_face_is_detected_after_serialization():
     assert result["ok"] is False
     missing = [item["message"] for item in result["errors"]
                if item["code"] == "source-entity-missing"]
-    assert any("wall:0:face:1" in message for message in missing)
+    assert any(expected_source in message for message in missing)
 
 
 def test_missing_overall_dimension_is_detected_after_serialization():

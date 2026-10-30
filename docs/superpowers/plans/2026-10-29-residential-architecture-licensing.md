@@ -179,3 +179,8 @@
 - The circulation comparator now correctly returns no proposal when the baseline is already clear. The plant-lab report treats that evidenced no-op as success and preserves the original PNG.
 - Follow-up visual defect: the floor-plan view showed each wall centerline as one stroke. It now derives two parallel wall faces at the model thickness and transverse end/jamb lines; the reopened-sheet audit detects if either face is removed. The regenerated 30+10 licensing corpus passed, and the representative plan was visually inspected.
 - Final full-suite/corpus runs and CI state are recorded in the PR review; no merge or deployment is authorized by this plan.
+
+## Wall-junction correction (2026-10-30)
+
+- Visual feedback showed doubled lines at T-junctions and corners because independent thickened wall segments overlapped. The renderer now unions the orthogonal wall strips on a rectilinear grid and emits only the exterior boundary edges, preserving gaps for modeled openings.
+- Regression coverage rejects positive-length collinear overlap among wall contour edges, checks wall thickness across an interior partition, and confirms a removed serialized contour edge is caught by the sheet audit.

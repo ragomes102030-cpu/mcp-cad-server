@@ -495,12 +495,12 @@ medição independente das faces acabadas. Ainda faltam detalhes construtivos,
 notas específicas de cada prefeitura, níveis e cotas internas dimensionadas
 por faces acabadas.
 
-Na planta baixa, os eixos ortogonais de parede são representados pelas duas
-faces paralelas, espaçadas pela espessura declarada no modelo, e pelos
-fechamentos transversais nos extremos dos segmentos/vãos. A auditoria da folha
-reaberta conserva IDs separados para as duas faces e detecta a remoção de uma
-delas. Essa representação 2D não adiciona hachura de material ou composição
-construtiva.
+Na planta baixa, os eixos ortogonais são expandidos pela espessura declarada e
+unidos geometricamente antes do desenho. A planta exibe somente o contorno
+externo resultante, removendo linhas internas duplicadas em encontros em T e
+cantos. A auditoria mantém IDs estáveis por aresta e detecta se uma aresta do
+contorno for removida. Essa representação 2D não adiciona hachura de material
+ou composição construtiva.
 
 O registro `mcp_cad_cloud/normas_arquitetura.json` é um inventário pequeno e
 explicitamente não exaustivo de normas candidatas. Em 29/10/2026, a ficha
