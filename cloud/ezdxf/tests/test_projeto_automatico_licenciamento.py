@@ -164,8 +164,13 @@ def test_export_reopens_all_sheets_and_bundles_auditable_files():
     assert "auditoria_legibilidade" in result
     assert result["auditoria_legibilidade"]["warning_count"] >= 0
     assert result["cotas_internas"]["room_count"] == 7
-    assert result["cotas_internas"]["width_dimensions_drawn"] >= 4
+    assert result["cotas_internas"]["width_dimensions_drawn"] == 7
+    assert result["cotas_internas"]["depth_dimensions_drawn"] >= 5
     assert result["cotas_internas"]["width_dimensions_in_schedule"] == 7
+    assert result["cotas_internas"]["depth_dimensions_in_schedule"] == 7
+    assert result["cotas_internas"]["omitted_width_room_indices"] == []
+    assert result["cotas_internas"]["omitted_depth_room_indices"] == [2, 5]
+    assert result["cotas_internas"]["graphic_status"] == "partial"
     assert result["cotas_internas"]["normative_approval"] is False
     assert result["auditoria_legibilidade"]["assessments"]
     assert all(item["normative_approval"] is False
