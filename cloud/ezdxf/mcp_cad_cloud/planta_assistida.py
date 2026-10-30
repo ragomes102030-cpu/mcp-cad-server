@@ -292,6 +292,10 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
         set_drawing_name(str(nome))
     for x1, y1, x2, y2 in wall_boundary_segments(model["paredes"]):
         msp.add_line((x1, y1), (x2, y2), dxfattribs={"layer": "PAREDES"})
+    # Auxiliary evidence layers are non-printing: axes represent physical
+    # SOLID wall stretches already broken at openings, not gross wall spans.
+    from mcp_cad_cloud.camadas_medicao import adicionar_evidencias_de_medicao
+    adicionar_evidencias_de_medicao(doc, model)
     x1, y1, x2, y2 = model["terreno"]
     msp.add_lwpolyline([(x1,y1),(x2,y1),(x2,y2),(x1,y2)], close=True, dxfattribs={"layer":"TERRENO"})
     folhas = model.get("portas_folhas", [])
