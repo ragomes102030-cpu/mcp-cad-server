@@ -470,7 +470,9 @@ def _facade(view_id: str, side: str, width: float, depth: float,
     boundary = 0.0 if side in {"frontal", "lateral-esq"} else (depth if along_x else width)
     roof_pitch = radians(envelope.roof_pitch_degrees)
     slope_span = depth if envelope.ridge_axis == "x" else width
-    rise = slope_span * 0.5 * tan(roof_pitch)
+    # The roof runs from the outer eaves: its half-run includes overhang.
+    # This is the same vertical datum used by the perpendicular section.
+    rise = (slope_span * 0.5 + envelope.roof_overhang_m) * tan(roof_pitch)
     wall_top = envelope.floor_level_m + envelope.wall_height_m
     ridge = wall_top + rise
     segments: list[Segment] = []
@@ -562,7 +564,10 @@ def _section(view_id: str, axis: str, width: float, depth: float, model: dict,
         _segment(segments, location, floor, location, wall_top, "CORTE-PAREDE", source)
 
     if envelope.ridge_axis == ("x" if along_x else "y"):
-        ridge_height = wall_top + (distance / 2 + envelope.roof_overhang_m) * tan(
+        # A section *along* the ridge must use the transverse roof run.
+        # Using `distance` here confused building length with roof half-span.
+        transverse_span = depth if envelope.ridge_axis == "x" else width
+        ridge_height = wall_top + (transverse_span / 2 + envelope.roof_overhang_m) * tan(
             radians(envelope.roof_pitch_degrees))
         _segment(segments, 0, ridge_height, distance, ridge_height,
                  "CORTE-COBERTURA", f"section:{axis}:ridge-run")

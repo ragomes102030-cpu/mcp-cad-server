@@ -57,21 +57,87 @@ def audit_sheet_document(doc, spec, package) -> dict:
     entities = list(msp)
     source_ids = Counter(_source_id(entity) for entity in entities if _source_id(entity))
     expected_sources = Counter()
+    expected_lines: dict[str, list[tuple]] = {}
+    expected_labels: dict[str, list[tuple]] = {}
+
+    def line_signature(start, end):
+        # DXF sheets are in millimetres. Normalize direction and round only
+        # sub-micron serialization noise; 0.01-mm changes must be visible.
+        p = lambda v: (round(float(v[0]), 4), round(float(v[1]), 4))
+        return tuple(sorted((p(start), p(end))))
+
+    def label_signature(value, point):
+        return (str(value)[:180],
+                (round(float(point[0]), 4), round(float(point[1]), 4)))
+
     views = {view.view_id: view for view in package.views}
     for viewport in spec.viewports:
         view = views.get(viewport.view_id)
         if view is None:
             error("view-missing", f"Vista declarada não está no pacote: {viewport.view_id}.")
             continue
+        min_x, min_y, max_x, max_y = view.bounds
+        factor = 1000.0 / float(spec.scale)
+        drawing_width = (max_x - min_x) * factor
+        drawing_height = (max_y - min_y) * factor
+        origin_x = (viewport.x_mm + (viewport.width_mm - drawing_width) / 2
+                    - min_x * factor)
+        origin_y = (viewport.y_mm + (viewport.height_mm - drawing_height) / 2
+                    - min_y * factor)
         for segment in view.segments:
             expected_sources[segment.source_id] += 1
+            start = (origin_x + segment.x1 * factor,
+                     origin_y + segment.y1 * factor)
+            end = (origin_x + segment.x2 * factor,
+                   origin_y + segment.y2 * factor)
+            expected_lines.setdefault(segment.source_id, []).append(
+                (segment.layer, line_signature(start, end)))
         for label in view.labels:
             expected_sources[label.source_id] += 1
+            point = (origin_x + label.x * factor,
+                     origin_y + label.y * factor)
+            expected_labels.setdefault(label.source_id, []).append(
+                label_signature(label.text, point))
         expected_sources[f"sheet:{spec.sheet_id}:view-title:{view.view_id}"] += 1
 
     for source, count in expected_sources.items():
         if source_ids[source] < count:
             error("source-entity-missing", f"Entidade de origem ausente: {source}.")
+        elif source_ids[source] > count:
+            error("source-entity-extra", f"Entidade de origem duplicada: {source}.")
+
+    # Compare physical, reopened DXF coordinates/layers/text at declared
+    # viewport scale. XDATA presence alone does not prove that a view matches.
+    entities_by_source: dict[str, list] = {}
+    for entity in entities:
+        source = _source_id(entity)
+        if source in expected_lines or source in expected_labels:
+            entities_by_source.setdefault(source, []).append(entity)
+    for source, wanted in expected_lines.items():
+        found = entities_by_source.get(source, [])
+        if any(entity.dxftype() != "LINE" for entity in found):
+            error("source-type-mismatch", f"Linha esperada substituída: {source}.")
+            continue
+        wanted_layers = Counter(layer for layer, _ in wanted)
+        actual_layers = Counter(entity.dxf.layer for entity in found)
+        if wanted_layers != actual_layers:
+            error("source-layer-mismatch", f"Camada da entidade diverge: {source}.")
+        actual_segments = Counter(
+            line_signature(entity.dxf.start, entity.dxf.end) for entity in found)
+        wanted_segments = Counter(signature for _, signature in wanted)
+        if actual_segments != wanted_segments:
+            error("source-geometry-mismatch",
+                  f"Geometria ou escala real diverge da vista: {source}.")
+    for source, wanted in expected_labels.items():
+        found = entities_by_source.get(source, [])
+        if any(entity.dxftype() != "TEXT" for entity in found):
+            error("source-type-mismatch", f"Rótulo esperado substituído: {source}.")
+            continue
+        actual_labels = Counter(
+            label_signature(entity.dxf.text, entity.dxf.insert) for entity in found)
+        if Counter(wanted) != actual_labels:
+            error("source-label-mismatch",
+                  f"Texto ou posição do rótulo diverge da vista: {source}.")
 
     frame_id = f"sheet:{spec.sheet_id}:frame"
     title_id = f"sheet:{spec.sheet_id}:title-block"
@@ -86,6 +152,11 @@ def audit_sheet_document(doc, spec, package) -> dict:
     for label in required_labels:
         if not any(label in value for value in text_values):
             error("title-field-missing", f"Campo obrigatório ausente: {label}.")
+    expected_scale = f"ESCALA: 1:{float(spec.scale):g} |"
+    scale_rows = [value for value in text_values if value.startswith("ESCALA:")]
+    if len(scale_rows) != 1 or not scale_rows[0].startswith(expected_scale):
+        error("sheet-scale-mismatch",
+              f"Escala do carimbo diverge da geometria/viewport: {spec.sheet_id}.")
 
     if width <= 0 or height <= 0:
         bounds = (0.0, 0.0, 0.0, 0.0)
@@ -106,6 +177,8 @@ def audit_sheet_document(doc, spec, package) -> dict:
         "sheet_id": spec.sheet_id,
         "errors": errors,
         "source_entities_checked": sum(expected_sources.values()),
+        "source_segments_checked": sum(len(value) for value in expected_lines.values()),
+        "source_labels_checked": sum(len(value) for value in expected_labels.values()),
         "entity_points_checked": checked,
         "source_id_counts": dict(source_ids),
     }
