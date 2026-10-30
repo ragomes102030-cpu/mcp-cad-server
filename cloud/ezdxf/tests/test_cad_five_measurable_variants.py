@@ -27,7 +27,7 @@ def test_five_supported_width_variants_still_pass_geometric_and_circulation_gate
     assert physical["ok"],(case["id"],physical["erros"])
     assert circulation["ok"],(case["id"],circulation["erros"])
     assert auditar_evidencias_de_medicao(model,_ensure())==[]
-    quantitative=cad.quantitativo(projeto_id="BENCH-"+case["id"])
+    quantitative=cad.quantitativo(projeto_id=f"BENCH-VARIANT-{index}")
     assert quantitative["ok"],quantitative
     q=quantitative["quantitativos_construtivos"]
     assert q["resumo"]["paredes"]==len(model["paredes"])
