@@ -197,3 +197,24 @@ def test_pilot_passage_height_never_inferred_from_other_door_heights(doc):
     assert passage["altura_m"] is None
     assert passage["area_m2"] is None
     assert any("altura_passagens_m" in p for p in result["pendencias"])
+
+
+@pytest.mark.parametrize("case_index",(0,6,12,18,24))
+def test_five_different_compact_widths_preserve_real_wall_openings(case_index):
+    from tools.plant_lab.scenarios import VALID_SCENARIOS
+    from copy import deepcopy
+    program=deepcopy(VALID_SCENARIOS[case_index]["program"])
+    preview=cad.planta_criar_validada(
+        programa=program,template="programa_sob_medida",modo="preview")
+    assert preview["ok"]
+    result=cad.planta_criar_validada(
+        programa=program,template="programa_sob_medida",
+        modo="desenhar",preview_token=preview["preview_token"])
+    assert result["ok"]
+    a=auditar_paredes_e_vaos_dxf(_ensure())
+    assert a["ok"],a["erros"]
+    assert a["resumo"]["alinhamentos"]==10
+    assert a["resumo"]["portas"]==5
+    assert a["resumo"]["janelas"]==6
+    assert a["resumo"]["vaos_sem_simbolo"]==1
+    assert a["status"]=="PARCIAL"
