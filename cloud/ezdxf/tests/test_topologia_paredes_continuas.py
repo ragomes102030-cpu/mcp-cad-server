@@ -157,3 +157,43 @@ def test_gross_wall_area_does_not_deduct_or_assume_gap_heights(doc):
     assert all(x["volume_geometrico_m3"] is None for x in result["paredes"])
     assert any(x["area_liquida_m2"] is None for x in result["paredes"])
     assert "altura_passagens_m" in " ".join(result["pendencias"])
+
+
+def test_analytic_gross_wall_and_opening_discount_from_independent_dxf():
+    """4m gross, 0.9m door, 1.2m window, 3m wall: 8.76m2 net."""
+    doc=ezdxf.new("R2013")
+    doc.header["$INSUNITS"]=6
+    for name in ("EIXOS-PAREDES","PORTAS","JANELAS"):
+        doc.layers.new(name)
+    ms=doc.modelspace()
+    for a,b in ((0,1),(1.9,2),(3.2,4)):
+        ms.add_line((a,0),(b,0),dxfattribs={"layer":"EIXOS-PAREDES"})
+    ms.add_arc((1,0),.9,0,90,dxfattribs={"layer":"PORTAS"})
+    ms.add_line((1,0),(1.9,0),dxfattribs={"layer":"PORTAS"})
+    for y in (-.035,.035):
+        ms.add_line((2,y),(3.2,y),dxfattribs={"layer":"JANELAS"})
+    result=auditar_paredes_e_vaos_dxf(
+        doc,altura_paredes_m=3,altura_portas_m=2,
+        altura_janelas_m=1.2,espessura_paredes_m=.15)
+    assert result["ok"],result["erros"]
+    assert len(result["paredes"])==1
+    wall=result["paredes"][0]
+    assert wall["comprimento_bruto_m"]==4
+    assert wall["comprimento_trechos_solidos_m"]==pytest.approx(1.9)
+    assert wall["area_bruta_m2"]==12
+    assert wall["area_aberturas_m2"]==pytest.approx(3.24)
+    assert wall["area_liquida_m2"]==pytest.approx(8.76)
+    assert wall["volume_geometrico_m3"] is None
+    assert {gap["tipo"] for gap in wall["vaos"]}=={"PORTA","JANELA"}
+
+
+def test_pilot_passage_height_never_inferred_from_other_door_heights(doc):
+    result=auditar_paredes_e_vaos_dxf(
+        doc,altura_paredes_m=2.8,altura_portas_m=2.1,
+        altura_janelas_m=1.2,altura_passagens_m=2.8)
+    assert result["ok"]
+    passage=next(g for wall in result["paredes"] for g in wall["vaos"]
+                 if g["tipo"]=="VAO_SEM_IDENTIFICACAO")
+    assert passage["altura_m"] is None
+    assert passage["area_m2"] is None
+    assert any("altura_passagens_m" in p for p in result["pendencias"])
