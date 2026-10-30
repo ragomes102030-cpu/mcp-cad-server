@@ -453,8 +453,13 @@ def _floor_plan(model: dict, envelope: BuildingEnvelope) -> ViewGeometry:
     # Interior cotas use clear-face room bounds and are placed only where
     # furniture/annotation clearance permits. The room schedule remains
     # the complete numeric record when a graphic dimension is omitted.
-    from mcp_cad_cloud.cotas_internas import adicionar_cotas_internas
-    adicionar_cotas_internas(segments, labels, model, Segment, ViewLabel)
+    from mcp_cad_cloud.cotas_internas import (
+        adicionar_cotas_internas, adicionar_profundidades_auxiliares,
+    )
+    omitted = adicionar_cotas_internas(
+        segments, labels, model, Segment, ViewLabel)
+    adicionar_profundidades_auxiliares(
+        segments, labels, model, omitted, Segment, ViewLabel)
     return _make_view("ARQ-PLANTA", "planta_baixa", segments, labels)
 
 
