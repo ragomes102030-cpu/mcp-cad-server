@@ -1,8 +1,9 @@
 """Source-traceable elevations and level dimensions for section/facade pilot."""
 from math import radians, tan
+from importlib import import_module
 
 from test_projeto_arquitetonico import generate
-from test_prancha_licenciamento import api as sheet_api_fixture, package as package_fixture, title_block
+from test_prancha_licenciamento import package as package_fixture
 
 
 def _labels(view):
@@ -37,7 +38,7 @@ def test_all_sections_and_elevations_show_measured_floor_and_wall_datums():
 
 
 def test_orthogonal_roof_ridge_has_one_consistent_elevation_in_each_drawn_view():
-    api = sheet_api_fixture.__wrapped__()
+    api = import_module("mcp_cad_cloud.projeto_arquitetonico")
     for axis in ("x", "y"):
         package = generate(api, ridge_axis=axis)
         env = package.envelope
