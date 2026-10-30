@@ -12,7 +12,7 @@ import pytest
 
 CHAVES = {"cad_status", "planta_templates", "planta_assistida",
           "planta_criar_validada", "validar_planta", "drawing_audit",
-          "export_dxf"}
+          "export_dxf", "projetar_pacote_licenciamento"}
 
 
 def _catalogo(profile: str):

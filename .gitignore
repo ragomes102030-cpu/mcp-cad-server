@@ -19,6 +19,7 @@ mcp-cad-server-entrega.zip
 codigo/mcp-cad-server-entrega.zip
 
 # Artefatos de teste (gerados por smoke_headless.py / verificar_instalacao.py)
+/out/
 codigo/data/smoke/*.dxf
 codigo/data/smoke/*.json
 codigo/data/smoke/

@@ -138,8 +138,13 @@ def gerar_compacto(programa):
     # confirma que as peças estão inteiramente dentro de um ambiente.
     moveis=[
         (.4,frente-1.95,2.40,frente-1.12), (1.05,1.25,2.55,2.05),
-        (5.92,.30,6.65,2.43),
-        (7.45,.30,8.10,1.04), (8.20,1.30,8.75,1.86),
+        # Preserve a clear approach to the service door. The former endpoint
+        # left only 0.20 m between this counter and the door jamb.
+        (lado_lav-.90-.73,.30,lado_lav-.90,2.43),
+        (7.45,.30,8.10,1.04),
+        # Keep this laundry fixture against the right wall, outside the
+        # inward swing of the service door as the house width varies.
+        (largura-.70,1.30,largura-.15,1.86),
         (.65,frente+1.45,2.05,frente+3.30),
         (.20,frente+.23,2.0,frente+.68),
         (x_direita+.35,frente+1.48,x_direita+1.30,frente+3.38),

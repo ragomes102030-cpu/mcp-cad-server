@@ -13,6 +13,9 @@ import math
 from mcp_cad_cloud.auditoria_circulacao import STEP, _blocked, _reach, _entrance_seeds
 
 MAX_OBSTACLES = 3
+# The compact model leaves a deliberate open floor strip between room bounds.
+# This is a geometric pilot tolerance, not a regulatory dimension.
+MAX_SOCIAL_ZONE_GAP = 0.60
 
 
 def _point_rect_dist(x, y, rect):
@@ -174,13 +177,14 @@ def verificar_integracao_sala_cozinha(model,doc) -> dict:
     if sala is None or cozinha is None:
         return {"ok":False,"verificado":False,"largura_abertura_estimada_m":None,
                 "motivo":"Sala ou cozinha ausente do programa"}
-    # Pilot layout defines adjacent rectangles, separated by <= 0.35 m.
+    # The compact pilot uses room bounds that can leave an open floor strip.
+    # Confirm the real intervening space against walls/furniture below.
     lx=float(sala["x2"])
     rx=float(cozinha["x1"])
     gap=rx-lx
     lower=max(float(sala["y1"]),float(cozinha["y1"]))
     upper=min(float(sala["y2"]),float(cozinha["y2"]))
-    if gap>0.35 or gap<-.35 or upper-lower<.75:
+    if gap>MAX_SOCIAL_ZONE_GAP or gap<-.35 or upper-lower<.75:
         return {"ok":False,"verificado":False,"largura_abertura_estimada_m":None,
                 "motivo":"Geometria fora do contrato de zonas adjacentes do modelo compacto"}
     width=float(model["resumo_geometria"]["largura"])
