@@ -489,6 +489,40 @@ def _roof_plan(width: float, depth: float, envelope: BuildingEnvelope) -> ViewGe
     return _make_view("ARQ-COBERTURA", "planta_cobertura", segments)
 
 
+
+
+def _level_datum(segments: list[Segment], labels: list[ViewLabel],
+                 view_id: str, span: float, floor: float, wall_top: float,
+                 ridge: float | None) -> None:
+    """Project measured vertical datums outside a facade or section.
+
+    Only mark ridge height where the roof is physically represented in
+    the view. These are geometric references for professional review,
+    not an NBR/municipal approval or measured finished ceiling height.
+    """
+    x = span + .30
+    datum_values = [("floor", floor, "PISO"),
+                    ("wall", wall_top, "TOPO PAREDE")]
+    if ridge is not None:
+        datum_values.append(("ridge", ridge, "CUMEEIRA"))
+    for name, elevation, title in datum_values:
+        _segment(segments, x-.09, elevation, x+.09, elevation,
+                 "COTAS-NIVEIS", f"datum:{view_id}:{name}:mark")
+        labels.append(ViewLabel(f"{title} {elevation:+.2f} m",
+                                x+.18, elevation+.02,
+                                f"datum:{view_id}:{name}:label"))
+    _segment(segments, x, floor, x, wall_top,
+             "COTAS-NIVEIS", f"height:{view_id}:wall")
+    labels.append(ViewLabel(f"ALTURA PAREDE {wall_top-floor:.2f} m",
+                            x+.18, (floor+wall_top)/2,
+                            f"height:{view_id}:wall:label"))
+    if ridge is not None:
+        _segment(segments, x, wall_top, x, ridge,
+                 "COTAS-NIVEIS", f"height:{view_id}:roof")
+        labels.append(ViewLabel(f"ELEVAÇÃO TELHADO {ridge-wall_top:.2f} m",
+                                x+.18, (wall_top+ridge)/2,
+                                f"height:{view_id}:roof:label"))
+
 def _facade(view_id: str, side: str, width: float, depth: float,
             model: dict, envelope: BuildingEnvelope,
             door_head: float, window_sill: float, window_head: float) -> ViewGeometry:
@@ -503,6 +537,7 @@ def _facade(view_id: str, side: str, width: float, depth: float,
     wall_top = envelope.floor_level_m + envelope.wall_height_m
     ridge = wall_top + rise
     segments: list[Segment] = []
+    labels: list[ViewLabel] = []
     facade_id = f"facade:{side}"
     _rect(segments, 0.0, envelope.floor_level_m, span, wall_top,
           "FACHADA-PAREDE", facade_id)
@@ -532,12 +567,20 @@ def _facade(view_id: str, side: str, width: float, depth: float,
                 _rect(segments, x1, envelope.floor_level_m + window_sill,
                       x2, envelope.floor_level_m + window_head,
                       "ESQUADRIA-JANELA", f"window:{side}:{index}")
+                labels.append(ViewLabel(
+                    f"J{index+1:02d}", (x1+x2)/2,
+                    envelope.floor_level_m + window_head + .12,
+                    f"facade:{side}:window-tag:{index}"))
         for index, door in enumerate(model["portas"]):
             x, y, _angle, door_width = door
             if abs(y - coord) <= 0.10:
                 _rect(segments, x, envelope.floor_level_m, x + door_width,
                       envelope.floor_level_m + door_head,
                       "ESQUADRIA-PORTA", f"door:{side}:{index}")
+                labels.append(ViewLabel(
+                    f"P{index+1:02d}", x + door_width/2,
+                    envelope.floor_level_m + door_head/2,
+                    f"facade:{side}:door-tag:{index}"))
     else:
         coord = boundary
         for index, door in enumerate(model["portas"]):
@@ -547,7 +590,11 @@ def _facade(view_id: str, side: str, width: float, depth: float,
                       envelope.floor_level_m + door_head,
                       "ESQUADRIA-PORTA", f"door:{side}:{index}")
 
-    return _make_view(view_id, f"fachada_{side}", segments)
+    _level_datum(
+        segments, labels, view_id, span, envelope.floor_level_m,
+        wall_top, ridge if ridge_visible else None,
+    )
+    return _make_view(view_id, f"fachada_{side}", segments, labels)
 
 
 def _section(view_id: str, axis: str, width: float, depth: float, model: dict,
@@ -559,6 +606,7 @@ def _section(view_id: str, axis: str, width: float, depth: float, model: dict,
     distance = width if along_x else depth
     wall_top = floor + wall_height
     segments: list[Segment] = []
+    labels: list[ViewLabel] = []
     _segment(segments, 0, floor, distance, floor, "CORTE-PISO", f"section:{axis}:floor")
 
     intersected_walls: list[tuple[float, str]] = [(0.0, f"section:{axis}:exterior:start"),
@@ -632,7 +680,9 @@ def _section(view_id: str, axis: str, width: float, depth: float, model: dict,
             _rect(segments, y1, floor + window_sill, y2, floor + window_head,
                   "CORTE-JANELA", f"section:{axis}:window:{index}")
 
-    return _make_view(view_id, f"corte_{axis}", segments)
+    _level_datum(segments, labels, view_id, distance, floor, wall_top,
+                 ridge_height)
+    return _make_view(view_id, f"corte_{axis}", segments, labels)
 
 
 def generate_architecture_package(
