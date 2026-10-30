@@ -156,12 +156,33 @@ def auditar_documento(model: dict, doc) -> dict:
         (x1, y1), (x2, y1), (x2, y2), (x1, y2))))
         for x1, y1, x2, y2 in model["moveis"])
     furniture = list(msp.query('LWPOLYLINE[layer=="MOBILIARIO"]'))
-    actual_furniture = _keys(
-        tuple(sorted(_point(v) for v in ent.get_points("xy")))
-        for ent in furniture if ent.closed and len(list(ent.get_points("xy"))) == 4)
-    if sum(actual_furniture.values()) != len(furniture):
-        erros.append({"chave": "mobiliario-formato",
-                      "detalhe": "Mobiliario exige polilinhas fechadas de quatro vertices"})
+    actual_furniture = Counter()
+    for ent in furniture:
+        points = [_point(v) for v in ent.get_points("xy")]
+        if not ent.closed or len(points) != 4 or len(set(points)) != 4:
+            erros.append({"chave": "mobiliario-formato",
+                          "detalhe": "Mobiliario exige quatro vertices distintos e polilinha fechada"})
+            continue
+        xs = [p[0] for p in points]
+        ys = [p[1] for p in points]
+        x1, x2 = min(xs), max(xs)
+        y1, y2 = min(ys), max(ys)
+        canonical = ((x1, y1), (x2, y1), (x2, y2), (x1, y2))
+        expected_edges = Counter(_segment(canonical[i], canonical[(i + 1) % 4])
+                                 for i in range(4))
+        actual_edges = Counter(_segment(points[i], points[(i + 1) % 4])
+                               for i in range(4))
+        if x2 <= x1 or y2 <= y1 or actual_edges != expected_edges:
+            erros.append({"chave": "mobiliario-contorno-invalido",
+                          "detalhe": "Arestas cruzadas, degeneradas ou nao ortogonais no mobiliario",
+                          "handle": ent.dxf.handle})
+            continue
+        actual_furniture[tuple(sorted(points))] += 1
+    other_furniture = [e for e in msp if e.dxf.layer == "MOBILIARIO" and
+                       e.dxftype() != "LWPOLYLINE"]
+    if other_furniture:
+        erros.append({"chave": "mobiliario-tipo",
+                      "detalhe": "Entidades inesperadas na camada MOBILIARIO"})
     _diff("mobiliario-divergente", expected_furniture, actual_furniture, erros)
 
     # COTAS: compare actual DIMENSION extension origins with model endpoints.
