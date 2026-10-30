@@ -155,6 +155,47 @@ def audit_architecture_coherence(package) -> dict:
     ) > 1e-4:
         fail("roof-ridge-mismatch", perpendicular_section, "section:roof")
 
+    datum_views_checked = 0
+    for view_id, view in views.items():
+        if not view_id.startswith(("ARQ-CORTE-", "ARQ-FACHADA-")):
+            continue
+        datum_views_checked += 1
+        labels = {label.source_id: label.text for label in view.labels}
+        is_section = view_id.startswith("ARQ-CORTE-")
+        gable_visible = (
+            (env.ridge_axis == "x" and view_id.endswith(("LATERAL-ESQ", "LATERAL-DIR")))
+            or (env.ridge_axis == "y" and view_id.endswith(("FRONTAL", "FUNDOS")))
+        )
+        visible_ridge = is_section or gable_visible
+        expected = {
+            f"datum:{view_id}:floor:label": f"PISO {floor:+.2f} m",
+            f"datum:{view_id}:wall:label": f"TOPO PAREDE {wall_top:+.2f} m",
+            f"height:{view_id}:wall:label": f"ALTURA PAREDE {wall_top-floor:.2f} m",
+        }
+        if visible_ridge:
+            expected[f"datum:{view_id}:ridge:label"] = f"CUMEEIRA {ridge_height:+.2f} m"
+            expected[f"height:{view_id}:roof:label"] = (
+                f"ELEVAÇÃO TELHADO {ridge_height-wall_top:.2f} m")
+        for source, text in expected.items():
+            if labels.get(source) != text:
+                fail("datum-label-mismatch", view_id, source)
+        for source, lower, upper in (
+            (f"height:{view_id}:wall", floor, wall_top),
+            *(([(f"height:{view_id}:roof", wall_top, ridge_height)]
+               if visible_ridge else [])),
+        ):
+            dim = _segments_for(view, source)
+            if (len(dim) != 1 or dim[0].layer != "COTAS-NIVEIS"
+                    or abs(dim[0].y1-lower) > 1e-5
+                    or abs(dim[0].y2-upper) > 1e-5
+                    or abs(dim[0].x1-dim[0].x2) > 1e-5):
+                fail("datum-dimension-mismatch", view_id, source)
+        if not visible_ridge and (
+                f"datum:{view_id}:ridge:label" in labels
+                or f"height:{view_id}:roof:label" in labels
+                or _segments_for(view, f"height:{view_id}:roof")):
+            fail("datum-unprojected-ridge", view_id, "ridge")
+
     return {
         "ok": not errors,
         "status": "review_required" if not errors else "blocked",
@@ -165,6 +206,7 @@ def audit_architecture_coherence(package) -> dict:
             "footprints": 2,
             "facade_envelopes": 4,
             "roof_profiles": 4,
+            "datum_views_checked": datum_views_checked,
         },
         "geometry": {
             "width_m": width,

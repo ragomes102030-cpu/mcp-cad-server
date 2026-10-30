@@ -382,6 +382,22 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
     building_envelope = BuildingEnvelope(**envelope)
     plan_model = gerar_modelo(deepcopy(programa))
     package = generate_architecture_package(plan_model, project_context, building_envelope)
+    datum_report = []
+    for view in package.views:
+        if not view.view_id.startswith(("ARQ-CORTE-", "ARQ-FACHADA-")):
+            continue
+        labels_by_id = {label.source_id: label.text for label in view.labels}
+        datum_report.append({
+            "view_id": view.view_id,
+            "floor_level": labels_by_id.get(f"datum:{view.view_id}:floor:label"),
+            "top_wall_level": labels_by_id.get(f"datum:{view.view_id}:wall:label"),
+            "ridge_level": labels_by_id.get(f"datum:{view.view_id}:ridge:label"),
+            "roof_visible": f"datum:{view.view_id}:ridge:label" in labels_by_id,
+            "opening_tags": sum(label.source_id.startswith(
+                f"facade:{view.view_id.removeprefix('ARQ-FACHADA-').lower()}:"
+            ) for label in view.labels),
+            "normative_approval": False,
+        })
     floor_view = next(view for view in package.views if view.view_id == "ARQ-PLANTA")
     graphic_room_dimensions = {
         label.source_id for label in floor_view.labels
@@ -494,6 +510,7 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         "requirements": results,
         "sheet_audits": audits,
         "cross_view_coherence": coherence,
+        "vertical_datum_checks": datum_report,
         "interior_dimensions": room_dimension_summary,
         "annotation_legibility": {
             "assessments": legibility,
@@ -529,6 +546,14 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         f"- Elevação de cumeeira do modelo: {coherence['geometry']['roof_ridge_elevation_m']:.3f} m",
         "- Revisão visual e normativa profissional continuam obrigatórias.",
     ])
+    report_md.extend(["", "## Cortes e fachadas — níveis geométricos", ""])
+    for item in datum_report:
+        report_md.append(
+            f"- {item['view_id']}: {item['floor_level']}; "
+            f"{item['top_wall_level']}; "
+            f"cumeeira visível: {item['roof_visible']}; "
+            f"tags de esquadrias: {item['opening_tags']}"
+        )
     report_md.extend([
         "", "## Cotas internas — primeira faixa piloto", "",
         f"- Larguras gráficas: {room_dimension_summary['width_dimensions_drawn']}/{total_rooms}",
@@ -580,6 +605,7 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         "resultados_requisitos": results,
         "auditorias_folhas": audits,
         "auditoria_coerencia": coherence,
+        "cotas_niveis": datum_report,
         "cotas_internas": room_dimension_summary,
         "auditoria_legibilidade": {
             "warning_count": legibility_warnings,
