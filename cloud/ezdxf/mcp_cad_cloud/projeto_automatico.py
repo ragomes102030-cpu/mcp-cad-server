@@ -352,6 +352,7 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
     """Build, reopen, audit, render and publish an in-memory architecture set."""
     from mcp_cad_cloud.arquitetura_requisitos import ProjectContext
     from mcp_cad_cloud.auditoria_prancha import audit_sheet_document
+    from mcp_cad_cloud.auditoria_coerencia import audit_architecture_coherence
     from mcp_cad_cloud.projeto_arquitetonico import (
         BuildingEnvelope, generate_architecture_package,
     )
@@ -381,6 +382,16 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
     building_envelope = BuildingEnvelope(**envelope)
     plan_model = gerar_modelo(deepcopy(programa))
     package = generate_architecture_package(plan_model, project_context, building_envelope)
+    coherence = audit_architecture_coherence(package)
+    if not coherence["ok"]:
+        return {
+            "ok": False,
+            "etapa": "auditoria_coerencia_vistas",
+            "licensing_readiness": "blocked",
+            "auditoria_coerencia": coherence,
+            "arquivos": {},
+            "avisos": ["Exportação bloqueada: vistas arquitetônicas inconsistentes."],
+        }
     if not isinstance(carimbo, dict):
         raise ValueError("carimbo deve ser um objeto JSON")
     title_block = TitleBlockData(**{
@@ -433,6 +444,7 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         "readiness_reason": evaluation["reason"],
         "requirements": results,
         "sheet_audits": audits,
+        "cross_view_coherence": coherence,
         "limitations": list(package.limitations),
         "artifacts": [f"{sheet_id}.{ext}" for sheet_id, *_ in serialized
                       for ext in ("dxf", "pdf", "png")],
@@ -453,6 +465,14 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
     )
     if not results:
         report_md.append("- Nenhum requisito cadastrado/verificado; situação mantida em revisão.")
+    report_md.extend([
+        "", "## Coerência entre vistas", "",
+        f"- Estado: {coherence['status']}",
+        f"- Vistas conferidas: {coherence['checked']['views']}",
+        f"- Aberturas projetadas conferidas: {coherence['checked']['projected_facade_openings']}",
+        f"- Elevação de cumeeira do modelo: {coherence['geometry']['roof_ridge_elevation_m']:.3f} m",
+        "- Revisão visual e normativa profissional continuam obrigatórias.",
+    ])
     report_md.extend(["", "## Pranchas", ""])
     report_md.extend(f"- {sheet_id}: auditoria independente passou."
                      for sheet_id, *_ in serialized)
@@ -479,6 +499,7 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         "motivo_prontidao": evaluation["reason"],
         "resultados_requisitos": results,
         "auditorias_folhas": audits,
+        "auditoria_coerencia": coherence,
         "arquivos": {
             "dxf_url": links["dxf_url"], "zip_url": links["download_url"],
             "pdf_url": visual_links["pdf_url"], "png_url": visual_links["png_url"],
