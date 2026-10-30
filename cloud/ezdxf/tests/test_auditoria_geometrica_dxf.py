@@ -140,3 +140,35 @@ def test_generated_pipeline_surfaces_geometry_and_fails_closed(monkeypatch):
     assert rejected["etapa"] == "auditoria_geometrica"
     assert rejected["code"] == "CONTRATO_GEOMETRICO_VIOLADO"
     assert "arquivos" not in rejected
+
+
+def test_furniture_bow_tie_same_corners_is_rejected(drawing):
+    """Same four corners must not let a self-intersecting polyline pass."""
+    model, doc = drawing
+    ent = next(iter(doc.modelspace().query('LWPOLYLINE[layer=="MOBILIARIO"]')))
+    points = list(ent.get_points("xy"))
+    assert len(points) == 4
+    ent.set_points([points[i] for i in (0, 2, 1, 3)], format="xy")
+    result = auditar_dxf_serializado(model, doc)
+    assert not result["ok"]
+    assert "mobiliario-contorno-invalido" in _keys(result)
+
+
+def test_unexpected_furniture_entity_is_rejected(drawing):
+    model, doc = drawing
+    doc.modelspace().add_line((1.1, 1.2), (1.7, 1.2),
+                              dxfattribs={"layer": "MOBILIARIO"})
+    result = auditar_dxf_serializado(model, doc)
+    assert not result["ok"]
+    assert "mobiliario-tipo" in _keys(result)
+
+
+def test_furniture_duplicate_vertex_is_rejected(drawing):
+    model, doc = drawing
+    ent = next(iter(doc.modelspace().query('LWPOLYLINE[layer=="MOBILIARIO"]')))
+    points = list(ent.get_points("xy"))
+    points[2] = points[1]
+    ent.set_points(points, format="xy")
+    result = auditar_documento(model, doc)
+    assert not result["ok"]
+    assert "mobiliario-formato" in _keys(result)
