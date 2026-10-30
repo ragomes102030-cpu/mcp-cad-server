@@ -161,6 +161,11 @@ def test_export_reopens_all_sheets_and_bundles_auditable_files():
     assert result["auditoria_coerencia"]["ok"] is True
     assert result["auditoria_coerencia"]["normative_approval"] is False
     assert result["auditoria_coerencia"]["checked"]["views"] == 9
+    assert "auditoria_legibilidade" in result
+    assert result["auditoria_legibilidade"]["warning_count"] >= 0
+    assert result["auditoria_legibilidade"]["assessments"]
+    assert all(item["normative_approval"] is False
+               for item in result["auditoria_legibilidade"]["assessments"])
     token = urlparse(result["arquivos"]["dxf_url"]).path.split("/")[-2]
     downloaded = importlib.import_module("mcp_cad_cloud.downloads").retrieve(token, "zip")
     assert downloaded is not None
@@ -173,5 +178,7 @@ def test_export_reopens_all_sheets_and_bundles_auditable_files():
     assert report["licensing_readiness"] == "review_required"
     assert report["cross_view_coherence"]["ok"] is True
     assert report["cross_view_coherence"]["status"] == "review_required"
+    assert report["annotation_legibility"]["warning_count"] == result["auditoria_legibilidade"]["warning_count"]
+    assert report["annotation_legibility"]["normative_approval"] is False
     assert "https://" not in report_text
 

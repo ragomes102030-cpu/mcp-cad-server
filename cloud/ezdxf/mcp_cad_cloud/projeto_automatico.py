@@ -382,6 +382,7 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
     building_envelope = BuildingEnvelope(**envelope)
     plan_model = gerar_modelo(deepcopy(programa))
     package = generate_architecture_package(plan_model, project_context, building_envelope)
+    from mcp_cad_cloud.auditoria_legibilidade import auditar_legibilidade_vista
     coherence = audit_architecture_coherence(package)
     if not coherence["ok"]:
         return {
@@ -403,6 +404,12 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
     specs = ([_sheet_spec_from_dict(item) for item in folhas]
              if folhas else list(default_licensing_sheet_specs(package)))
     sheets = compose_licensing_sheets(package, specs, title_block)
+    view_map = {view.view_id: view for view in package.views}
+    legibility = [
+        auditar_legibilidade_vista(view_map[viewport.view_id], spec.scale)
+        for spec in specs for viewport in spec.viewports
+    ]
+    legibility_warnings = sum(len(audit["warnings"]) for audit in legibility)
     evaluation = evaluate_package(package, requirements, applicability_rules, evaluators)
 
     serialized, audits, visuals = [], [], []
@@ -445,6 +452,12 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         "requirements": results,
         "sheet_audits": audits,
         "cross_view_coherence": coherence,
+        "annotation_legibility": {
+            "assessments": legibility,
+            "warning_count": legibility_warnings,
+            "status": "review_required" if legibility_warnings else "ok",
+            "normative_approval": False,
+        },
         "limitations": list(package.limitations),
         "artifacts": [f"{sheet_id}.{ext}" for sheet_id, *_ in serialized
                       for ext in ("dxf", "pdf", "png")],
@@ -473,6 +486,18 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         f"- Elevação de cumeeira do modelo: {coherence['geometry']['roof_ridge_elevation_m']:.3f} m",
         "- Revisão visual e normativa profissional continuam obrigatórias.",
     ])
+    report_md.extend([
+        "", "## Legibilidade de anotações — inspeção preliminar", "",
+        f"- Caixas de texto/obstáculos estimados: {sum(x['checked_labels'] for x in legibility)} rótulos;",
+        f"- Alertas de interferência: {legibility_warnings}",
+        "- A detecção geométrica não equivale à medição tipográfica do PDF/PNG.",
+    ])
+    for assessment in legibility:
+        for warning in assessment["warnings"]:
+            report_md.append(
+                f"- {warning['view_id']}: {warning['source_id']} / "
+                f"{warning['other_source_id']} — {warning['code']}"
+            )
     report_md.extend(["", "## Pranchas", ""])
     report_md.extend(f"- {sheet_id}: auditoria independente passou."
                      for sheet_id, *_ in serialized)
@@ -500,6 +525,11 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         "resultados_requisitos": results,
         "auditorias_folhas": audits,
         "auditoria_coerencia": coherence,
+        "auditoria_legibilidade": {
+            "warning_count": legibility_warnings,
+            "status": "review_required" if legibility_warnings else "ok",
+            "assessments": legibility,
+        },
         "arquivos": {
             "dxf_url": links["dxf_url"], "zip_url": links["download_url"],
             "pdf_url": visual_links["pdf_url"], "png_url": visual_links["png_url"],
@@ -510,5 +540,9 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
             "Revisão de profissional habilitado obrigatória; este pacote não é aprovação de licenciamento.",
             "Normas NBR e regras municipais não verificadas permanecem pendentes.",
             "Links temporários públicos; não enviar projetos sigilosos.",
+            *([
+                f"{legibility_warnings} possíveis interferências gráficas na prancha; "
+                "conferir os IDs no relatório."
+            ] if legibility_warnings else []),
         ],
     }
