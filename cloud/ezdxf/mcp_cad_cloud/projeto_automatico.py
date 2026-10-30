@@ -382,6 +382,23 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
     building_envelope = BuildingEnvelope(**envelope)
     plan_model = gerar_modelo(deepcopy(programa))
     package = generate_architecture_package(plan_model, project_context, building_envelope)
+    floor_view = next(view for view in package.views if view.view_id == "ARQ-PLANTA")
+    graphic_room_dimensions = {
+        label.source_id for label in floor_view.labels
+        if label.source_id.startswith("dimension-label:room:")
+    }
+    total_rooms = len(plan_model.get("ambientes", []))
+    room_dimension_summary = {
+        "width_dimensions_drawn": len(graphic_room_dimensions),
+        "room_count": total_rooms,
+        "width_dimensions_in_schedule": len(plan_model.get("cotas_ambientes", [])),
+        "omitted_graphic_room_indices": [
+            index for index in range(total_rooms)
+            if f"dimension-label:room:{index}:width" not in graphic_room_dimensions
+        ],
+        "source": "model_room_clear_faces",
+        "normative_approval": False,
+    }
     from mcp_cad_cloud.auditoria_legibilidade import auditar_legibilidade_vista
     coherence = audit_architecture_coherence(package)
     if not coherence["ok"]:
@@ -452,6 +469,7 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         "requirements": results,
         "sheet_audits": audits,
         "cross_view_coherence": coherence,
+        "interior_dimensions": room_dimension_summary,
         "annotation_legibility": {
             "assessments": legibility,
             "warning_count": legibility_warnings,
@@ -485,6 +503,13 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         f"- Aberturas projetadas conferidas: {coherence['checked']['projected_facade_openings']}",
         f"- Elevação de cumeeira do modelo: {coherence['geometry']['roof_ridge_elevation_m']:.3f} m",
         "- Revisão visual e normativa profissional continuam obrigatórias.",
+    ])
+    report_md.extend([
+        "", "## Cotas internas — primeira faixa piloto", "",
+        f"- Larguras gráficas posicionadas sem interferência estimada: {room_dimension_summary['width_dimensions_drawn']}/{total_rooms}",
+        f"- Ambientes com largura/profundidade numérica no quadro: {room_dimension_summary['width_dimensions_in_schedule']}/{total_rooms}",
+        f"- Índices sem cota interna gráfica: {room_dimension_summary['omitted_graphic_room_indices']}",
+        "- Comprimentos derivados das faces internas do modelo; não são verificação normativa.",
     ])
     report_md.extend([
         "", "## Legibilidade de anotações — inspeção preliminar", "",
@@ -525,6 +550,7 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         "resultados_requisitos": results,
         "auditorias_folhas": audits,
         "auditoria_coerencia": coherence,
+        "cotas_internas": room_dimension_summary,
         "auditoria_legibilidade": {
             "warning_count": legibility_warnings,
             "status": "review_required" if legibility_warnings else "ok",
