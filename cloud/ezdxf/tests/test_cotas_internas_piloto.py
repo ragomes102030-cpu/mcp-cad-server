@@ -1,7 +1,5 @@
 """Regression for measured, safely placed horizontal and vertical cotas."""
 import math
-from copy import deepcopy
-
 from test_prancha_licenciamento import package as package_fixture
 from mcp_cad_cloud.auditoria_legibilidade import auditar_legibilidade_vista
 
@@ -14,7 +12,7 @@ def _plan():
 def _intersects_rect_line(segment, box):
     x1, y1, x2, y2 = map(float, box)
     if abs(segment.y1 - segment.y2) < 1e-8:
-        return y1 < segment.y1 < y2 and min(segment.x1, segment.x2, x2) != 0 and (
+        return y1 < segment.y1 < y2 and (
             min(max(segment.x1, segment.x2), x2) -
             max(min(segment.x1, segment.x2), x1) > 1e-8)
     if abs(segment.x1 - segment.x2) < 1e-8:
