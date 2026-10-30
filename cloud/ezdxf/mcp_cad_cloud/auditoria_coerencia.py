@@ -29,8 +29,10 @@ def _segments_for(view, source):
     return [part for part in view.segments if part.source_id == source]
 
 
-def _same_rectangle(view, source, bounds):
+def _same_rectangle(view, source, bounds, layer=None):
     segments = _segments_for(view, source)
+    if layer is not None:
+        segments = [segment for segment in segments if segment.layer == layer]
     found = Counter(_edge(s.x1, s.y1, s.x2, s.y2) for s in segments)
     return found == _rectangle_edges(bounds)
 
@@ -87,7 +89,8 @@ def audit_architecture_coherence(package) -> dict:
     for side, view_id, span, boundary, fixed_axis in facade_specs:
         facade = views[view_id]
         if not _same_rectangle(
-            facade, f"facade:{side}", (0, floor, span, wall_top)
+            facade, f"facade:{side}", (0, floor, span, wall_top),
+            layer="FACHADA-PAREDE",
         ):
             fail("facade-envelope-mismatch", view_id, f"facade:{side}")
 
