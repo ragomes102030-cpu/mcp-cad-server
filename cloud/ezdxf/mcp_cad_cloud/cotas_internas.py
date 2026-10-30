@@ -159,3 +159,73 @@ def adicionar_cotas_internas(segments, labels, model, Segment, ViewLabel):
                 else:
                     omitted[axis].append(index)
     return omitted
+
+
+def adicionar_profundidades_auxiliares(segments, labels, model, omitted,
+                                     Segment, ViewLabel):
+    """Draw true-scale vertical reference rails outside the footprint.
+
+    The rails preserve the original model Y ordinates. They are annotated
+    as auxiliary, *without* fictitious witness lines across other rooms.
+    If an unobstructed rail or a separate legend cannot fit, leave a
+    dimension omitted; the room schedule remains the numeric source.
+    """
+    indices = [int(i) for i in omitted.get("depth", [])]
+    if not indices:
+        return []
+    room_data = model.get("ambientes", [])
+    width = float(model["resumo_geometria"]["largura"])
+    depth = float(model["resumo_geometria"]["profundidade"])
+    scheduled = [label for label in labels
+                 if label.source_id.startswith("schedule:")]
+    if not scheduled:
+        return []
+    # Reserve a quiet strip immediately between the right exterior wall
+    # and the table at width + 0.65 m. No oblique room-to-rail extension
+    # crosses another apartment/room.
+    rail_x = width + .28
+    header_y = min(label.y for label in scheduled) - .30
+    legend_ys = [header_y - .30 * (i + 1) for i in range(len(indices))]
+    if (header_y > depth - .20 or
+            not legend_ys or min(legend_ys) < .35):
+        return []
+
+    original_labels = [_label_box(item, 50) for item in labels
+                       if item.source_id.startswith(
+                           ("room:", "room-area:", "opening-tag:",
+                            "dimension-label:", "schedule:"))]
+    rail_boxes = []
+    result = []
+    for idx, row_y in zip(indices, legend_ys):
+        if not (0 <= idx < len(room_data)):
+            continue
+        _, y1, _, y2 = _room_box(room_data[idx])
+        rail = (rail_x - .05, y1, rail_x + .05, y2)
+        if y1 < 0 or y2 > depth:
+            continue
+        if any(_overlap(rail, old, .035) for old in rail_boxes):
+            continue
+        # The textual room name is essential: the rail is a proportional
+        # reference and is intentionally NOT shown as an in-situ wall cota.
+        tag = f"AUX D{idx + 1:02d} {room_data[idx]['nome']} {y2-y1:.2f} m"
+        label = ViewLabel(tag, width + .65, row_y,
+                          f"dimension-label:room:{idx}:depth:aux")
+        label_box = _label_box(label, 50)
+        if any(_overlap(label_box, other, .025)
+               for other in original_labels):
+            continue
+        original_labels.append(label_box)
+        rail_boxes.append(rail)
+        source = f"dimension:room:{idx}:depth:aux"
+        segments.append(Segment(rail_x, y1, rail_x, y2,
+                                "COTAS-AUXILIAR", source))
+        for y in (y1, y2):
+            segments.append(Segment(rail_x-.045, y-.045,
+                                    rail_x+.045, y+.045,
+                                    "COTAS-AUXILIAR", source))
+        labels.append(label)
+        result.append(idx)
+    if result:
+        labels.append(ViewLabel("COTAS AUX. - REFERENCIA SEM CHAMADA",
+                                width+.65, header_y, "aux-depth:legend"))
+    return result
