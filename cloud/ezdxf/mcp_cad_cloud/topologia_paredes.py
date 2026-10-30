@@ -71,6 +71,17 @@ def _door_arcs_at_gap(arcs, axis, coord, lo, hi):
     return found
 
 
+def _leaves_at_arc(leaves, arc):
+    """A door arc needs an actual matching hinge-to-leaf LINE in the DXF."""
+    found=[]
+    for leaf in leaves:
+        a,b=leaf.dxf.start,leaf.dxf.end
+        if (_close(a.x,arc.dxf.center.x) and _close(a.y,arc.dxf.center.y)
+                and _close(hypot(b.x-a.x,b.y-a.y),arc.dxf.radius)):
+            found.append(leaf.dxf.handle)
+    return found
+
+
 def _new_result(errors=(),status="DADOS_INSUFICIENTES",pendings=(),walls=()):
     walls=list(walls)
     openings=[gap for wall in walls for gap in wall["vaos"]]
@@ -122,6 +133,8 @@ def auditar_paredes_e_vaos_dxf(
     groups=defaultdict(list)
     axes=list(doc.modelspace().query('LINE[layer=="EIXOS-PAREDES"]'))
     arcs=list(doc.modelspace().query('ARC[layer=="PORTAS"]'))
+    leaves=list(doc.modelspace().query('LINE[layer=="PORTAS"]'))
+    arc_by_handle={a.dxf.handle:a for a in arcs}
     windows=list(doc.modelspace().query('LINE[layer=="JANELAS"]'))
     for line in axes:
         a,b=line.dxf.start,line.dxf.end
@@ -145,6 +158,7 @@ def auditar_paredes_e_vaos_dxf(
                            ["Nenhum eixo mensurável no layer EIXOS-PAREDES."])
     walls=[]
     used_arcs=set()
+    used_leaves=set()
     used_windows=set()
     for axis,coord in sorted(groups):
         intervals=sorted(groups[(axis,coord)])
@@ -185,8 +199,17 @@ def auditar_paredes_e_vaos_dxf(
                     errors.append({"codigo":"JANELA_INCOMPLETA",
                                    "eixo":f"{axis}:{coord}","vao":[b,c]})
                 if matched_arcs and kinds==1:
+                    leaf_matches=[
+                        h for arc_id in matched_arcs
+                        for h in _leaves_at_arc(leaves,arc_by_handle[arc_id])
+                    ]
+                    if len(leaf_matches)!=len(matched_arcs) or len(leaf_matches)!=1:
+                        errors.append({"codigo":"FOLHA_PORTA_INCONSISTENTE",
+                                       "eixo":f"{axis}:{coord}","vao":[b,c],
+                                       "arcos":matched_arcs,"folhas":leaf_matches})
                     kind="PORTA"
-                    sym=matched_arcs
+                    sym=matched_arcs+leaf_matches
+                    used_leaves.update(leaf_matches)
                     height=door_height
                 elif len(matched_windows)==2 and kinds==1 and (
                         matched_windows[0][1]*matched_windows[1][1]<0 and
@@ -249,6 +272,7 @@ def auditar_paredes_e_vaos_dxf(
                            "volume retido por ausência de regra de encontros.",
             })
     leftovers=[e.dxf.handle for e in arcs if e.dxf.handle not in used_arcs]
+    leftovers+= [e.dxf.handle for e in leaves if e.dxf.handle not in used_leaves]
     leftovers+= [e.dxf.handle for e in windows if e.dxf.handle not in used_windows]
     if leftovers:
         errors.append({"codigo":"SIMBOLO_SEM_ABERTURA","handles":leftovers})
