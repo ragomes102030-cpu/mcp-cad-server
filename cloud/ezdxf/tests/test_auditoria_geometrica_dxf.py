@@ -172,3 +172,41 @@ def test_furniture_duplicate_vertex_is_rejected(drawing):
     result = auditar_documento(model, doc)
     assert not result["ok"]
     assert "mobiliario-formato" in _keys(result)
+
+
+def test_existing_wall_edges_have_no_independent_topology_errors(drawing):
+    from mcp_cad_cloud.auditoria_geometrica import _auditar_arestas_paredes
+    _, doc = drawing
+    wall_lines = list(doc.modelspace().query('LINE[layer=="PAREDES"]'))
+    assert wall_lines
+    assert _auditar_arestas_paredes(wall_lines) == []
+
+
+def test_partially_overlapping_wall_edge_rejected_by_independent_check(drawing):
+    model, doc = drawing
+    lines = list(doc.modelspace().query('LINE[layer=="PAREDES"]'))
+    ent = next(e for e in lines if
+               abs(e.dxf.end.x - e.dxf.start.x) > 0.4 and
+               abs(e.dxf.end.y - e.dxf.start.y) < 1e-8)
+    a, b = ent.dxf.start, ent.dxf.end
+    doc.modelspace().add_line(
+        (a.x * .75 + b.x * .25, a.y),
+        (a.x * .25 + b.x * .75, b.y),
+        dxfattribs={"layer": "PAREDES"},
+    )
+    result = auditar_dxf_serializado(model, doc)
+    assert not result["ok"]
+    assert "paredes-arestas-sobrepostas" in _keys(result)
+
+
+def test_diagonal_and_zero_length_wall_edges_rejected(drawing):
+    model, doc = drawing
+    msp = doc.modelspace()
+    msp.add_line((0.3, 0.4), (0.5, 0.7),
+                 dxfattribs={"layer": "PAREDES"})
+    msp.add_line((0.6, 0.6), (0.6, 0.6),
+                 dxfattribs={"layer": "PAREDES"})
+    result = auditar_documento(model, doc)
+    assert not result["ok"]
+    assert "parede-segmento-nao-ortogonal" in _keys(result)
+    assert "parede-segmento-degenerado" in _keys(result)
