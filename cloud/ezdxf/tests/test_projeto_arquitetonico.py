@@ -72,7 +72,7 @@ def test_compact_house_produces_all_licensing_views_with_sources(api):
     assert all(view.unit == "m" and view.segments for view in package.views)
     assert all(view.source_ids for view in package.views)
     floor_plan = by_id["ARQ-PLANTA"]
-    assert sum(segment.layer == "ESQUADRIA-PORTA" for segment in floor_plan.segments) == len(package.source_plan["portas"])
+    assert sum(segment.source_id.endswith(":leaf") for segment in floor_plan.segments) == len(package.source_plan["portas"])
     assert sum(segment.layer == "ESQUADRIA-JANELA" for segment in floor_plan.segments) == 2 * len(package.source_plan["janelas"])
     assert sum(segment.layer == "MOBILIARIO" for segment in floor_plan.segments) == 4 * len(package.source_plan["moveis"])
     assert package.readiness == "review_required"
@@ -104,6 +104,36 @@ def test_floor_plan_represents_wall_thickness_with_two_faces_and_jambs(api):
     else:
         assert abs(abs(faces[0].x1-faces[1].x1) - thickness) < 1e-8
         assert all(abs(segment.y1-segment.y2) < 1e-8 for segment in jambs)
+
+
+def test_floor_plan_has_internal_room_and_opening_dimensions(api):
+    package = generate(api)
+    floor_plan = next(view for view in package.views if view.view_id == "ARQ-PLANTA")
+    labels = {label.source_id: label.text for label in floor_plan.labels}
+
+    assert labels["schedule:rooms:title"] == "AMBIENTES | DIMENSÕES E ÁREAS"
+    assert all(f"schedule:room:{index}" in labels
+               for index in range(len(package.source_plan["cotas_ambientes"])))
+    assert labels["schedule:doors:title"] == "PORTAS | VÃOS (m)"
+    assert all(f"schedule:door:{index}" in labels
+               for index in range(len(package.source_plan["portas"])))
+    assert labels["schedule:windows:title"] == "JANELAS | VÃOS (m)"
+    assert all(f"schedule:window:{index}" in labels
+               for index in range(len(package.source_plan["janelas"])))
+    assert all(f"opening-tag:door:{index}" in labels
+               for index in range(len(package.source_plan["portas"])))
+    assert all(f"opening-tag:window:{index}" in labels
+               for index in range(len(package.source_plan["janelas"])))
+
+
+def test_floor_plan_draws_quarter_swing_for_each_door(api):
+    package = generate(api)
+    floor_plan = next(view for view in package.views if view.view_id == "ARQ-PLANTA")
+
+    for index in range(len(package.source_plan["portas"])):
+        arc_segments = [segment for segment in floor_plan.segments
+                        if segment.source_id.startswith(f"door:{index}:swing:")]
+        assert len(arc_segments) == 8, (index, arc_segments)
 
 
 def test_missing_wall_opening_or_roof_height_is_rejected(api):

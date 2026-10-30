@@ -181,6 +181,11 @@ def _make_view(view_id: str, kind: str, segments: list[Segment],
         raise ArchitecturePackageError(f"Vista arquitetônica vazia: {view_id}.")
     xs = [point for seg in segments for point in (seg.x1, seg.x2)]
     ys = [point for seg in segments for point in (seg.y1, seg.y2)]
+    # Include label extents in the viewport bounds. Text is plotted at about
+    # 3.2 mm on A3 at 1:50; 0.10 m per character is a conservative width.
+    for label in labels or ():
+        xs.extend((label.x, label.x + 0.10 * len(label.text)))
+        ys.extend((label.y - 0.08, label.y + 0.16))
     sources = tuple(dict.fromkeys(seg.source_id for seg in segments))
     return ViewGeometry(
         view_id=view_id,
@@ -237,8 +242,28 @@ def _wall_faces(target: list[Segment], wall: tuple[float, ...],
             "A planta arquitetônica exige eixos de parede ortogonais nesta versão.")
 
 
+def _opening_axis(model: dict, x: float, y: float, width: float) -> str:
+    """Infer whether a door opening lies on a horizontal or vertical wall."""
+    horizontal = vertical = 0
+    for wall in model.get("paredes", []):
+        x1, y1, x2, y2 = (float(value) for value in wall)
+        if abs(y2-y1) <= 1e-8 and abs(y-y1) <= 0.16:
+            left, right = sorted((x1, x2))
+            if min(abs(left-x), abs(right-x), abs(left-(x+width)),
+                   abs(right-(x+width))) <= 0.16:
+                horizontal += 1
+        elif abs(x2-x1) <= 1e-8 and abs(x-x1) <= 0.16:
+            bottom, top = sorted((y1, y2))
+            if min(abs(bottom-y), abs(top-y), abs(bottom-(y+width)),
+                   abs(top-(y+width))) <= 0.16:
+                vertical += 1
+    return "horizontal" if horizontal >= vertical else "vertical"
+
+
 def _floor_plan(model: dict) -> ViewGeometry:
     segments: list[Segment] = []
+    width = _finite("largura da planta", model.get("resumo_geometria", {}).get("largura"))
+    depth = _finite("profundidade da planta", model.get("resumo_geometria", {}).get("profundidade"))
     thickness = _finite("espessura de parede", model.get("espessura_parede"))
     if thickness <= 0:
         raise ArchitecturePackageError("Espessura de parede deve ser positiva.")
@@ -252,6 +277,17 @@ def _floor_plan(model: dict) -> ViewGeometry:
         angle = radians(_finite("orientação de folha de porta", leaf_angle))
         _segment(segments, x, y, x + width * cos(angle), y + width * sin(angle),
                  "ESQUADRIA-PORTA", f"door:{index}:leaf")
+        # Show the conventional quarter swing from the closed wall axis to
+        # the modeled open leaf. Eight chords keep the geometry portable to
+        # lightweight DXF consumers while retaining stable audit IDs.
+        arc_start = angle - radians(90)
+        for part in range(8):
+            a0 = arc_start + radians(90) * part / 8
+            a1 = arc_start + radians(90) * (part + 1) / 8
+            _segment(segments,
+                     x + width * cos(a0), y + width * sin(a0),
+                     x + width * cos(a1), y + width * sin(a1),
+                     "ESQUADRIA-PORTA", f"door:{index}:swing:{part:02d}")
     for index, window in enumerate(model["janelas"]):
         x1, y1, x2, y2 = window
         offset = 0.035
@@ -288,6 +324,51 @@ def _floor_plan(model: dict) -> ViewGeometry:
         if area is not None:
             labels.append(ViewLabel(f"{float(area):.2f} m²", x, y - 0.25,
                                     f"room-area:{index}"))
+    # Opening IDs sit just inside the footprint, near their modeled opening.
+    # The complete schedule below carries the corresponding clear model width.
+    for index, (x, y, _wall_angle, door_width) in enumerate(model["portas"]):
+        axis = _opening_axis(model, float(x), float(y), float(door_width))
+        if axis == "horizontal":
+            tag_x = float(x) + float(door_width) / 2
+            tag_y = float(y) + (0.38 if float(y) < depth / 2 else -0.38)
+        else:
+            tag_x = float(x) + (0.38 if float(x) < width / 2 else -0.38)
+            tag_y = float(y) + float(door_width) / 2
+        labels.append(ViewLabel(f"P{index + 1:02d}", tag_x, tag_y,
+                                f"opening-tag:door:{index}"))
+    for index, (x1, y1, x2, y2) in enumerate(model["janelas"]):
+        labels.append(ViewLabel(f"J{index + 1:02d}", (x1 + x2) / 2,
+                                y1 + (0.48 if y1 < depth / 2 else -0.48),
+                                f"opening-tag:window:{index}"))
+
+    # Compact drawing schedule, positioned to the right of the footprint.
+    # Room dimensions/areas are copied from cotas_ambientes and are explicitly
+    # model values; they are not independently measured clear-face dimensions.
+    schedule_x = _finite("largura da planta", model.get("resumo_geometria", {}).get("largura")) + 0.65
+    schedule_y = _finite("profundidade da planta", model.get("resumo_geometria", {}).get("profundidade")) - 0.10
+    row = 0.30
+    labels.append(ViewLabel("AMBIENTES | DIMENSÕES E ÁREAS", schedule_x, schedule_y,
+                            "schedule:rooms:title"))
+    for index, room in enumerate(model.get("cotas_ambientes", [])):
+        schedule_y -= row
+        labels.append(ViewLabel(
+            f"{room['nome']} | {float(room['largura']):.2f} x "
+            f"{float(room['profundidade']):.2f} m | {float(room['area']):.2f} m²",
+            schedule_x, schedule_y, f"schedule:room:{index}"))
+    schedule_y -= row * 1.25
+    labels.append(ViewLabel("PORTAS | VÃOS (m)", schedule_x, schedule_y,
+                            "schedule:doors:title"))
+    for index, door in enumerate(model.get("portas", [])):
+        schedule_y -= row
+        labels.append(ViewLabel(f"P{index + 1:02d} | {float(door[3]):.2f}",
+                                schedule_x, schedule_y, f"schedule:door:{index}"))
+    schedule_y -= row * 1.25
+    labels.append(ViewLabel("JANELAS | VÃOS (m)", schedule_x, schedule_y,
+                            "schedule:windows:title"))
+    for index, window in enumerate(model.get("janelas", [])):
+        schedule_y -= row
+        labels.append(ViewLabel(f"J{index + 1:02d} | {abs(float(window[2]) - float(window[0])):.2f}",
+                                schedule_x, schedule_y, f"schedule:window:{index}"))
     width = _finite("largura da planta", model.get("resumo_geometria", {}).get("largura"))
     depth = _finite("profundidade da planta", model.get("resumo_geometria", {}).get("profundidade"))
     # Overall external dimension strings are explicit drawing geometry with

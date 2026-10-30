@@ -124,6 +124,21 @@ def _functional_checks(program: dict, package) -> list[str]:
     for index in range(len(program["ambientes"])):
         if f"room-area:{index}" not in labels:
             errors.append(f"room-area-label-missing:{index}")
+        if f"schedule:room:{index}" not in labels:
+            errors.append(f"room-dimensions-schedule-missing:{index}")
+    for index in range(len(model.get("portas", ()))):
+        if f"opening-tag:door:{index}" not in labels or f"schedule:door:{index}" not in labels:
+            errors.append(f"door-identification-or-schedule-missing:{index}")
+        if sum(segment.source_id.startswith(f"door:{index}:swing:")
+               for segment in floor.segments) != 8:
+            errors.append(f"door-swing-symbol-invalid:{index}")
+    for index in range(len(model.get("janelas", ()))):
+        if f"opening-tag:window:{index}" not in labels or f"schedule:window:{index}" not in labels:
+            errors.append(f"window-identification-or-schedule-missing:{index}")
+    for source_id in ("schedule:rooms:title", "schedule:doors:title",
+                      "schedule:windows:title"):
+        if source_id not in labels:
+            errors.append(f"opening-or-room-schedule-title-missing:{source_id}")
     if "dimension-label:overall:width" not in labels or "dimension-label:overall:depth" not in labels:
         errors.append("external-dimensions-missing")
     return errors

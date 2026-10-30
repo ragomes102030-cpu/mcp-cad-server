@@ -489,9 +489,11 @@ temporários para a primeira prancha e para o conjunto.
 Se `folhas` for omitido, a ferramenta cria quatro folhas A3: planta baixa,
 implantação/cobertura, dois cortes e quatro fachadas, com escalas declaradas.
 O usuário ainda pode fornecer uma composição própria. A planta traz cotas
-externas da edificação; o pacote ainda não contém quadro completo de
-esquadrias, detalhes construtivos, notas específicas da prefeitura ou cotas
-internas.
+externas, códigos de portas e janelas, arcos esquemáticos de giro e quadros
+de ambientes e vãos com dimensões copiadas do modelo. Os quadros não são uma
+medição independente das faces acabadas. Ainda faltam detalhes construtivos,
+notas específicas de cada prefeitura, níveis e cotas internas dimensionadas
+por faces acabadas.
 
 Na planta baixa, os eixos ortogonais de parede são representados pelas duas
 faces paralelas, espaçadas pela espessura declarada no modelo, e pelos

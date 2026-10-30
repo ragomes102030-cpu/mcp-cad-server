@@ -81,7 +81,7 @@ def spec(api, sheet_id="ARQ-01", **changes):
         "margin_mm": 10.0,
         "sheet_id": sheet_id,
         "viewports": (api.ViewportSpec(
-            view_id="ARQ-PLANTA", x_mm=20, y_mm=70, width_mm=220, height_mm=200,
+            view_id="ARQ-PLANTA", x_mm=20, y_mm=70, width_mm=380, height_mm=200,
         ),),
     }
     values.update(changes)

@@ -134,7 +134,7 @@ def test_export_reopens_all_sheets_and_bundles_auditable_files():
             "paper_format": "A3", "orientation": "landscape", "scale": 50,
             "margin_mm": 10, "sheet_id": "ARQ-01",
             "viewports": [{"view_id": "ARQ-PLANTA", "x_mm": 20, "y_mm": 70,
-                           "width_mm": 220, "height_mm": 200}],
+                           "width_mm": 380, "height_mm": 200}],
         },
         {
             "paper_format": "A3", "orientation": "landscape", "scale": 100,
