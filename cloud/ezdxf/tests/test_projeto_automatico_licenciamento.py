@@ -161,6 +161,12 @@ def test_export_reopens_all_sheets_and_bundles_auditable_files():
     assert result["auditoria_coerencia"]["ok"] is True
     assert result["auditoria_coerencia"]["normative_approval"] is False
     assert result["auditoria_coerencia"]["checked"]["views"] == 9
+    assert len(result["cotas_niveis"]) == 6
+    assert all(item["floor_level"] and item["top_wall_level"]
+               for item in result["cotas_niveis"])
+    assert all(item["normative_approval"] is False
+               for item in result["cotas_niveis"])
+    assert sum(item["roof_visible"] for item in result["cotas_niveis"]) == 4
     assert "auditoria_legibilidade" in result
     assert result["auditoria_legibilidade"]["warning_count"] >= 0
     assert result["cotas_internas"]["room_count"] == 7
@@ -191,6 +197,7 @@ def test_export_reopens_all_sheets_and_bundles_auditable_files():
     assert report["licensing_readiness"] == "review_required"
     assert report["cross_view_coherence"]["ok"] is True
     assert report["cross_view_coherence"]["status"] == "review_required"
+    assert report["vertical_datum_checks"] == result["cotas_niveis"]
     assert report["annotation_legibility"]["warning_count"] == result["auditoria_legibilidade"]["warning_count"]
     assert report["annotation_legibility"]["normative_approval"] is False
     assert report["interior_dimensions"] == result["cotas_internas"]
