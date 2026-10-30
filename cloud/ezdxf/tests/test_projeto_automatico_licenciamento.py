@@ -163,6 +163,10 @@ def test_export_reopens_all_sheets_and_bundles_auditable_files():
     assert result["auditoria_coerencia"]["checked"]["views"] == 9
     assert "auditoria_legibilidade" in result
     assert result["auditoria_legibilidade"]["warning_count"] >= 0
+    assert result["cotas_internas"]["room_count"] == 7
+    assert result["cotas_internas"]["width_dimensions_drawn"] >= 4
+    assert result["cotas_internas"]["width_dimensions_in_schedule"] == 7
+    assert result["cotas_internas"]["normative_approval"] is False
     assert result["auditoria_legibilidade"]["assessments"]
     assert all(item["normative_approval"] is False
                for item in result["auditoria_legibilidade"]["assessments"])
@@ -180,5 +184,6 @@ def test_export_reopens_all_sheets_and_bundles_auditable_files():
     assert report["cross_view_coherence"]["status"] == "review_required"
     assert report["annotation_legibility"]["warning_count"] == result["auditoria_legibilidade"]["warning_count"]
     assert report["annotation_legibility"]["normative_approval"] is False
+    assert report["interior_dimensions"] == result["cotas_internas"]
     assert "https://" not in report_text
 
