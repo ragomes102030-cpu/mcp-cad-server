@@ -66,7 +66,8 @@ def test_missing_door_arc_is_detected_as_unidentified_gap(doc):
     result=auditar_paredes_e_vaos_dxf(doc)
     assert result["resumo"]["portas"]==4
     assert result["resumo"]["vaos_sem_simbolo"]==2
-    assert result["status"]=="PARCIAL"
+    assert result["status"]=="INVALIDO"
+    assert "SIMBOLO_SEM_ABERTURA" in _issues(result)
     assert not result["aprovacao_arquitetonica"]
 
 
