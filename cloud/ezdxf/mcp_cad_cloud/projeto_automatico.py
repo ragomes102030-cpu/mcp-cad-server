@@ -392,20 +392,35 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
         index for index in range(total_rooms)
         if f"dimension-label:room:{index}:width" not in graphic_room_dimensions
     ]
+    auxiliary_depth = [
+        index for index in range(total_rooms)
+        if f"dimension-label:room:{index}:depth:aux" in graphic_room_dimensions
+    ]
+    depth_inside_count = sum(
+        f"dimension-label:room:{index}:depth" in graphic_room_dimensions
+        for index in range(total_rooms))
     missing_depth = [
         index for index in range(total_rooms)
-        if f"dimension-label:room:{index}:depth" not in graphic_room_dimensions
+        if (f"dimension-label:room:{index}:depth" not in graphic_room_dimensions
+            and f"dimension-label:room:{index}:depth:aux"
+                not in graphic_room_dimensions)
     ]
     room_dimension_summary = {
         "width_dimensions_drawn": total_rooms - len(missing_width),
         "depth_dimensions_drawn": total_rooms - len(missing_depth),
+        "depth_dimensions_inside_drawn": depth_inside_count,
+        "depth_dimensions_auxiliary_drawn": len(auxiliary_depth),
+        "auxiliary_depth_room_indices": auxiliary_depth,
         "room_count": total_rooms,
         "width_dimensions_in_schedule": len(plan_model.get("cotas_ambientes", [])),
         "depth_dimensions_in_schedule": len(plan_model.get("cotas_ambientes", [])),
         "omitted_graphic_room_indices": missing_width,
         "omitted_width_room_indices": missing_width,
         "omitted_depth_room_indices": missing_depth,
-        "graphic_status": "complete" if not (missing_width or missing_depth) else "partial",
+        "graphic_status": (
+            "partial" if (missing_width or missing_depth)
+            else "complete_with_auxiliary" if auxiliary_depth else "complete"
+        ),
         "source": "model_room_clear_faces",
         "normative_approval": False,
     }
@@ -517,7 +532,10 @@ def export_licensing_package(programa: dict, contexto: dict, envelope: dict,
     report_md.extend([
         "", "## Cotas internas — primeira faixa piloto", "",
         f"- Larguras gráficas: {room_dimension_summary['width_dimensions_drawn']}/{total_rooms}",
-        f"- Profundidades gráficas: {room_dimension_summary['depth_dimensions_drawn']}/{total_rooms}",
+        f"- Profundidades gráficas (internas + auxiliares): {room_dimension_summary['depth_dimensions_drawn']}/{total_rooms}",
+        f"- Profundidades internas: {room_dimension_summary['depth_dimensions_inside_drawn']}/{total_rooms}",
+        f"- Profundidades auxiliares fora dos cômodos: {room_dimension_summary['depth_dimensions_auxiliary_drawn']}",
+        f"- Referências auxiliares (índices): {room_dimension_summary['auxiliary_depth_room_indices']}",
         f"- Ambientes com largura/profundidade no quadro: {room_dimension_summary['width_dimensions_in_schedule']}/{total_rooms}",
         f"- Índices sem largura gráfica: {room_dimension_summary['omitted_width_room_indices']}",
         f"- Índices sem profundidade gráfica: {room_dimension_summary['omitted_depth_room_indices']}",
