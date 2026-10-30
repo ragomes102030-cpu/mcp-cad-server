@@ -6,7 +6,7 @@ vertical inputs. They are not a permit approval or a substitute for review.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import cos, isfinite, radians, sin, tan
+from math import cos, hypot, isfinite, radians, sin, tan
 import re
 import unicodedata
 
@@ -304,7 +304,7 @@ def _opening_axis(model: dict, x: float, y: float, width: float) -> str:
     return "horizontal" if horizontal >= vertical else "vertical"
 
 
-def _floor_plan(model: dict) -> ViewGeometry:
+def _floor_plan(model: dict, envelope: BuildingEnvelope) -> ViewGeometry:
     segments: list[Segment] = []
     width = _finite("largura da planta", model.get("resumo_geometria", {}).get("largura"))
     depth = _finite("profundidade da planta", model.get("resumo_geometria", {}).get("profundidade"))
@@ -401,17 +401,25 @@ def _floor_plan(model: dict) -> ViewGeometry:
     schedule_y -= row * 1.25
     labels.append(ViewLabel("PORTAS | VÃOS (m)", schedule_x, schedule_y,
                             "schedule:doors:title"))
+    # Heights are derived from the same envelope used in sections and façades.
+    door_height = float(envelope.door_head_m) - float(envelope.floor_level_m)
+    window_height = float(envelope.window_head_m) - float(envelope.window_sill_m)
+    sill_height = float(envelope.window_sill_m) - float(envelope.floor_level_m)
     for index, door in enumerate(model.get("portas", [])):
         schedule_y -= row
-        labels.append(ViewLabel(f"P{index + 1:02d} | {float(door[3]):.2f}",
-                                schedule_x, schedule_y, f"schedule:door:{index}"))
+        labels.append(ViewLabel(
+            f"P{index + 1:02d} | L={float(door[3]):.2f} | H={door_height:.2f} m",
+            schedule_x, schedule_y, f"schedule:door:{index}"))
     schedule_y -= row * 1.25
     labels.append(ViewLabel("JANELAS | VÃOS (m)", schedule_x, schedule_y,
                             "schedule:windows:title"))
     for index, window in enumerate(model.get("janelas", [])):
         schedule_y -= row
-        labels.append(ViewLabel(f"J{index + 1:02d} | {abs(float(window[2]) - float(window[0])):.2f}",
-                                schedule_x, schedule_y, f"schedule:window:{index}"))
+        span = hypot(float(window[2]) - float(window[0]),
+                     float(window[3]) - float(window[1]))
+        labels.append(ViewLabel(
+            f"J{index + 1:02d} | L={span:.2f} | H={window_height:.2f} | P={sill_height:.2f} m",
+            schedule_x, schedule_y, f"schedule:window:{index}"))
     width = _finite("largura da planta", model.get("resumo_geometria", {}).get("largura"))
     depth = _finite("profundidade da planta", model.get("resumo_geometria", {}).get("profundidade"))
     # Overall external dimension strings are explicit drawing geometry with
@@ -618,7 +626,7 @@ def generate_architecture_package(
      window_sill, window_head) = _validate_inputs(model, context, envelope)
     views = [
         _site_plan(width, depth, terrain),
-        _floor_plan(model),
+        _floor_plan(model, envelope),
         _roof_plan(width, depth, envelope),
         _section("ARQ-CORTE-A", "y", width, depth, model, envelope, floor,
                  wall_height, door_head, window_sill, window_head),
