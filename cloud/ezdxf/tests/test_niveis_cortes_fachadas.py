@@ -82,3 +82,47 @@ def test_facade_window_and_door_tags_reference_the_actual_openings():
                 side, index = segment.source_id.split(":")[1:]
                 tag = f"facade:{side}:door-tag:{index}"
                 assert _labels(view)[tag] == f"P{int(index)+1:02d}"
+
+
+def test_cross_view_audit_blocks_corrupted_level_text_even_with_valid_xdata():
+    from dataclasses import replace
+    from mcp_cad_cloud.auditoria_coerencia import audit_architecture_coherence
+
+    package = package_fixture.__wrapped__()
+    target = "ARQ-CORTE-A"
+    altered = []
+    for view in package.views:
+        if view.view_id != target:
+            altered.append(view)
+            continue
+        altered.append(replace(view, labels=tuple(
+            replace(label, text="TOPO PAREDE +99.00 m")
+            if label.source_id == f"datum:{target}:wall:label"
+            else label for label in view.labels
+        )))
+    bad = replace(package, views=tuple(altered))
+    audit = audit_architecture_coherence(bad)
+    assert audit["ok"] is False
+    assert any(item["code"] == "datum-label-mismatch"
+               and item["view_id"] == target for item in audit["errors"])
+
+
+def test_cross_view_audit_blocks_fake_ridge_in_parallel_facade():
+    from dataclasses import replace
+    from mcp_cad_cloud.projeto_arquitetonico import ViewLabel
+    from mcp_cad_cloud.auditoria_coerencia import audit_architecture_coherence
+
+    package = package_fixture.__wrapped__()
+    view_id = "ARQ-FACHADA-FRONTAL"  # ridge_axis=x: parallel gable not projected
+    altered = []
+    for view in package.views:
+        if view.view_id == view_id:
+            fake = ViewLabel("CUMEEIRA +5.01 m", 10, 5.01,
+                             f"datum:{view_id}:ridge:label")
+            altered.append(replace(view, labels=(*view.labels, fake)))
+        else:
+            altered.append(view)
+    audit = audit_architecture_coherence(replace(package, views=tuple(altered)))
+    assert audit["ok"] is False
+    assert any(item["code"] == "datum-unprojected-ridge"
+               and item["view_id"] == view_id for item in audit["errors"])
