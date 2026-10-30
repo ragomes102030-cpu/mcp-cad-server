@@ -60,7 +60,11 @@ def test_real_dxf_https_download_and_independent_ezdxf_audit():
         path = Path(tmp) / "downloaded.dxf"
         path.write_bytes(dxf_response.body)
         doc = ezdxf.readfile(path)
-    assert len(doc.modelspace()) == 146
+    assert len(doc.modelspace()) == 175
+    assert len([e for e in doc.modelspace()
+                if e.dxf.layer not in ("EIXOS-PAREDES", "PISOS")]) == 146
+    assert len(doc.modelspace().query('LINE[layer=="EIXOS-PAREDES"]')) == 22
+    assert len(doc.modelspace().query('LWPOLYLINE[layer=="PISOS"]')) == 7
     assert len(list(doc.modelspace().query("DIMENSION"))) == 8
     assert doc.audit().has_errors is False
 
