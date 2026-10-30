@@ -54,10 +54,10 @@ def _wrap(fn):
 def planta_assistida(programa: dict | None = None, modo: str = "preview",
                      nome: str | None = None, template: str | None = None,
                      preview_token: str | None = None) -> dict:
-    """Create the deterministic residential template in headless ezdxf.
+    """Create a residential template in an isolated temporary DXF workspace.
 
-    The cloud variant never opens or edits AutoCAD; ``desenhar`` changes only
-    the ephemeral DXF held by this HTTP session.
+    Preview returns a model without changing the DXF; desenhar stores the
+    audited drawing in this HTTP session until export or expiration.
     """
     if programa is not None and not isinstance(programa, dict):
         return {"ok": False, "code": "INVALID_INPUT", "error": "programa deve ser JSON"}
