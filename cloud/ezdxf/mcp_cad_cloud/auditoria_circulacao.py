@@ -303,8 +303,36 @@ def auditar_circulacao(model: dict, doc) -> dict:
              "sala-cozinha-integracao-nao-comprovada","Sala / Cozinha",
              integracao["motivo"])
 
+    geometry_issue_codes = {
+        "mobiliario-nao-retangular", "portas-incompletas",
+    }
+    geometric_errors = [item for item in erros
+                        if item["chave"] in geometry_issue_codes]
+    functional_errors = [item for item in erros
+                         if item["chave"] not in geometry_issue_codes]
+    technical_warnings = list(avisos)
+    insufficient = []
+    if any(item.get("largura_estimativa_m") is None
+           for item in gargalos.get("larguras", [])):
+        insufficient.append(
+            "Algumas larguras de circulação não puderam ser estimadas pela malha.")
+    insufficient.append(
+        "Acessibilidade e largura livre efetiva não verificadas segundo NBR 9050.")
     return {
         "ok":not erros,
+        "classificacao": {
+            "status_geometrico": ("erro" if geometric_errors else
+                                  "sem_erro_detectado_nas_verificacoes_executadas"),
+            "status_funcional": ("erro" if functional_errors else
+                                 "sem_erro_detectado_nas_verificacoes_executadas"),
+            "erros_geometricos": geometric_errors,
+            "problemas_funcionais": functional_errors,
+            "avisos_tecnicos": technical_warnings,
+            "informacoes_insuficientes": insufficient,
+            "verificacao_normativa": "NAO_REALIZADA",
+            "aprovacao_arquitetonica": False,
+            "metodo": "malha aproximada com auditoria preliminar de giro e mobiliario DXF",
+        },
         "tipo":"auditoria_preliminar_circulacao_interferencias",
         "erros":erros,"avisos":avisos,
         "metricas":{

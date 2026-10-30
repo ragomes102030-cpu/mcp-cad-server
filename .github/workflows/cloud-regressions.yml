@@ -24,6 +24,18 @@ jobs:
           PYTHONPATH: cloud/ezdxf
           MCP_CAD_PROFILE: full
         run: python -m pytest cloud/ezdxf/tests -q
+      - name: Run independent engineering quantity benchmark
+        env:
+          PYTHONPATH: cloud/ezdxf
+          MCP_CAD_PROFILE: full
+        run: python tools/run_cad_engineering_benchmark.py --output out/cad-engineering-benchmark.json
+      - name: Upload engineering benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arquimedes-cad-engineering-benchmark
+          path: out/cad-engineering-benchmark.json
+          retention-days: 30
       - name: Run plant generation lab
         env:
           PYTHONPATH: cloud/ezdxf

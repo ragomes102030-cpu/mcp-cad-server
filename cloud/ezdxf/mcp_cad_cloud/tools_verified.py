@@ -356,13 +356,35 @@ def drawing_audit() -> dict:
             "fixes": len(auditor.fixes), "warning": "Não substitui análise arquitetônica"}
 
 @_wrap
-def quantitativo() -> dict:
-    """Return counts of actual entities by type and layer, not architectural quantities."""
-    entities = list(_ensure().modelspace())
-    return {"ok": True, "entities": len(entities),
+def quantitativo(projeto_id: str | None = None,
+                altura_paredes_m: float | None = None,
+                espessura_paredes_m: float | None = None,
+                altura_portas_m: float | None = None,
+                altura_janelas_m: float | None = None,
+                aberturas_por_parede: dict[str, list[str]] | None = None,
+                inventario_aberturas_completo: bool = False) -> dict:
+    """Count physical entities and measure supported construction elements.
+
+    Old counts remain in the exact same fields. Full wall quantities require
+    explicit wall axes, heights, thickness and a complete opening inventory.
+    Missing data is reported, never filled by architectural assumptions.
+    """
+    from mcp_cad_cloud.quantitativos_engenharia import extrair_quantitativos_dxf
+    doc = _ensure()
+    entities = list(doc.modelspace())
+    engineering = extrair_quantitativos_dxf(
+        doc, projeto_id=projeto_id, altura_paredes_m=altura_paredes_m,
+        espessura_paredes_m=espessura_paredes_m,
+        altura_portas_m=altura_portas_m,
+        altura_janelas_m=altura_janelas_m,
+        aberturas_por_parede=aberturas_por_parede,
+        inventario_aberturas_completo=inventario_aberturas_completo,
+    )
+    return {"ok": engineering["ok"], "entities": len(entities),
             "by_type": dict(Counter(e.dxftype() for e in entities)),
             "by_layer": dict(Counter(e.dxf.layer for e in entities)),
-            "warning": "Contagem de entidades; não mede paredes nem portas"}
+            "quantitativos_construtivos": engineering,
+            "warning": "Quantitativos só são completos quando dados e geometria comprovados; não calcula preços."}
 
 @_wrap
 def export_dxf(incluir_base64: bool = False) -> dict:
