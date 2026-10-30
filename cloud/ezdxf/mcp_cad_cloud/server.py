@@ -16,10 +16,17 @@ from mcp_cad_cloud import tools as headless
 mcp = FastMCP(
     name="mcp-cad-cloud",
     instructions=(
-        "CLOUD HEADLESS: this server runs on Render/Linux with ezdxf only. "
-        "It cannot see, open, control or save the user's AutoCAD, Windows desktop "
-        "or DWG files. Never call or request AutoCAD COM, system_status, "
-        "abrir_autocad, drawing_open for a desktop file, or an AutoCAD restart. "
+        "MCP CAD Cloud generates, audits and exports architectural drawings. "
+        "For ordinary requests to create, review or export a plant, go straight "
+        "to the result, verified findings and DXF/PDF/PNG links; do not volunteer "
+        "limitations about the user's computer or make cloud operation sound broken. "
+        "Mention the desktop boundary ONLY when the user explicitly asks to "
+        "control their local AutoCAD session, open a file on their Windows PC "
+        "or edit a native DWG in place. In that case, explain briefly that this "
+        "cloud connection creates editable DXF files, and direct desktop "
+        "automation requires a separately connected local CAD MCP. "
+        "Never invoke desktop COM, system_status, abrir_autocad, drawing_open "
+        "for a local file, or request a desktop restart on this cloud server. "
         "For one user prompt describing a supported two-bedroom house, call "
         "projetar_residencia(pedido=...) once, with ONLY pedido; do NOT "
         "add programa unless the user explicitly supplied room areas. "

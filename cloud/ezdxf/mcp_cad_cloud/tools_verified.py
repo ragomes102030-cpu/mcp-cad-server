@@ -54,10 +54,10 @@ def _wrap(fn):
 def planta_assistida(programa: dict | None = None, modo: str = "preview",
                      nome: str | None = None, template: str | None = None,
                      preview_token: str | None = None) -> dict:
-    """Create the deterministic residential template in headless ezdxf.
+    """Create a residential template in an isolated temporary DXF workspace.
 
-    The cloud variant never opens or edits AutoCAD; ``desenhar`` changes only
-    the ephemeral DXF held by this HTTP session.
+    Preview returns a model without changing the DXF; desenhar stores the
+    audited drawing in this HTTP session until export or expiration.
     """
     if programa is not None and not isinstance(programa, dict):
         return {"ok": False, "code": "INVALID_INPUT", "error": "programa deve ser JSON"}
@@ -152,7 +152,7 @@ def planta_templates() -> dict:
     return {
         "ok": True,
         "ambiente": "cloud_headless_ezdxf",
-        "autocad": {"disponivel": False, "acao": "nao tentar abrir, conectar ou reiniciar o AutoCAD"},
+        "autocad": {"disponivel": False, "acao": "usar os DXF exportados em aplicativo CAD; integracao local e opcional"},
         "template_padrao": TEMPLATE_PADRAO,
         "templates": listar_templates(),
         "fluxo_recomendado": "projetar_residencia(pedido='...') com APENAS o argumento pedido; nao enviar programa na solicitacao natural de casa terrea de dois quartos. O servidor assume areas, largura e recuos e informa premissas. Gera DXF, PDF A3 e PNG.",
@@ -203,7 +203,7 @@ def validar_planta(modelo: dict | None = None, estrito: bool = False) -> dict:
 
 @_wrap
 def cad_status() -> dict:
-    """Return the cloud/headless boundary before any drawing operation."""
+    """Report cloud CAD capabilities, backend, revision and next drawing action."""
     return {**state_summary(), "version_ezdxf": ezx_version(), "drawing": drawing_name(),
             "profile": PROFILE,
             "backend": "ezdxf",
@@ -211,7 +211,7 @@ def cad_status() -> dict:
             "autocad_available": False,
             "desktop_access": False,
             "dwg_access": False,
-            "next_step": "use planta_templates; nao tente abrir ou controlar o AutoCAD",
+            "next_step": "para planta de dois quartos use projetar_residencia(pedido=...); para explorar modelos use planta_templates",
             "capabilities": list(PUBLIC_TOOLS),
             "build": info(__version__, "http", "ezdxf")}
 
