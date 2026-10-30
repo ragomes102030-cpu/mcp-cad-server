@@ -85,6 +85,9 @@ def test_conflicting_lot_is_rejected_instead_of_silently_replaced():
 def test_real_mcp_one_call_still_exports_when_no_program():
     r = cad.projetar_residencia(PEDIDO)
     assert r["ok"], r
-    assert r["quantitativo"]["entities"] == 146
+    assert r["quantitativo"]["entities"] == 175
+    assert r["quantitativo"]["by_layer"]["EIXOS-PAREDES"] == 22
+    assert r["quantitativo"]["by_layer"]["PISOS"] == 7
+    assert r["quantitativo"]["quantitativos_construtivos"]["resumo"]["pisos"] == 7
     assert r["auditoria"]["errors"] == 0
     assert all(r["arquivos"].get(name) for name in ("dxf_url","pdf_url","png_url","zip_url"))
