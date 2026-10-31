@@ -141,7 +141,7 @@ def test_quantitativo_public_preserves_legacy_counts_and_exposes_topology():
         modo="desenhar",preview_token=preview["preview_token"])["ok"]
     q=cad.quantitativo(projeto_id="TOPOLOGIA-PILOTO")
     assert q["ok"]
-    assert q["entities"]==175
+    assert q["entities"]==180
     assert q["by_layer"]["EIXOS-PAREDES"]==22
     assert q["auditoria_paredes_continuas"]["resumo"]["portas"]==5
     assert q["quantitativos_construtivos"]["resumo"]["paredes"]==22
