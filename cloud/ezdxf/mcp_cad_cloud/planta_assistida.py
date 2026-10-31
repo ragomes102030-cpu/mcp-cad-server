@@ -80,10 +80,13 @@ def build_assisted_model(programa=None):
         "espessura_parede": .15, "pe_direito": float(programa.get("pe_direito", 2.8)),
         "terreno": (-1.5, -5.0, 13.5, 16.0), "paredes": walls,
         "parede_sem_sobreposicao": True, "ambientes": _rooms(),
-        "portas": [(0.5, 0, 90, .9), (2.2, 5, 270, .9), (6.4, 5, 270, .9),
-                   (10.2, 5, 270, .7), (3.2, 6.2, 90, .9), (5.6, 6.2, 90, .9),
-                   (9.6, 6.2, 90, .9), (3.2, 8.6, 90, .9), (5, 2, 0, .9),
-                   (8.6, .9, 0, .9), (2.4, 6.6, 180, .9)],
+        # Door ARC start/end angles must include the CLOSED endpoint
+        # along the actual wall opening. A previously used 90..180 arc
+        # for rightward openings, placing the closed end to the left.
+        "portas": [(0.5, 0, 0, .9), (2.2, 5, 270, .9), (6.4, 5, 270, .9),
+                   (10.2, 5, 270, .7), (3.2, 6.2, 0, .9), (5.6, 6.2, 0, .9),
+                   (9.6, 6.2, 0, .9), (3.2, 8.6, 0, .9), (5, 2, 0, .9),
+                   (8.6, .9, 0, .9), (2.4, 6.6, 90, .9)],
         "janelas": [(2.2, 0, 4.2, 0), (5.9, 0, 7.3, 0), (9.4, 0, 10.6, 0),
                     (12, 3.2, 12, 4.2), (12, 7.5, 12, 9.5), (1, 11, 2.2, 11),
                     (5.5, 11, 7.5, 11), (9.4, 11, 10.9, 11), (0, 2, 0, 3.4),
