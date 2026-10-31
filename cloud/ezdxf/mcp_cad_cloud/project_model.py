@@ -163,7 +163,7 @@ class ProjectModel:
     def from_json(cls, payload: str) -> "ProjectModel":
         try:
             raw = json.loads(payload, parse_constant=lambda value: (_ for _ in ()).throw(
-                ProjectModelError(f"nonfinite JSON constant: {value}"
+                ProjectModelError(f"nonfinite JSON constant: {value}")
             ))
         except (TypeError, ValueError) as exc:
             raise ProjectModelError("invalid project JSON") from exc
