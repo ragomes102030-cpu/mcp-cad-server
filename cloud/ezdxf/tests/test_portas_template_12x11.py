@@ -55,5 +55,5 @@ def test_real_dxf_preserves_all_eleven_arcs_and_parallel_leaf_strokes():
     msp=doc.modelspace()
     assert len(msp.query('ARC[layer=="PORTAS"]'))==11
     assert len(msp.query('LINE[layer=="PORTAS"]'))==11
-    assert len(msp.query('LINE[layer=="PORTAS-DETALHE"]'))==11
+    assert len(msp.query('LINE[layer=="PORTAS-DETALHE"]'))==33
     assert not doc.audit().has_errors
