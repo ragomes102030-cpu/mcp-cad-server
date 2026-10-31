@@ -225,10 +225,25 @@ def _summary(model):
 
 
 def _ensure_layers(doc):
-    for name, color in (("TERRENO", 6), ("PAREDES", 7), ("PORTAS", 3), ("JANELAS", 5),
-                        ("MOBILIARIO", 2), ("COTAS", 1), ("COTAS_INT", 8), ("TEXTOS", 7)):
+    """Low-saturation drafting palette with explicit printable line hierarchy."""
+    from ezdxf.colors import rgb2int
+    palette = (
+        ("TERRENO", 8, (155, 165, 172), 13),
+        ("PAREDES", 7, (35, 43, 49), 50),
+        ("PORTAS", 7, (56, 65, 72), 18),
+        ("PORTAS-DETALHE", 7, (56, 65, 72), 18),
+        ("JANELAS", 4, (75, 120, 144), 20),
+        ("MOBILIARIO", 8, (169, 177, 182), 13),
+        ("COTAS", 1, (165, 72, 64), 18),
+        ("COTAS_INT", 8, (112, 120, 126), 13),
+        ("TEXTOS", 7, (36, 45, 53), 18),
+    )
+    for name, aci, rgb, lineweight in palette:
         if name not in doc.layers:
-            doc.layers.new(name, dxfattribs={"color": color})
+            doc.layers.new(name, dxfattribs={
+                "color": aci, "true_color": rgb2int(rgb),
+                "lineweight": lineweight,
+            })
 
 
 def planta_assistida(programa=None, modo="preview", nome=None, preview_token=None):
@@ -307,6 +322,15 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
         r = math.radians(ang_folha)
         msp.add_line((px,py),(px+width*math.cos(r),py+width*math.sin(r)),
                      dxfattribs={"layer":"PORTAS"})
+        # Graphic parallel leaf: the original PORTAS LINE stays untouched
+        # for backwards-compatible circulation and topology auditing.
+        # A separate drafting layer prevents a second "physical" leaf.
+        blade_thickness = .035
+        nx, ny = -math.sin(r)*blade_thickness, math.cos(r)*blade_thickness
+        msp.add_line(
+            (px+nx,py+ny),
+            (px+width*math.cos(r)+nx,py+width*math.sin(r)+ny),
+            dxfattribs={"layer":"PORTAS-DETALHE"})
     half = .15 / 2
     for a, b, c, d in model["janelas"]:
         if abs(d-b) < 1e-9:
