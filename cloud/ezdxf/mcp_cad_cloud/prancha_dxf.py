@@ -43,32 +43,60 @@ def renderizar_prancha(doc, titulo: str, geometria: dict) -> tuple[bytes, bytes]
     ax.set_ylim(cy - span_y / 2, cy + span_y / 2)
     ax.set_aspect("equal", adjustable="box")
 
+    # Sheet graphics are placed in figure coordinates, not modelspace:
+    # this keeps the border and title block clear of the CAD viewport.
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Rectangle
+
+    def rule(x1, y1, x2, y2, width=0.8):
+        fig.add_artist(Line2D((x1, x2), (y1, y2), transform=fig.transFigure,
+                              color="#142b3b", linewidth=width))
+
+    fig.add_artist(Rectangle((.025, .025), .95, .95,
+                             transform=fig.transFigure, fill=False,
+                             edgecolor="#142b3b", linewidth=1.1))
     fig.text(.06, .945, "MCP CAD CLOUD  /  PLANTA BAIXA 2D",
-             fontsize=19, weight="bold", color="#142b3b")
-    fig.text(.06, .91, titulo[:90], fontsize=12, color="#445563")
-    fig.text(.74, .83, "QUADRO TECNICO", fontsize=12,
+             fontsize=17, weight="bold", color="#142b3b")
+    fig.text(.06, .912, titulo[:72], fontsize=10, color="#445563")
+
+    # The drawing remains strictly above the footer; no title-block overlap.
+    fig.text(.735, .835, "QUADRO DE AREAS", fontsize=11,
              color="#142b3b", weight="bold")
-    fig.text(.74, .775, "TIPO: estudo preliminar", fontsize=10, color="#142b3b")
-    fig.text(.74, .74, "PAVIMENTOS: 1 (terreo)", fontsize=10, color="#142b3b")
-    fig.text(.74, .69,
+    fig.text(.735, .786, "TIPO: estudo preliminar", fontsize=9, color="#142b3b")
+    fig.text(.735, .747, "PAVIMENTOS: 1 (terreo)", fontsize=9, color="#142b3b")
+    fig.text(.735, .697,
              f"DIMENSOES: {geometria['largura']:.2f} x {geometria['profundidade']:.2f} m",
-             fontsize=10, color="#142b3b")
-    fig.text(.74, .65,
+             fontsize=9, color="#142b3b")
+    fig.text(.735, .656,
              f"PROJECAO: {geometria['area_construida']:.2f} m2",
-             fontsize=10, color="#142b3b")
-    fig.text(.74, .61,
+             fontsize=9, color="#142b3b")
+    fig.text(.735, .616,
              f"AREA MAPEADA: {geometria['area_util_total']:.2f} m2",
-             fontsize=10, color="#142b3b")
-    fig.text(.74, .54, "ESCALA GRAFICA: aprox. 1:50",
-             fontsize=9, color="#445563")
-    fig.text(.74, .49, "Arquivo DXF disponivel para", fontsize=9, color="#445563")
-    fig.text(.74, .47, "medicao e edicao CAD.", fontsize=9, color="#445563")
-    fig.text(.06, .07,
-             "ESTUDO CONCEITUAL - SEM APROVACAO NORMATIVA OU URBANISTICA.",
-             fontsize=10, weight="bold", color="#984d36")
-    fig.text(.06, .044,
-             "Cotas e geometria derivadas de entidades reais DXF. Conferir antes de executar.",
-             fontsize=9, color="#445563")
+             fontsize=9, color="#142b3b")
+    fig.text(.735, .555, "ESCALA NOMINAL: aprox. 1:50",
+             fontsize=8, color="#445563")
+    fig.text(.735, .516, "DXF disponivel para conferencia", fontsize=8,
+             color="#445563")
+
+    # Structured footer: no invented client, address or professional license.
+    rule(.035, .115, .965, .115, 1.0)
+    rule(.035, .035, .965, .035)
+    rule(.035, .035, .035, .115)
+    rule(.965, .035, .965, .115)
+    rule(.62, .035, .62, .115)
+    rule(.81, .035, .81, .115)
+    rule(.035, .075, .965, .075, .5)
+    fig.text(.045, .089, "PROJETO: " + titulo[:55], fontsize=7,
+             color="#142b3b")
+    fig.text(.045, .048, "ETAPA: ESTUDO PRELIMINAR - SEM VALIDACAO NORMATIVA",
+             fontsize=6.5, color="#984d36")
+    fig.text(.63, .089, "FORMATO: A3 / PAISAGEM", fontsize=7,
+             color="#142b3b")
+    fig.text(.63, .048, "ESCALA: APROX. 1:50", fontsize=7,
+             color="#142b3b")
+    fig.text(.82, .089, "PRANCHA: ARQ-01", fontsize=7,
+             color="#142b3b")
+    fig.text(.82, .048, "REVISAO: 00", fontsize=7, color="#142b3b")
 
     pdf = io.BytesIO()
     png = io.BytesIO()
