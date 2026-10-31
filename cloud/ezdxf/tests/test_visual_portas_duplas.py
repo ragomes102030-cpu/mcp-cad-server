@@ -24,7 +24,8 @@ def test_professional_palette_and_double_leaf_from_dxf():
     physical=list(msp.query('LINE[layer=="PORTAS"]'))
     decorative=list(msp.query('LINE[layer=="PORTAS-DETALHE"]'))
     arcs=list(msp.query('ARC[layer=="PORTAS"]'))
-    assert len(physical)==len(decorative)==len(arcs)==5
+    assert len(physical)==len(arcs)==5
+    assert len(decorative)==3*len(physical)
     for layer in ("PAREDES","PORTAS","PORTAS-DETALHE","JANELAS","MOBILIARIO","COTAS","TEXTOS"):
         assert doc.layers.get(layer).dxf.hasattr("true_color")
         assert doc.layers.get(layer).dxf.lineweight>0
@@ -42,6 +43,13 @@ def test_professional_palette_and_double_leaf_from_dxf():
                 if abs(hypot(*delta)-.035)<1e-6 and abs(delta[0]*direction[0]+delta[1]*direction[1])<1e-7:
                     matches.append(sec)
         assert len(matches)==1
+        parallel=matches[0]
+        for start,end in ((a,parallel.dxf.start),(b,parallel.dxf.end)):
+            caps=[sec for sec in decorative
+                  if hypot(sec.dxf.start.x-start.x,sec.dxf.start.y-start.y)<1e-7
+                  and hypot(sec.dxf.end.x-end.x,sec.dxf.end.y-end.y)<1e-7]
+            assert len(caps)==1, "Folha dupla precisa fechar nas duas pontas"
+            assert abs(hypot(end.x-start.x,end.y-start.y)-.035)<1e-6
     topology=auditar_paredes_e_vaos_dxf(doc)
     assert topology["ok"],topology["erros"]
     assert topology["resumo"]["portas"]==5
