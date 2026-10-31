@@ -337,6 +337,14 @@ def planta_assistida(programa=None, modo="preview", nome=None, preview_token=Non
             (px+nx,py+ny),
             (px+width*math.cos(r)+nx,py+width*math.sin(r)+ny),
             dxfattribs={"layer":"PORTAS-DETALHE"})
+        # Close both ends of the 35 mm leaf outline. Keep these lines on the
+        # drafting-only layer so physical-door counts and audits stay stable.
+        msp.add_line((px, py), (px+nx, py+ny),
+                     dxfattribs={"layer":"PORTAS-DETALHE"})
+        msp.add_line(
+            (px+width*math.cos(r), py+width*math.sin(r)),
+            (px+width*math.cos(r)+nx, py+width*math.sin(r)+ny),
+            dxfattribs={"layer":"PORTAS-DETALHE"})
     half = .15 / 2
     for a, b, c, d in model["janelas"]:
         if abs(d-b) < 1e-9:
