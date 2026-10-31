@@ -65,7 +65,7 @@ def test_one_prompt_produces_downloadable_real_dxfs_png_and_a3_pdf():
         reopened = ezdxf.readfile(path)
     assert len(reopened.modelspace()) == 180
     assert len([e for e in reopened.modelspace()
-                if e.dxf.layer not in ("EIXOS-PAREDES", "PISOS")]) == 146
+                if e.dxf.layer not in ("EIXOS-PAREDES", "PISOS", "PORTAS-DETALHE")]) == 146
     assert len(reopened.modelspace().query('LINE[layer=="EIXOS-PAREDES"]')) == 22
     assert len(reopened.modelspace().query('LWPOLYLINE[layer=="PISOS"]')) == 7
     assert reopened.audit().has_errors is False
