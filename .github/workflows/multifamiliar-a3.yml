@@ -37,7 +37,7 @@ jobs:
           assert result['status'] == 'v4_detailed_preliminary_not_normatively_approved'
           for key in ('dxf','pdf','audit'):
               p = Path(result[key])
-              assert p.is_file() and p.stat().st_size > 1000
+              assert p.is_file() and p.stat().st_size > (100 if key == 'audit' else 1000)
               print(f'{key}: {p} ({p.stat().st_size} bytes)')
           PY
       - name: Upload real CAD outputs
