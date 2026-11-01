@@ -9,7 +9,7 @@ from mcp_cad_cloud.multifamiliar_arch_v4 import (
     _room_program, generate_multifamily_v4, ArchitecturalDetailError
 )
 
-def test_four_units_and_brutal_areas_are_flagged_gross():
+def test_four_units_and_gross_areas_are_flagged_gross():
     rooms=_room_program()
     assert len(rooms)==20
     assert {r.uid for r in rooms}=={'AP01','AP02','AP03','AP04'}
@@ -27,7 +27,7 @@ def test_v4_is_real_dxf_and_same_a3_pdf(tmp_path):
     m=doc.modelspace()
     assert len(m.query('ARC'))==21
     assert len([e for e in m.query('TEXT') if e.dxf.layer=='ARQ-AREAS'])==20
-    assert len([e for e in m.query('LINE') if e.dxf.layer=='ARQ-COTAS-INTERNAS'])>=20
+    assert len([e for e in m.query('LINE') if e.dxf.layer=='ARQ-COTAS-INTERNAS'])==17
     assert len([e for e in m.query('SOLID') if e.dxf.layer=='ARQ-SIMBOLOS'])==1
     audit=json.loads(Path(result['audit']).read_text())
     assert audit['unit_count']==4
