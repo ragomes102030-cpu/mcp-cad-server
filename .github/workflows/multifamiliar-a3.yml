@@ -6,6 +6,7 @@ on:
       - 'cloud/ezdxf/mcp_cad_cloud/multifamiliar_*.py'
       - 'cloud/ezdxf/tests/test_multifamiliar_*.py'
       - '.github/workflows/multifamiliar-a3.yml'
+      - 'cloud/ezdxf/pyproject.toml'
   workflow_dispatch:
 
 jobs:
@@ -24,16 +25,17 @@ jobs:
       - name: Install CAD engine and test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e . pytest
+          python -m pip install -e . pytest pymupdf
       - name: Validate real DXF-backed A3 export
-        run: python -m pytest -q tests/test_multifamiliar_pilot.py tests/test_multifamiliar_detail.py tests/test_multifamiliar_partition.py tests/test_multifamiliar_export.py tests/test_multifamiliar_arch_v2.py
+        run: python -m pytest -q tests/test_multifamiliar_pilot.py tests/test_multifamiliar_detail.py tests/test_multifamiliar_partition.py tests/test_multifamiliar_export.py tests/test_multifamiliar_arch_v2.py tests/test_multifamiliar_arch_v3.py
       - name: Produce DXF and PDF from MCP CAD module
         run: |
           python - <<'PY'
-          from mcp_cad_cloud.multifamiliar_arch_v2 import generate_multifamily_architectural_v2
+          from mcp_cad_cloud.multifamiliar_arch_v3 import generate_multifamily_v3
           from pathlib import Path
-          result = generate_multifamily_architectural_v2('artifacts')
-          for key in ('dxf','pdf'):
+          result = generate_multifamily_v3('artifacts')
+          assert result['status'] == 'geometry_preliminarily_approved_not_code_approved'
+          for key in ('dxf','pdf','audit'):
               p = Path(result[key])
               assert p.is_file() and p.stat().st_size > 1000
               print(f'{key}: {p} ({p.stat().st_size} bytes)')
@@ -41,9 +43,10 @@ jobs:
       - name: Upload real CAD outputs
         uses: actions/upload-artifact@v4
         with:
-          name: multifamiliar-arquitetonico-v2-a3-dxf
+          name: multifamiliar-validacao-interna-v3-a3-dxf-auditoria
           path: |
-            cloud/ezdxf/artifacts/multifamiliar_arquitetonico_v2_A3.pdf
-            cloud/ezdxf/artifacts/multifamiliar_arquitetonico_v2.dxf
+            cloud/ezdxf/artifacts/multifamiliar_validacao_interna_v3_A3.pdf
+            cloud/ezdxf/artifacts/multifamiliar_validacao_interna_v3.dxf
+            cloud/ezdxf/artifacts/auditoria_interna_v3.json
           if-no-files-found: error
           retention-days: 30
