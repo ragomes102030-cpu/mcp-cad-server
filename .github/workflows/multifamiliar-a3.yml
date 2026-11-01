@@ -27,14 +27,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e . pytest pymupdf
       - name: Validate real DXF-backed A3 export
-        run: python -m pytest -q tests/test_multifamiliar_pilot.py tests/test_multifamiliar_detail.py tests/test_multifamiliar_partition.py tests/test_multifamiliar_export.py tests/test_multifamiliar_arch_v2.py tests/test_multifamiliar_arch_v3.py tests/test_multifamiliar_arch_v4.py
+        run: python -m pytest -q tests/test_multifamiliar_pilot.py tests/test_multifamiliar_detail.py tests/test_multifamiliar_partition.py tests/test_multifamiliar_export.py tests/test_multifamiliar_arch_v2.py tests/test_multifamiliar_arch_v3.py tests/test_multifamiliar_arch_v4.py tests/test_multifamiliar_arch_v5.py
       - name: Produce DXF and PDF from MCP CAD module
         run: |
           python - <<'PY'
-          from mcp_cad_cloud.multifamiliar_arch_v4 import generate_multifamily_v4
+          from mcp_cad_cloud.multifamiliar_arch_v5 import generate_multifamily_v5
           from pathlib import Path
-          result = generate_multifamily_v4('artifacts')
-          assert result['status'] == 'v4_detailed_preliminary_not_normatively_approved'
+          result = generate_multifamily_v5('artifacts')
+          assert result['status'] == 'functional_preliminary_checks_passed_not_normative'
           for key in ('dxf','pdf','audit'):
               p = Path(result[key])
               assert p.is_file() and p.stat().st_size > (100 if key == 'audit' else 1000)
@@ -43,10 +43,10 @@ jobs:
       - name: Upload real CAD outputs
         uses: actions/upload-artifact@v4
         with:
-          name: multifamiliar-detalhamento-v4-a3-dxf-auditoria
+          name: multifamiliar-funcional-v5-a3-dxf-auditoria
           path: |
-            cloud/ezdxf/artifacts/multifamiliar_detalhamento_v4_A3.pdf
-            cloud/ezdxf/artifacts/multifamiliar_detalhamento_v4.dxf
-            cloud/ezdxf/artifacts/auditoria_detalhamento_v4.json
+            cloud/ezdxf/artifacts/multifamiliar_funcional_v5_A3.pdf
+            cloud/ezdxf/artifacts/multifamiliar_funcional_v5.dxf
+            cloud/ezdxf/artifacts/auditoria_funcional_v5.json
           if-no-files-found: error
           retention-days: 30
