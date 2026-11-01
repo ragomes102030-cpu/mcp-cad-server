@@ -14,7 +14,7 @@ from pathlib import Path
 SITE = (0.0, 0.0, 32.0, 26.0)  # assumed demonstration lot, not user-supplied land survey
 BUILDING = (3.0, 4.0, 27.0, 22.0)  # four units plus the shared passage
 STAIR = (27.0, 10.5, 30.5, 15.5)
-CORRIDOR = (3.0, 12.0, 27.0, 14.0)
+CORRIDOR = (3.0, 11.9, 27.0, 14.1)
 EXTERIOR_WALL = .20
 PARTITION_WALL = .12
 
@@ -67,16 +67,16 @@ def _build_geometry():
     hwall(bx0,bx1,by1,EXTERIOR_WALL)
     vwall(bx0,by0,by1,EXTERIOR_WALL)
     vwall(bx1,by0,by1,EXTERIOR_WALL)
-    # Shared corridor has guaranteed 2m nominal clear centerline separation.
-    hwall(bx0,bx1,12,EXTERIOR_WALL)
-    hwall(bx0,bx1,14,EXTERIOR_WALL)
+    # 2.20 m axis-to-axis less two 0.10 m half-walls = 2.00 m CLEAR corridor.
+    hwall(bx0,bx1,11.9,EXTERIOR_WALL)
+    hwall(bx0,bx1,14.1,EXTERIOR_WALL)
     # Two party-wall segments; NEVER block the shared corridor.
-    vwall(15,4,12,EXTERIOR_WALL)
-    vwall(15,14,22,EXTERIOR_WALL)
+    vwall(15,4,11.9,EXTERIOR_WALL)
+    vwall(15,14.1,22,EXTERIOR_WALL)
     for row in range(2):
-        y0=4 if row==0 else 14
-        room_boundary=(y0+4.5 if row==0 else y0+3.5)
-        unit_rear=(y0 if row==0 else y0+8)
+        y0=4 if row==0 else 14.1
+        room_boundary=(y0+4.5 if row==0 else y0+3.4)
+        unit_rear=(y0 if row==0 else 22.0)
         room_ylo=min(room_boundary,unit_rear)
         room_yhi=max(room_boundary,unit_rear)
         inside_y=(room_boundary + (2 if row==0 else -2))
@@ -92,11 +92,11 @@ def _build_geometry():
                 openings.append(Opening(uid+"-"+label,"door","h",room_boundary,
                                         x0+offset,w,-1 if row==0 else +1,uid))
             # Unit entrance from the common corridor, swings INSIDE the unit.
-            front=y0+8 if row==0 else y0
+            front=11.9 if row==0 else y0
             openings.append(Opening(uid+"-entrada","door","h",front,
                                     x0+5.55,1.0,-1 if row==0 else +1,uid))
             # Bedroom windows on real exterior facade, plus wet room vents.
-            outer=y0 if row==0 else y0+8
+            outer=y0 if row==0 else 22.0
             for label,start,w in (("janela-q1",1.10,1.55),("janela-q2",5.10,1.55),
                                   ("janela-banho",8.75,.70),("janela-servico",10.7,.75)):
                 openings.append(Opening(uid+"-"+label,"window","h",outer,
@@ -183,6 +183,10 @@ def audit_multifamily_internal(material, raw, openings, spaces) -> dict:
             errors.append(f"Corredor obstruido em x={x}")
     if material.buffer(-.001).contains(Point(27,13.4)):
         errors.append("Acesso corredor-escada obstruido")
+    # Verify clear width, rather than misleading centerline spacing.
+    clear_width=(CORRIDOR[3]-.1)-(CORRIDOR[1]+.1)
+    if clear_width < 2.0-1e-9:
+        errors.append(f"Largura livre do corredor insuficiente: {clear_width:.2f} m")
     # A FULL transverse corridor sweep catches the central party-wall defect.
     from shapely.geometry import LineString
     passage=LineString([(3.25,13.0),(26.85,13.0)])
@@ -202,7 +206,7 @@ def audit_multifamily_internal(material, raw, openings, spaces) -> dict:
             "wall_area_m2":round(material.area,3),"room_areas_m2":area_by_kind,
             "units":4,"doors":sum(op.type=="door" for op in openings),
             "windows":sum(op.type=="window" for op in openings),
-            "scale":"1:125 at A3 100%",
+            "scale":"1:125 at A3 100%", "corridor_clear_width_m":round(clear_width,2),
             "scope":"geometric and graphical preliminary study only"}
 
 
