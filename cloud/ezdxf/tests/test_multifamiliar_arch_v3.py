@@ -17,7 +17,9 @@ def test_clean_wall_material_and_uninterrupted_shared_corridor():
     assert material.is_valid
     assert material.geom_type in {"Polygon", "MultiPolygon"}
     assert not material.intersects(LineString([(3.25, 13), (26.85, 13)]))
-    assert audit_multifamily_internal(material, raw, openings, spaces)["ok"]
+    audit = audit_multifamily_internal(material, raw, openings, spaces)
+    assert audit["ok"]
+    assert audit["corridor_clear_width_m"] == pytest.approx(2.0)
 
 
 def test_circulation_cross_wall_regression_rejected():
