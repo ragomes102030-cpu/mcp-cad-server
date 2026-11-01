@@ -9,6 +9,7 @@ import io
 from pathlib import Path
 
 from .multifamiliar_partition import build_partitioned_four_apartment_floor
+from .multifamiliar_acceptance import audit_multifamily_architecture
 
 
 def generate_multifamily_preview(output_dir: str | Path) -> dict[str, str]:
@@ -22,6 +23,9 @@ def generate_multifamily_preview(output_dir: str | Path) -> dict[str, str]:
     from ezdxf.addons.drawing.properties import LayoutProperties
 
     model = build_partitioned_four_apartment_floor()
+    architectural_audit = audit_multifamily_architecture(model)
+    if architectural_audit['ok']:
+        raise RuntimeError('Concept export unexpectedly passed strict architectural gate')
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     doc = ezdxf.new("R2013")
@@ -82,4 +86,5 @@ def generate_multifamily_preview(output_dir: str | Path) -> dict[str, str]:
     if not pdf_path.read_bytes().startswith(b"%PDF-"):
         raise RuntimeError("PDF export failed")
     return {"dxf":str(dxf_path),"pdf":str(pdf_path),
-            "status":"concept_preview_not_validated"}
+            "status":"concept_preview_not_validated",
+            "architectural_audit":architectural_audit}
