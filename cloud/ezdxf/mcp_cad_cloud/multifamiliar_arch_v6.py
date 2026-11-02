@@ -22,7 +22,7 @@ class ComponentIntegrationError(ValueError):
 def _expected_components(room):
     x0, y0, x1, y1 = room.rect
     if room.kind in ("quarto1", "quarto2"):
-        return [("bed_double", (x0 + .60, y0 + .65), "CAMA")]
+        return [("bed_double", (x0 + .60, y0 + .65 + (.80 if room.uid in ("AP03", "AP04") else 0)), "CAMA")]
     if room.kind == "sala_cozinha":
         return [("dining_table", (x0 + 5.30, (y0 + y1) / 2 - .70), "MESA")]
     if room.kind == "banheiro":
@@ -52,9 +52,46 @@ def _find_footprint(doc, kind, origin, tolerance=.015):
     return candidates[0]
 
 
+
+def _relocate_upper_beds(doc):
+    """Fix four existing upper-unit bed/door swing collisions without moving walls."""
+    moved = 0
+    for room in _room_program():
+        if room.uid not in ("AP03", "AP04") or room.kind not in ("quarto1", "quarto2"):
+            continue
+        x0, y0, _, _ = room.rect
+        bed = _find_footprint(doc, "bed_double", (x0 + .60, y0 + .65))
+        # Pillow is a separate schematic polyline inside the original bed.
+        pillows = []
+        for entity in doc.modelspace().query("LWPOLYLINE"):
+            if entity.dxf.layer != "ARQ-MOBILIARIO" or not entity.closed:
+                continue
+            pts = list(entity.get_points("xy"))
+            if len(pts) != 4:
+                continue
+            xs = [p[0] for p in pts]
+            ys = [p[1] for p in pts]
+            if (abs(min(xs) - (x0 + .71)) < .01
+                    and abs(max(xs) - (x0 + 1.89)) < .01
+                    and abs(min(ys) - (y0 + 2.15)) < .01
+                    and abs(max(ys) - (y0 + 2.46)) < .01):
+                pillows.append(entity)
+        if len(pillows) != 1:
+            raise ComponentIntegrationError(
+                f"{room.uid}/{room.kind}: missing or ambiguous pillow geometry")
+        for entity in (bed, pillows[0]):
+            entity.set_points([(x, y + .80) for x, y in entity.get_points("xy")],
+                              format="xy")
+            moved += 1
+    if moved != 8:
+        raise ComponentIntegrationError(f"Expected eight corrected entities, got {moved}")
+    return moved
+
+
 def adopt_apartment_components(doc):
     """Adopt 20 real existing CAD shapes; never overwrite the baseline walls/doors."""
     m = doc.modelspace()
+    _relocate_upper_beds(doc)
     if "ARQ-COMPONENTES-ROTULOS" not in doc.layers:
         doc.layers.new("ARQ-COMPONENTES-ROTULOS", dxfattribs={"color": 8})
     items = []
@@ -226,6 +263,7 @@ def generate_multifamily_v6(output_dir):
     adopted = adopt_apartment_components(doc)
     report = audit_apartment_components(doc)
     report["adopted"] = adopted
+    report["upper_bed_and_pillow_entities_relocated"] = 8
     report["scope"] = "architectural preliminary study only"
     report_path = out / "auditoria_componentes_v6.json"
     report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
