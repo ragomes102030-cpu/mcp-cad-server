@@ -4,9 +4,13 @@ on:
     paths:
       - 'cloud/ezdxf/mcp_cad_cloud/components.py'
       - 'cloud/ezdxf/mcp_cad_cloud/component_placement.py'
+      - 'cloud/ezdxf/mcp_cad_cloud/multifamiliar_arch_v6.py'
       - 'cloud/ezdxf/tests/test_component*.py'
+      - 'cloud/ezdxf/tests/test_multifamiliar_components_v6.py'
       - '.github/workflows/cad-components-qa.yml'
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   components:
     runs-on: ubuntu-latest
@@ -15,7 +19,29 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install cloud package and pytest
-        run: python -m pip install -e cloud/ezdxf pytest
-      - name: Run component regression
-        run: python -m pytest -q cloud/ezdxf/tests/test_components.py cloud/ezdxf/tests/test_component_placement.py
+      - name: Install CAD and PDF verification dependencies
+        run: python -m pip install -e cloud/ezdxf pytest pymupdf
+      - name: Run component and full architectural regression V3-V6
+        run: |
+          python -m pytest -q \
+            cloud/ezdxf/tests/test_components.py \
+            cloud/ezdxf/tests/test_component_placement.py \
+            cloud/ezdxf/tests/test_multifamiliar_arch_v3.py \
+            cloud/ezdxf/tests/test_multifamiliar_arch_v4.py \
+            cloud/ezdxf/tests/test_multifamiliar_arch_v5.py \
+            cloud/ezdxf/tests/test_multifamiliar_components_v6.py
+      - name: Generate real MCP CAD DXF PDF A3 and JSON
+        run: |
+          python -m mcp_cad_cloud.multifamiliar_arch_v6 cloud/ezdxf/artifacts/v6
+          cd cloud/ezdxf/artifacts/v6
+          sha256sum multifamiliar_componentes_v6.dxf multifamiliar_componentes_v6_A3.pdf auditoria_componentes_v6.json > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mcp-cad-multifamiliar-v6-a3
+          path: |
+            cloud/ezdxf/artifacts/v6/multifamiliar_componentes_v6.dxf
+            cloud/ezdxf/artifacts/v6/multifamiliar_componentes_v6_A3.pdf
+            cloud/ezdxf/artifacts/v6/auditoria_componentes_v6.json
+            cloud/ezdxf/artifacts/v6/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 14
