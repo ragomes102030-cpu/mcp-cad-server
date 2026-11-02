@@ -24,13 +24,13 @@ def place_checked(doc, kind, origin, room_rect, *, angle_deg=0, clearance_m=None
     if not box(x0, y0, x1, y1).covers(polygon.buffer(clearance)):
         raise PlacementError("Component or clearance outside room")
     m = doc.modelspace()
-    for e in m.query("LWPOLYLINE"):
+    for e in m.query("LWPOLYLINE LINE"):
         if e.dxf.layer not in {"ARQ-PAREDES", "ARQ-MOBILIARIO", "ARQ-DETALHES"}:
             continue
-        points = list(e.get_points("xy"))
+        points = list(e.get_points("xy")) if e.dxftype() == "LWPOLYLINE" else [(e.dxf.start.x, e.dxf.start.y), (e.dxf.end.x, e.dxf.end.y)]
         if len(points) < 2:
             continue
-        obstacle = Polygon(points) if e.closed and len(points) >= 3 else LineString(points)
+        obstacle = Polygon(points) if e.dxftype() == "LWPOLYLINE" and e.closed and len(points) >= 3 else LineString(points)
         if not obstacle.is_valid:
             raise PlacementError("Invalid obstacle geometry")
         if polygon.buffer(clearance).intersects(obstacle):
