@@ -1,0 +1,21 @@
+name: CAD parametric components QA
+on:
+  pull_request:
+    paths:
+      - 'cloud/ezdxf/mcp_cad_cloud/components.py'
+      - 'cloud/ezdxf/mcp_cad_cloud/component_placement.py'
+      - 'cloud/ezdxf/tests/test_component*.py'
+      - '.github/workflows/cad-components-qa.yml'
+  workflow_dispatch:
+jobs:
+  components:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install cloud package and pytest
+        run: python -m pip install -e cloud/ezdxf pytest
+      - name: Run component regression
+        run: python -m pytest -q cloud/ezdxf/tests/test_components.py cloud/ezdxf/tests/test_component_placement.py
