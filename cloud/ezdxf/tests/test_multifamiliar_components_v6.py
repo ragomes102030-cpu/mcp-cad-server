@@ -75,3 +75,18 @@ def test_adoption_fails_for_wrong_geometry():
     with pytest.raises(ValueError, match="does not match"):
         adopt_component(doc, ent, "bed_double", (0, 0), unit_id="AP01")
     assert not ent.has_xdata("MCP_CAD")
+
+
+def test_upper_unit_furniture_repositioned_out_of_door_swing(v6_files):
+    doc = ezdxf.readfile(v6_files["dxf"])
+    for e in doc.modelspace().query("LWPOLYLINE"):
+        if not e.has_xdata("MCP_CAD"):
+            continue
+        info = read_component(e)
+        if info["unit_id"] not in ("AP03", "AP04"):
+            continue
+        ymin = min(p[1] for p in e.get_points("xy"))
+        if info["kind"] == "dining_table":
+            assert ymin == pytest.approx(15.45)
+        if info["kind"] == "washbasin_existing":
+            assert ymin == pytest.approx(18.55)
