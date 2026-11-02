@@ -139,7 +139,7 @@ def audit_apartment_components(doc):
         radius = float(arc.dxf.radius)
         pts = [(cx + radius * cos(radians(a + (b-a)*i/30)),
                 cy + radius * sin(radians(a + (b-a)*i/30))) for i in range(31)]
-        door_sweeps.append(LineString(pts).buffer(.02))
+        door_sweeps.append((LineString(pts).buffer(.02), (round(cx, 2), round(cy, 2))))
     for e in m.query("LWPOLYLINE"):
         if not e.has_xdata("MCP_CAD"):
             continue
@@ -160,8 +160,10 @@ def audit_apartment_components(doc):
             errors.append(f"{uid}: component outside exactly one room")
         if any(polygon.intersects(wall) for wall in wall_lines):
             errors.append(f"{uid}: component collides with wall")
-        if any(polygon.intersects(sweep) for sweep in door_sweeps):
-            errors.append(f"{uid}: component collides with door swing")
+        collisions = [center for sweep, center in door_sweeps
+                      if polygon.intersects(sweep)]
+        if collisions:
+            errors.append(f"{uid}/{meta['kind']}: component collides with door swing {collisions}")
         origin = (min(p[0] for p in points), min(p[1] for p in points))
         expected = Polygon(footprint(CATALOG[meta["kind"]], origin))
         if polygon.symmetric_difference(expected).area > .0001:
